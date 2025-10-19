@@ -1,3 +1,4 @@
+
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -38,16 +39,16 @@ export default function Home() {
         <section className="w-full py-24 md:py-32 lg:py-40">
           <div className="container px-4 md:px-6">
             <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
-              <div className="space-y-6">
+              <div className="space-y-6 text-center lg:text-left">
                 <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl font-headline">
                   Build your portfolio. Publish in minutes.
                 </h1>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl">
+                <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
                   The easiest way to build and share a professional developer
                   portfolio. Sign up, create projects, choose a theme, and get a
                   unique public URL instantly.
                 </p>
-                <div className="flex flex-col gap-4 min-[400px]:flex-row">
+                <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center lg:justify-start">
                   <Button asChild size="lg">
                     <Link href="/signup">Get Started for Free</Link>
                   </Button>

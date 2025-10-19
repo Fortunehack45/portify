@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -17,6 +18,7 @@ import PreviewPanel from './preview-panel';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface DashboardClientProps {
   initialUser: User;
@@ -30,6 +32,7 @@ export default function DashboardClient({
   const [user, setUser] = useState<User>(initialUser);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedTheme, setSelectedTheme] = useState<Theme>(initialUser.selectedTheme);
+  const isMobile = useIsMobile();
 
   const firestore = useFirestore();
   const { user: authUser } = useAuthUser();
@@ -84,11 +87,14 @@ export default function DashboardClient({
 
 
   return (
-    <ResizablePanelGroup direction="horizontal" className="h-[calc(100vh-4rem)]">
-      <ResizablePanel defaultSize={40} minSize={30}>
+    <ResizablePanelGroup 
+      direction={isMobile ? 'vertical' : 'horizontal'} 
+      className="h-[calc(100vh-4rem)]"
+    >
+      <ResizablePanel defaultSize={isMobile ? 50 : 40} minSize={30}>
         <ScrollArea className="h-full">
-          <div className="p-6 space-y-8">
-            <div className="flex items-center justify-between">
+          <div className="p-4 md:p-6 space-y-8">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
               <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
               <Button onClick={handleSave}>
                 <Save className="mr-2 h-4 w-4" />
@@ -106,7 +112,7 @@ export default function DashboardClient({
         </ScrollArea>
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={60} minSize={30}>
+      <ResizablePanel defaultSize={isMobile ? 50 : 60} minSize={30}>
         <PreviewPanel user={{ ...user, selectedTheme }} projects={projects} />
       </ResizablePanel>
     </ResizablePanelGroup>
