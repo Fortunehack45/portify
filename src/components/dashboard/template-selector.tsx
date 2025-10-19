@@ -1,34 +1,49 @@
 'use client';
 
-import { Template, Project } from '@/types';
+import { Template, Project, User } from '@/types';
 import AiTemplateAssistant from './ai-template-assistant';
-import Image from 'next/image';
 import { CheckCircle } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { placeholderImages } from '@/lib/placeholder-images';
+import React, { lazy, Suspense } from 'react';
+import { Skeleton } from '@/components/ui/skeleton';
+
+// Import all templates directly for rendering
+import MinimalLight from '../templates/minimal-light';
+import ModernDark from '../templates/modern-dark';
+import ProfessionalBlue from '../templates/professional-blue';
+import RetroGamer from '../templates/retro-gamer';
+import BrutalistWeb from '../templates/brutalist-web';
+import CyberpunkNeon from '../templates/cyberpunk-neon';
+import ElegantSerif from '../templates/elegant-serif';
+import CosmicDream from '../templates/cosmic-dream';
+import HackerTerminal from '../templates/hacker-terminal';
+import CraftsmanPaper from '../templates/craftsman-paper';
+import PhotoGrid from '../templates/photo-grid';
+import LakesideDawn from '../templates/lakeside-dawn';
 
 interface TemplateSelectorProps {
   selectedTemplate: Template;
   onTemplateChange: (template: Template) => void;
   projects: Project[];
+  user: User;
 }
 
-const templateOptions: { value: Template; label: string; imageId: string }[] = [
-    { value: 'minimal-light', label: 'Minimal Light', imageId: 'template-minimal-light' },
-    { value: 'modern-dark', label: 'Modern Dark', imageId: 'template-modern-dark' },
-    { value: 'professional-blue', label: 'Professional Blue', imageId: 'template-professional-blue' },
-    { value: 'retro-gamer', label: 'Retro Gamer', imageId: 'template-retro-gamer' },
-    { value: 'brutalist-web', label: 'Brutalist Web', imageId: 'template-brutalist-web' },
-    { value: 'cyberpunk-neon', label: 'Cyberpunk Neon', imageId: 'template-cyberpunk-neon' },
-    { value: 'elegant-serif', label: 'Elegant Serif', imageId: 'template-elegant-serif' },
-    { value: 'cosmic-dream', label: 'Cosmic Dream', imageId: 'template-cosmic-dream' },
-    { value: 'hacker-terminal', label: 'Hacker Terminal', imageId: 'template-hacker-terminal' },
-    { value: 'craftsman-paper', label: 'Craftsman Paper', imageId: 'template-craftsman-paper' },
-    { value: 'photo-grid', label: 'Photo Grid', imageId: 'template-photo-grid' },
-    { value: 'lakeside-dawn', label: 'Lakeside Dawn', imageId: 'template-lakeside-dawn' },
+const templateOptions: { value: Template; label: string; component: React.FC<{user: User, projects: Project[]}> }[] = [
+    { value: 'minimal-light', label: 'Minimal Light', component: MinimalLight },
+    { value: 'modern-dark', label: 'Modern Dark', component: ModernDark },
+    { value: 'professional-blue', label: 'Professional Blue', component: ProfessionalBlue },
+    { value: 'retro-gamer', label: 'Retro Gamer', component: RetroGamer },
+    { value: 'brutalist-web', label: 'Brutalist Web', component: BrutalistWeb },
+    { value: 'cyberpunk-neon', label: 'Cyberpunk Neon', component: CyberpunkNeon },
+    { value: 'elegant-serif', label: 'Elegant Serif', component: ElegantSerif },
+    { value: 'cosmic-dream', label: 'Cosmic Dream', component: CosmicDream },
+    { value: 'hacker-terminal', label: 'Hacker Terminal', component: HackerTerminal },
+    { value: 'craftsman-paper', label: 'Craftsman Paper', component: CraftsmanPaper },
+    { value: 'photo-grid', label: 'Photo Grid', component: PhotoGrid },
+    { value: 'lakeside-dawn', label: 'Lakeside Dawn', component: LakesideDawn },
 ];
 
-export default function TemplateSelector({ selectedTemplate, onTemplateChange, projects }: TemplateSelectorProps) {
+export default function TemplateSelector({ selectedTemplate, onTemplateChange, projects, user }: TemplateSelectorProps) {
   return (
     <div className="space-y-6">
       <div className="space-y-2">
@@ -36,36 +51,33 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
         <p className="text-sm text-muted-foreground">Select a template to change the look of your portfolio.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {templateOptions.map(option => {
-          const image = placeholderImages.find(img => img.id === option.imageId);
+          const TemplateComponent = option.component;
           return (
-            <button
-              key={option.value}
-              className={cn(
-                "relative block rounded-lg border-2 bg-card overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-                selectedTemplate === option.value ? "border-primary" : "border-transparent"
-              )}
-              onClick={() => onTemplateChange(option.value)}
-            >
-              {selectedTemplate === option.value && (
-                <div className="absolute top-2 right-2 z-10 bg-primary text-primary-foreground rounded-full">
-                  <CheckCircle className="h-5 w-5" />
+            <div key={option.value} className="space-y-2">
+                <button
+                className={cn(
+                    "relative block w-full rounded-lg border-2 bg-card overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 aspect-[4/5]",
+                    selectedTemplate === option.value ? "border-primary" : "border-border"
+                )}
+                onClick={() => onTemplateChange(option.value)}
+                >
+                {selectedTemplate === option.value && (
+                    <div className="absolute top-2 right-2 z-20 bg-primary text-primary-foreground rounded-full p-0.5">
+                    <CheckCircle className="h-5 w-5" />
+                    </div>
+                )}
+                <div className="absolute inset-0 transform scale-[0.25] origin-top-left pointer-events-none">
+                    <div className="w-[1280px] h-[1600px] bg-background">
+                         <Suspense fallback={<Skeleton className="w-full h-full" />}>
+                            <TemplateComponent user={user} projects={projects} />
+                         </Suspense>
+                    </div>
                 </div>
-              )}
-              {image && (
-                 <Image
-                    src={image.imageUrl}
-                    alt={`Preview of ${option.label} template`}
-                    width={200}
-                    height={250}
-                    className="w-full h-auto object-cover transition-transform hover:scale-105"
-                  />
-              )}
-              <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-2">
-                  <p className="text-white text-xs font-semibold truncate text-center">{option.label}</p>
-              </div>
-            </button>
+                </button>
+                <p className="text-sm font-medium text-center">{option.label}</p>
+            </div>
           )
         })}
       </div>

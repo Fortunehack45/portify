@@ -92,6 +92,7 @@ export default function TemplatesPage() {
             selectedTemplate={selectedTemplate}
             onTemplateChange={setSelectedTemplate}
             projects={projects}
+            user={user}
         />
     </div>
   );
