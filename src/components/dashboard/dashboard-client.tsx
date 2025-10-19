@@ -19,7 +19,6 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent } from '../ui/card';
 
 interface DashboardClientProps {
   initialUser: User;
@@ -63,6 +62,7 @@ export default function DashboardClient({
       const userDocRef = doc(firestore, 'users', authUser.uid);
       const userData: Partial<User> = {
         ...user,
+        selectedTheme: selectedTheme,
         updatedAt: new Date(),
       };
       await setDoc(userDocRef, userData, { merge: true });
@@ -83,14 +83,23 @@ export default function DashboardClient({
   
   const handleThemeChange = (theme: Theme) => {
     setSelectedTheme(theme);
-    handleUserChange({ selectedTheme: theme });
   };
-
+  
+  // Prevent rendering the ResizablePanelGroup until we know if it's mobile or not.
+  // This avoids a hydration mismatch error.
+  if (isMobile === null) {
+    return (
+        <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
+            <p>Loading editor...</p>
+        </div>
+    )
+  }
 
   return (
     <ResizablePanelGroup 
       direction={isMobile ? 'vertical' : 'horizontal'} 
       className="h-[calc(100vh-4rem)]"
+      key={isMobile ? 'mobile' : 'desktop'} // Add key to force re-mount on responsive change
     >
       <ResizablePanel defaultSize={isMobile ? 50 : 40} minSize={30}>
         <div className="flex flex-col h-full">
