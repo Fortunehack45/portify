@@ -4,8 +4,8 @@ import { Logo } from './icons';
 
 const Header = () => {
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center">
+    <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+      <div className="container flex h-16 max-w-screen-2xl items-center">
         <div className="mr-auto flex">
           <Link href="/" className="mr-6 flex items-center space-x-2">
             <Logo />
@@ -24,10 +24,10 @@ const Header = () => {
         </nav>
         <div className="flex items-center justify-end ml-auto">
           <nav className="flex items-center space-x-2">
-            <Button variant="ghost" asChild className="rounded-full">
+            <Button variant="ghost" asChild>
               <Link href="/login">Log in</Link>
             </Button>
-            <Button asChild className="rounded-full">
+            <Button asChild>
               <Link href="/signup">Sign Up</Link>
             </Button>
           </nav>

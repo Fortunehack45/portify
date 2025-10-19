@@ -10,21 +10,21 @@ import { placeholderImages } from '@/lib/placeholder-images';
 const featureList = [
   {
     icon: <Palette className="w-8 h-8 text-primary" />,
-    title: 'Theme Options',
+    title: 'Powerful Theme Options',
     description:
-      'Choose from a variety of professionally designed themes. Switch between them with a single click.',
+      'Choose from a variety of professionally designed themes. Switch between them with a single click to find the perfect fit.',
   },
   {
     icon: <Code className="w-8 h-8 text-primary" />,
-    title: 'Fast Build',
+    title: 'Intuitive Content Editing',
     description:
-      'Our intuitive editor allows you to add projects, skills, and your bio with a real-time preview.',
+      'Our intuitive editor allows you to add projects, skills, and your bio with a real-time preview of your changes.',
   },
   {
     icon: <Share2 className="w-8 h-8 text-primary" />,
-    title: 'Live Publishing',
+    title: 'Instant Live Publishing',
     description:
-      'Get a unique, shareable URL at /[username] to showcase your work to potential employers and colleagues.',
+      'Get a unique, shareable URL at /[username] to showcase your work to potential employers and colleagues instantly.',
   },
 ];
 
@@ -32,14 +32,14 @@ export default function Home() {
   const heroImage = placeholderImages.find(p => p.id === "hero");
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow">
-        <section className="w-full py-20 md:py-32 lg:py-40 bg-background">
+        <section className="w-full py-24 md:py-32 lg:py-40">
           <div className="container px-4 md:px-6">
             <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
               <div className="space-y-6">
-                <h1 className="text-4xl font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl font-headline">
+                <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl font-headline">
                   Build your portfolio. Publish in minutes.
                 </h1>
                 <p className="max-w-[600px] text-muted-foreground md:text-xl">
@@ -48,11 +48,11 @@ export default function Home() {
                   unique public URL instantly.
                 </p>
                 <div className="flex flex-col gap-4 min-[400px]:flex-row">
-                  <Button asChild size="lg" className="rounded-full">
-                    <Link href="/signup">Get Started</Link>
+                  <Button asChild size="lg">
+                    <Link href="/signup">Get Started for Free</Link>
                   </Button>
-                  <Button asChild variant="secondary" size="lg" className="rounded-full">
-                    <Link href="#features">View Examples</Link>
+                  <Button asChild variant="outline" size="lg">
+                    <Link href="#features">Learn More</Link>
                   </Button>
                 </div>
               </div>
@@ -63,7 +63,7 @@ export default function Home() {
                       alt={heroImage.description}
                       width={600}
                       height={400}
-                      className="rounded-2xl shadow-2xl"
+                      className="rounded-2xl shadow-2xl shadow-primary/10"
                       data-ai-hint={heroImage.imageHint}
                     />
                   )}
@@ -72,10 +72,10 @@ export default function Home() {
           </div>
         </section>
 
-        <section id="features" className="w-full py-20 md:py-32 bg-secondary/50">
+        <section id="features" className="w-full py-24 md:py-32 bg-secondary/50">
           <div className="container px-4 md:px-6">
-            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-12">
-              <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl font-headline">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
+              <h2 className="text-4xl font-bold tracking-tight sm:text-5xl font-headline">
                 Everything You Need to Shine
               </h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
@@ -85,22 +85,26 @@ export default function Home() {
             </div>
             <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:max-w-none">
               {featureList.map((feature) => (
-                <div key={feature.title} className="text-center space-y-4">
-                  <div className="mx-auto flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-                    {feature.icon}
-                  </div>
-                  <h3 className="text-2xl font-bold font-headline">{feature.title}</h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
-                </div>
+                <Card key={feature.title} className="text-left bg-card hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 mb-4">
+                            {feature.icon}
+                        </div>
+                        <CardTitle className="text-2xl font-bold font-headline">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-muted-foreground">{feature.description}</p>
+                    </CardContent>
+                </Card>
               ))}
             </div>
           </div>
         </section>
         
-        <section className="w-full py-20 md:py-32">
+        <section className="w-full py-24 md:py-32">
           <div className="container grid items-center justify-center gap-4 px-4 text-center md:px-6">
-            <div className="space-y-3">
-              <h2 className="text-3xl font-bold tracking-tighter md:text-4xl/tight font-headline">
+            <div className="space-y-4">
+              <h2 className="text-4xl font-bold tracking-tighter md:text-5xl font-headline">
                 Ready to Forge Your Legacy?
               </h2>
               <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed">
@@ -108,7 +112,7 @@ export default function Home() {
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">
-              <Button asChild size="lg" className="w-full rounded-full">
+              <Button asChild size="lg" className="w-full">
                 <Link href="/signup">Create Your Portfolio Now</Link>
               </Button>
             </div>
