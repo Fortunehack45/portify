@@ -1,12 +1,11 @@
 'use client';
 
-import { User, Social, SocialPlatform } from '@/types';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { User, Social, SocialPlatform, Availability } from '@/types';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '../ui/badge';
-import { X, Github, Linkedin, Twitter, Link as LinkIcon, Plus, ChevronDown } from 'lucide-react';
+import { X, Github, Linkedin, Twitter, Link as LinkIcon, Plus } from 'lucide-react';
 import React, { useState } from 'react';
 import { Button } from '../ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
@@ -29,7 +28,13 @@ const socialOptions: {value: SocialPlatform, label: string}[] = [
     { value: 'linkedin', label: 'LinkedIn' },
     { value: 'twitter', label: 'Twitter / X' },
     { value: 'website', label: 'Website' },
-]
+];
+
+const availabilityOptions: {value: Availability, label: string}[] = [
+    { value: 'open to work', label: 'Open to Work' },
+    { value: 'available for freelance', label: 'Available for Freelance' },
+    { value: 'not available', label: 'Not Available' },
+];
 
 export default function ProfileForm({ user, onUserChange }: ProfileFormProps) {
   const [skillInput, setSkillInput] = useState('');
@@ -78,14 +83,41 @@ export default function ProfileForm({ user, onUserChange }: ProfileFormProps) {
         </AccordionTrigger>
         <AccordionContent className="pt-4">
              <div className="space-y-6 bg-background p-4 rounded-b-lg border-x border-b">
-                <div className="space-y-2">
-                  <Label htmlFor="name">Name</Label>
-                  <Input id="name" value={user.name} onChange={(e) => onUserChange({ name: e.target.value })} />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="name">Name</Label>
+                    <Input id="name" value={user.name} onChange={(e) => onUserChange({ name: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input id="username" value={user.username} onChange={(e) => onUserChange({ username: e.target.value })} />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="username">Username</Label>
-                  <Input id="username" value={user.username} onChange={(e) => onUserChange({ username: e.target.value })} />
+                 <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="jobTitle">Job Title</Label>
+                    <Input id="jobTitle" placeholder="e.g. Software Engineer" value={user.jobTitle} onChange={(e) => onUserChange({ jobTitle: e.target.value })} />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="location">Location</Label>
+                    <Input id="location" placeholder="e.g. San Francisco, CA" value={user.location} onChange={(e) => onUserChange({ location: e.target.value })} />
+                  </div>
                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="availability">Availability</Label>
+                    <Select value={user.availability} onValueChange={(v) => onUserChange({ availability: v as Availability })}>
+                        <SelectTrigger id="availability">
+                            <SelectValue placeholder="Select your status" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {availabilityOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value}>
+                                    {opt.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="bio">Bio</Label>
                   <Textarea id="bio" value={user.bio} onChange={(e) => onUserChange({ bio: e.target.value })} placeholder="Tell us a little bit about yourself" />

@@ -26,6 +26,19 @@
           "type": "string",
           "description": "A short biography of the user."
         },
+        "jobTitle": {
+          "type": "string",
+          "description": "The user's professional job title."
+        },
+        "location": {
+          "type": "string",
+          "description": "The user's physical location."
+        },
+        "availability": {
+          "type": "string",
+          "enum": ["open to work", "available for freelance", "not available"],
+          "description": "The user's work availability status."
+        },
         "skills": {
           "type": "array",
           "items": {
@@ -95,6 +108,11 @@
         },
         "description": {
           "type": "string"
+        },
+        "imageUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "URL for the project's cover image."
         },
         "techStack": {
           "type": "array",

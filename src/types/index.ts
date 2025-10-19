@@ -5,6 +5,7 @@ export type Project = {
   userId: string;
   title: string;
   description: string;
+  imageUrl?: string;
   techStack: string[];
   githubLink?: string;
   liveDemo?: string;
@@ -19,12 +20,17 @@ export type Social = {
   url: string;
 };
 
+export type Availability = 'open to work' | 'available for freelance' | 'not available';
+
 export type User = {
   id: string;
   username: string;
   name: string;
   email: string;
   bio: string;
+  jobTitle?: string;
+  location?: string;
+  availability?: Availability;
   skills: string[];
   socials: Social[];
   selectedTemplate: Template;

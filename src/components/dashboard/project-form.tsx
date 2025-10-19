@@ -20,6 +20,7 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
     const { user: authUser } = useAuthUser();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
+    const [imageUrl, setImageUrl] = useState('');
     const [githubLink, setGithubLink] = useState('');
     const [liveDemo, setLiveDemo] = useState('');
     const [techStack, setTechStack] = useState<string[]>([]);
@@ -29,12 +30,14 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
         if (project) {
             setTitle(project.title);
             setDescription(project.description);
+            setImageUrl(project.imageUrl || '');
             setGithubLink(project.githubLink || '');
             setLiveDemo(project.liveDemo || '');
             setTechStack(project.techStack);
         } else {
             setTitle('');
             setDescription('');
+            setImageUrl('');
             setGithubLink('');
             setLiveDemo('');
             setTechStack([]);
@@ -62,6 +65,7 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
             userId: authUser.uid,
             title,
             description,
+            imageUrl,
             githubLink,
             liveDemo,
             techStack,
@@ -82,6 +86,10 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
                 <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} />
             </div>
             <div className="grid gap-2">
+                <Label htmlFor="imageUrl">Image URL</Label>
+                <Input id="imageUrl" placeholder="https://example.com/image.png" value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} />
+            </div>
+            <div className="grid gap-2">
                 <Label htmlFor="tech-stack">Tech Stack</Label>
                 <Input 
                     id="tech-stack" 
@@ -90,7 +98,7 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
                     onChange={(e) => setTechInput(e.target.value)}
                     onKeyDown={handleTechKeyDown}
                 />
-                <div className="flex flex-wrap gap-2 mt-2">
+                <div className="flex flex-wrap gap-2 mt-2 min-h-[20px]">
                     {techStack.map(tech => (
                         <Badge key={tech} variant="secondary" className="pl-2 pr-1 py-1 text-sm">
                             {tech}
