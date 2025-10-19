@@ -28,7 +28,7 @@ export const signUpWithEmail = async (email: string, password: string, name: str
     email: email,
     bio: '',
     skills: [],
-    socials: {},
+    socials: [],
     selectedTemplate: 'minimal-light',
     createdAt: new Date(),
     updatedAt: new Date(),

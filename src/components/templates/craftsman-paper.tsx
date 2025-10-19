@@ -13,6 +13,17 @@ interface TemplateProps {
 }
 
 const InteractiveTabs: React.FC<TemplateProps> = ({ user, projects }) => {
+
+    const getSocialButton = (platform: string, url: string) => {
+        switch (platform) {
+            case 'github': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><Github className="mr-2 h-4 w-4" /> GitHub</a></Button>;
+            case 'linkedin': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><Linkedin className="mr-2 h-4 w-4" /> LinkedIn</a></Button>;
+            case 'twitter': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><Twitter className="mr-2 h-4 w-4" /> Twitter</a></Button>;
+            case 'website': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><LinkIcon className="mr-2 h-4 w-4" /> Website</a></Button>;
+            default: return null;
+        }
+    }
+
   return (
     <div className="font-body bg-blue-50 text-gray-800 min-h-screen">
       <header className="py-12 bg-white border-b">
@@ -41,9 +52,11 @@ const InteractiveTabs: React.FC<TemplateProps> = ({ user, projects }) => {
                   <h2 className="text-2xl font-bold font-headline mb-4">Contact & Socials</h2>
                   <div className="flex flex-wrap gap-4">
                     {user.email && <Button variant="outline" asChild><a href={`mailto:${user.email}`}><Mail className="mr-2 h-4 w-4" /> Email</a></Button>}
-                    {user.socials?.github && <Button variant="outline" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer"><Github className="mr-2 h-4 w-4" /> GitHub</a></Button>}
-                    {user.socials?.linkedin && <Button variant="outline" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin className="mr-2 h-4 w-4" /> LinkedIn</a></Button>}
-                    {user.socials?.twitter && <Button variant="outline" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="mr-2 h-4 w-4" /> Twitter</a></Button>}
+                    {user.socials?.map(social => (
+                        <React.Fragment key={social.platform}>
+                            {getSocialButton(social.platform, social.url)}
+                        </React.Fragment>
+                    ))}
                   </div>
                 </div>
               </CardContent>

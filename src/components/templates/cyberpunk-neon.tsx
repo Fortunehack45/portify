@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Github, ExternalLink, Mail, Linkedin, Twitter, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import React from 'react';
 
 interface TemplateProps {
   user: User;
@@ -11,6 +12,16 @@ interface TemplateProps {
 }
 
 const BoldTypography: React.FC<TemplateProps> = ({ user, projects }) => {
+    const getSocialButton = (platform: string, url: string) => {
+        switch (platform) {
+            case 'github': return <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-5 h-5 mr-2" />GitHub</a></Button>;
+            case 'linkedin': return <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-5 h-5 mr-2" />LinkedIn</a></Button>;
+            case 'twitter': return <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-5 h-5 mr-2" />Twitter</a></Button>;
+            case 'website': return <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="Website"><LinkIcon className="w-5 h-5 mr-2" />Website</a></Button>;
+            default: return null;
+        }
+    }
+
   return (
     <div className="font-body bg-black text-white min-h-screen antialiased">
       <main className="container mx-auto px-4 py-16 md:py-24 max-w-4xl">
@@ -23,9 +34,11 @@ const BoldTypography: React.FC<TemplateProps> = ({ user, projects }) => {
             {user.bio}
           </p>
           <div className="flex flex-wrap justify-center md:justify-start gap-2 mt-8">
-            {user.socials?.github && <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-5 h-5 mr-2" />GitHub</a></Button>}
-            {user.socials?.linkedin && <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-5 h-5 mr-2" />LinkedIn</a></Button>}
-            {user.socials?.twitter && <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-5 h-5 mr-2" />Twitter</a></Button>}
+            {user.socials?.map(social => (
+                <React.Fragment key={social.platform}>
+                    {getSocialButton(social.platform, social.url)}
+                </React.Fragment>
+            ))}
             {user.email && <Button variant="link" className="text-gray-300 hover:text-white" asChild><a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-5 h-5 mr-2" />Email</a></Button>}
           </div>
         </header>

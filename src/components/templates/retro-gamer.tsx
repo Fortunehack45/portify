@@ -10,6 +10,16 @@ interface TemplateProps {
 }
 
 const TimelineStyle: React.FC<TemplateProps> = ({ user, projects }) => {
+
+    const getSocialIcon = (platform: string) => {
+        switch (platform) {
+            case 'github': return <Github className="w-4 h-4" />;
+            case 'linkedin': return <Linkedin className="w-4 h-4" />;
+            case 'twitter': return <Twitter className="w-4 h-4" />;
+            default: return <LinkIcon className="w-4 h-4" />;
+        }
+    }
+
   return (
     <div className="font-mono bg-gray-100 text-gray-800 min-h-screen">
       <header className="bg-white border-b-4 border-gray-800 py-12">
@@ -18,9 +28,13 @@ const TimelineStyle: React.FC<TemplateProps> = ({ user, projects }) => {
           <p className="text-lg text-gray-600 mt-2">@{user.username}</p>
           <p className="mt-4 text-gray-700 max-w-2xl mx-auto">{user.bio}</p>
           <div className="flex justify-center gap-4 mt-6">
-            {user.socials?.github && <Button variant="outline" size="sm" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-4 h-4" /></a></Button>}
-            {user.socials?.linkedin && <Button variant="outline" size="sm" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-4 h-4" /></a></Button>}
-            {user.socials?.twitter && <Button variant="outline" size="sm" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-4 h-4" /></a></Button>}
+            {user.socials?.map(social => (
+                <Button key={social.platform} variant="outline" size="sm" asChild>
+                    <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                        {getSocialIcon(social.platform)}
+                    </a>
+                </Button>
+            ))}
           </div>
         </div>
       </header>

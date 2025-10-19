@@ -9,6 +9,15 @@ interface TemplateProps {
 }
 
 const ElegantSerif: React.FC<TemplateProps> = ({ user, projects }) => {
+    const getSocialIcon = (platform: string) => {
+        switch (platform) {
+            case 'github': return <Github className="w-5 h-5 text-gray-500 hover:text-gray-800" />;
+            case 'linkedin': return <Linkedin className="w-5 h-5 text-gray-500 hover:text-gray-800" />;
+            case 'twitter': return <Twitter className="w-5 h-5 text-gray-500 hover:text-gray-800" />;
+            default: return <LinkIcon className="w-5 h-5 text-gray-500 hover:text-gray-800" />;
+        }
+    }
+
   return (
     <div style={{ fontFamily: "'Lora', serif" }} className="bg-[#fdfcf9] text-[#3d3d3d] min-h-screen">
       <main className="container mx-auto px-4 py-16 md:py-24 max-w-3xl">
@@ -17,9 +26,13 @@ const ElegantSerif: React.FC<TemplateProps> = ({ user, projects }) => {
           <p className="text-lg text-gray-500 mt-4">@{user.username}</p>
           <p className="mt-6 text-lg max-w-2xl mx-auto leading-relaxed">{user.bio}</p>
           <div className="flex justify-center gap-2 mt-6">
-            {user.socials?.github && <Button variant="ghost" size="icon" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-5 h-5 text-gray-500 hover:text-gray-800" /></a></Button>}
-            {user.socials?.linkedin && <Button variant="ghost" size="icon" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-5 h-5 text-gray-500 hover:text-gray-800" /></a></Button>}
-            {user.socials?.twitter && <Button variant="ghost" size="icon" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-5 h-5 text-gray-500 hover:text-gray-800" /></a></Button>}
+            {user.socials?.map(social => (
+                <Button key={social.platform} variant="ghost" size="icon" asChild>
+                    <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                        {getSocialIcon(social.platform)}
+                    </a>
+                </Button>
+            ))}
             {user.email && <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-5 h-5 text-gray-500 hover:text-gray-800" /></a></Button>}
           </div>
         </header>

@@ -80,7 +80,7 @@ export default function DashboardClient({
     try {
       // Save user profile
       const userDocRef = doc(firestore, 'users', authUser.uid);
-      const userData: Partial<User> = {
+      const userData: User = {
         ...user,
         selectedTemplate: selectedTemplate,
         updatedAt: new Date(),

@@ -12,12 +12,12 @@ export type Project = {
   updatedAt: Date | Timestamp;
 };
 
-export type Socials = {
-  github?: string;
-  linkedin?: string;
-  twitter?: string;
-  website?: string;
-}
+export type SocialPlatform = 'github' | 'linkedin' | 'twitter' | 'website';
+
+export type Social = {
+  platform: SocialPlatform;
+  url: string;
+};
 
 export type User = {
   id: string;
@@ -26,7 +26,7 @@ export type User = {
   email: string;
   bio: string;
   skills: string[];
-  socials?: Socials;
+  socials: Social[];
   selectedTemplate: Template;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;

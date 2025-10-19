@@ -1,21 +1,39 @@
 'use client';
 
-import { User, Socials } from '@/types';
+import { User, Social, SocialPlatform } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '../ui/badge';
-import { X, Github, Linkedin, Twitter, Link as LinkIcon } from 'lucide-react';
+import { X, Github, Linkedin, Twitter, Link as LinkIcon, Plus } from 'lucide-react';
 import React, { useState } from 'react';
+import { Button } from '../ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../ui/select';
 
 interface ProfileFormProps {
   user: User;
   onUserChange: (updatedUser: Partial<User>) => void;
 }
 
+const socialIcons: Record<SocialPlatform, React.ElementType> = {
+  github: Github,
+  linkedin: Linkedin,
+  twitter: Twitter,
+  website: LinkIcon,
+};
+
+const socialOptions: {value: SocialPlatform, label: string}[] = [
+    { value: 'github', label: 'GitHub' },
+    { value: 'linkedin', label: 'LinkedIn' },
+    { value: 'twitter', label: 'Twitter / X' },
+    { value: 'website', label: 'Website' },
+]
+
 export default function ProfileForm({ user, onUserChange }: ProfileFormProps) {
   const [skillInput, setSkillInput] = useState('');
+  const [newSocialPlatform, setNewSocialPlatform] = useState<SocialPlatform | ''>('');
+  const [newSocialUrl, setNewSocialUrl] = useState('');
 
   const handleSkillKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter' && skillInput.trim() !== '') {
@@ -30,9 +48,28 @@ export default function ProfileForm({ user, onUserChange }: ProfileFormProps) {
   const removeSkill = (skillToRemove: string) => {
     onUserChange({ skills: user.skills.filter(skill => skill !== skillToRemove) });
   };
+  
+  const handleAddSocial = () => {
+    if (newSocialPlatform && newSocialUrl.trim() !== '') {
+        const existingSocial = user.socials?.find(s => s.platform === newSocialPlatform);
+        if (existingSocial) {
+            // Update existing social link
+            const updatedSocials = user.socials.map(s => 
+                s.platform === newSocialPlatform ? { ...s, url: newSocialUrl } : s
+            );
+            onUserChange({ socials: updatedSocials });
+        } else {
+            // Add new social link
+             const newSocial: Social = { platform: newSocialPlatform, url: newSocialUrl };
+             onUserChange({ socials: [...(user.socials || []), newSocial] });
+        }
+        setNewSocialPlatform('');
+        setNewSocialUrl('');
+    }
+  }
 
-  const handleSocialChange = (field: keyof Socials, value: string) => {
-    onUserChange({ socials: { ...user.socials, [field]: value } });
+  const handleRemoveSocial = (platform: SocialPlatform) => {
+    onUserChange({ socials: user.socials?.filter(s => s.platform !== platform) });
   };
   
   return (
@@ -81,33 +118,52 @@ export default function ProfileForm({ user, onUserChange }: ProfileFormProps) {
               <Label>Social Links</Label>
               <p className="text-sm text-muted-foreground">Add links to your social profiles.</p>
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="github">GitHub</Label>
-                <div className="relative">
-                    <Github className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="github" className="pl-9" placeholder="https://github.com/username" value={user.socials?.github || ''} onChange={(e) => handleSocialChange('github', e.target.value)} />
-                </div>
+            <div className="space-y-3">
+                {user.socials?.map((social) => {
+                    const Icon = socialIcons[social.platform];
+                    return (
+                        <div key={social.platform} className="flex items-center gap-2">
+                           <Icon className="h-5 w-5 text-muted-foreground" />
+                           <Input 
+                             value={social.url}
+                             onChange={(e) => {
+                                const updatedSocials = user.socials.map(s => 
+                                    s.platform === social.platform ? { ...s, url: e.target.value } : s
+                                );
+                                onUserChange({ socials: updatedSocials });
+                             }}
+                             className="flex-1"
+                           />
+                           <Button variant="ghost" size="icon" onClick={() => handleRemoveSocial(social.platform)}>
+                                <X className="h-4 w-4" />
+                           </Button>
+                        </div>
+                    )
+                })}
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="linkedin">LinkedIn</Label>
-                <div className="relative">
-                    <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="linkedin" className="pl-9" placeholder="https://linkedin.com/in/username" value={user.socials?.linkedin || ''} onChange={(e) => handleSocialChange('linkedin', e.target.value)} />
+             <div className="flex items-center gap-2 pt-2">
+                <div className="grid grid-cols-2 gap-2 flex-1">
+                    <Select value={newSocialPlatform} onValueChange={(v) => setNewSocialPlatform(v as SocialPlatform)}>
+                        <SelectTrigger>
+                            <SelectValue placeholder="Select platform" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {socialOptions.map(opt => (
+                                <SelectItem key={opt.value} value={opt.value} disabled={user.socials?.some(s => s.platform === opt.value)}>
+                                    {opt.label}
+                                </SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                    <Input 
+                        placeholder="URL"
+                        value={newSocialUrl}
+                        onChange={(e) => setNewSocialUrl(e.target.value)}
+                    />
                 </div>
-            </div>
-            <div className="space-y-2">
-                <Label htmlFor="twitter">Twitter / X</Label>
-                <div className="relative">
-                    <Twitter className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="twitter" className="pl-9" placeholder="https://twitter.com/username" value={user.socials?.twitter || ''} onChange={(e) => handleSocialChange('twitter', e.target.value)} />
-                </div>
-            </div>
-             <div className="space-y-2">
-                <Label htmlFor="website">Website</Label>
-                <div className="relative">
-                    <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input id="website" className="pl-9" placeholder="https://your-website.com" value={user.socials?.website || ''} onChange={(e) => handleSocialChange('website', e.target.value)} />
-                </div>
+                 <Button onClick={handleAddSocial} disabled={!newSocialPlatform || !newSocialUrl}>
+                    <Plus className="mr-2 h-4 w-4" /> Add
+                </Button>
             </div>
         </div>
       </CardContent>

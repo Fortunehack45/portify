@@ -14,6 +14,15 @@ const ModernDark: React.FC<TemplateProps> = ({ user, projects }) => {
   const accentBorder = 'border-cyan-400';
   const accentBg = 'bg-cyan-400';
 
+    const getSocialIcon = (platform: string) => {
+        switch (platform) {
+            case 'github': return <Github className="w-5 h-5 text-gray-400 hover:text-cyan-400" />;
+            case 'linkedin': return <Linkedin className="w-5 h-5 text-gray-400 hover:text-cyan-400" />;
+            case 'twitter': return <Twitter className="w-5 h-5 text-gray-400 hover:text-cyan-400" />;
+            default: return <LinkIcon className="w-5 h-5 text-gray-400 hover:text-cyan-400" />;
+        }
+    }
+
   return (
     <div className="font-body bg-[#101010] text-gray-300 min-h-screen">
       <main className="container mx-auto px-4 py-12 md:py-20 max-w-5xl">
@@ -24,10 +33,13 @@ const ModernDark: React.FC<TemplateProps> = ({ user, projects }) => {
           <p className="text-xl text-gray-400 mt-3">@{user.username}</p>
           <p className="mt-6 text-lg max-w-3xl mx-auto">{user.bio}</p>
           <div className="flex justify-center gap-2 mt-6">
-            {user.socials?.github && <Button variant="ghost" size="icon" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-5 h-5 text-gray-400 hover:text-cyan-400" /></a></Button>}
-            {user.socials?.linkedin && <Button variant="ghost" size="icon" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-5 h-5 text-gray-400 hover:text-cyan-400" /></a></Button>}
-            {user.socials?.twitter && <Button variant="ghost" size="icon" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-5 h-5 text-gray-400 hover:text-cyan-400" /></a></Button>}
-            {user.socials?.website && <Button variant="ghost" size="icon" asChild><a href={user.socials.website} target="_blank" rel="noopener noreferrer" aria-label="Website"><LinkIcon className="w-5 h-5 text-gray-400 hover:text-cyan-400" /></a></Button>}
+            {user.socials?.map(social => (
+                <Button key={social.platform} variant="ghost" size="icon" asChild>
+                    <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                        {getSocialIcon(social.platform)}
+                    </a>
+                </Button>
+            ))}
             {user.email && <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-5 h-5 text-gray-400 hover:text-cyan-400" /></a></Button>}
           </div>
         </header>

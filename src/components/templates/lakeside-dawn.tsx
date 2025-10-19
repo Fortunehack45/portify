@@ -11,6 +11,15 @@ interface TemplateProps {
 }
 
 const SplitHero: React.FC<TemplateProps> = ({ user, projects }) => {
+    const getSocialIcon = (platform: string) => {
+        switch (platform) {
+            case 'github': return <Github className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
+            case 'linkedin': return <Linkedin className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
+            case 'twitter': return <Twitter className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
+            default: return <LinkIcon className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
+        }
+    }
+
   return (
     <div className="font-body bg-white text-gray-800 min-h-screen">
       {/* Hero Section */}
@@ -22,9 +31,13 @@ const SplitHero: React.FC<TemplateProps> = ({ user, projects }) => {
               <p className="text-lg text-gray-600 mt-2">@{user.username}</p>
               <p className="mt-6 text-lg max-w-xl">{user.bio}</p>
               <div className="flex gap-2 mt-6">
-                {user.socials?.github && <Button variant="ghost" size="icon" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer"><Github className="w-6 h-6 text-gray-600 hover:text-gray-900" /></a></Button>}
-                {user.socials?.linkedin && <Button variant="ghost" size="icon" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin className="w-6 h-6 text-gray-600 hover:text-gray-900" /></a></Button>}
-                {user.socials?.twitter && <Button variant="ghost" size="icon" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="w-6 h-6 text-gray-600 hover:text-gray-900" /></a></Button>}
+                {user.socials?.map(social => (
+                    <Button key={social.platform} variant="ghost" size="icon" asChild>
+                        <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                            {getSocialIcon(social.platform)}
+                        </a>
+                    </Button>
+                ))}
                 {user.email && <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`}><Mail className="w-6 h-6 text-gray-600 hover:text-gray-900" /></a></Button>}
               </div>
             </div>

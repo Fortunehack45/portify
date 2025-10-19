@@ -10,6 +10,16 @@ interface TemplateProps {
 }
 
 const SidebarProfile: React.FC<TemplateProps> = ({ user, projects }) => {
+
+    const getSocialIcon = (platform: string) => {
+        switch (platform) {
+            case 'github': return <Github className="w-5 h-5 text-gray-500 hover:text-gray-900" />;
+            case 'linkedin': return <Linkedin className="w-5 h-5 text-gray-500 hover:text-gray-900" />;
+            case 'twitter': return <Twitter className="w-5 h-5 text-gray-500 hover:text-gray-900" />;
+            default: return <LinkIcon className="w-5 h-5 text-gray-500 hover:text-gray-900" />;
+        }
+    }
+
   return (
     <div className="flex min-h-screen font-body bg-gray-100 text-gray-800">
       {/* Sidebar */}
@@ -30,10 +40,11 @@ const SidebarProfile: React.FC<TemplateProps> = ({ user, projects }) => {
         </div>
         <div className="flex-shrink-0 pt-6">
             <div className="flex flex-wrap gap-x-4 gap-y-2">
-                {user.socials?.github && <a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-5 h-5 text-gray-500 hover:text-gray-900" /></a>}
-                {user.socials?.linkedin && <a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-5 h-5 text-gray-500 hover:text-gray-900" /></a>}
-                {user.socials?.twitter && <a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-5 h-5 text-gray-500 hover:text-gray-900" /></a>}
-                {user.socials?.website && <a href={user.socials.website} target="_blank" rel="noopener noreferrer" aria-label="Website"><LinkIcon className="w-5 h-5 text-gray-500 hover:text-gray-900" /></a>}
+                {user.socials?.map(social => (
+                    <a key={social.platform} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                        {getSocialIcon(social.platform)}
+                    </a>
+                ))}
                 {user.email && <a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-5 h-5 text-gray-500 hover:text-gray-900" /></a>}
             </div>
             <p className="text-xs text-gray-400 mt-4">Made with FolioForge</p>

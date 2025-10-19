@@ -10,6 +10,16 @@ interface TemplateProps {
 }
 
 const ProfessionalBlue: React.FC<TemplateProps> = ({ user, projects }) => {
+
+    const getSocialIcon = (platform: string) => {
+        switch (platform) {
+            case 'github': return <Github className="w-5 h-5" />;
+            case 'linkedin': return <Linkedin className="w-5 h-5" />;
+            case 'twitter': return <Twitter className="w-5 h-5" />;
+            default: return <LinkIcon className="w-5 h-5" />;
+        }
+    }
+
   return (
     <div className="font-body bg-slate-50 text-slate-800 min-h-screen">
       <header className="bg-slate-800 text-white">
@@ -17,10 +27,13 @@ const ProfessionalBlue: React.FC<TemplateProps> = ({ user, projects }) => {
           <h1 className="text-5xl md:text-6xl font-bold font-headline">{user.name}</h1>
           <p className="text-xl text-slate-300 mt-2">@{user.username}</p>
           <div className="flex justify-center md:justify-start gap-2 mt-4">
-            {user.socials?.github && <Button variant="ghost" className="text-slate-300 hover:bg-slate-700 hover:text-white" size="icon" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-5 h-5" /></a></Button>}
-            {user.socials?.linkedin && <Button variant="ghost" className="text-slate-300 hover:bg-slate-700 hover:text-white" size="icon" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-5 h-5" /></a></Button>}
-            {user.socials?.twitter && <Button variant="ghost" className="text-slate-300 hover:bg-slate-700 hover:text-white" size="icon" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-5 h-5" /></a></Button>}
-            {user.socials?.website && <Button variant="ghost" className="text-slate-300 hover:bg-slate-700 hover:text-white" size="icon" asChild><a href={user.socials.website} target="_blank" rel="noopener noreferrer" aria-label="Website"><LinkIcon className="w-5 h-5" /></a></Button>}
+            {user.socials?.map(social => (
+                <Button key={social.platform} variant="ghost" className="text-slate-300 hover:bg-slate-700 hover:text-white" size="icon" asChild>
+                    <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                        {getSocialIcon(social.platform)}
+                    </a>
+                </Button>
+            ))}
             {user.email && <Button variant="ghost" className="text-slate-300 hover:bg-slate-700 hover:text-white" size="icon" asChild><a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-5 h-5" /></a></Button>}
           </div>
         </div>

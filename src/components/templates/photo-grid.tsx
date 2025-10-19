@@ -20,6 +20,16 @@ const OnePageScroll: React.FC<TemplateProps> = ({ user, projects }) => {
         }
     }, [])
 
+    const getSocialIcon = (platform: string) => {
+        switch (platform) {
+            case 'github': return <Github className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
+            case 'linkedin': return <Linkedin className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
+            case 'twitter': return <Twitter className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
+            default: return <LinkIcon className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
+        }
+    }
+
+
   return (
     <div className="font-body bg-gray-900 text-white min-h-screen">
       <header className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-sm">
@@ -41,9 +51,13 @@ const OnePageScroll: React.FC<TemplateProps> = ({ user, projects }) => {
             <p className="text-xl text-gray-400 mt-2">@{user.username}</p>
             <p className="mt-8 text-lg text-gray-300 leading-relaxed">{user.bio}</p>
             <div className="flex justify-center gap-2 mt-8">
-              {user.socials?.github && <Button variant="ghost" size="icon" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer"><Github className="w-6 h-6 text-gray-400 hover:text-blue-400" /></a></Button>}
-              {user.socials?.linkedin && <Button variant="ghost" size="icon" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer"><Linkedin className="w-6 h-6 text-gray-400 hover:text-blue-400" /></a></Button>}
-              {user.socials?.twitter && <Button variant="ghost" size="icon" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer"><Twitter className="w-6 h-6 text-gray-400 hover:text-blue-400" /></a></Button>}
+              {user.socials?.map(social => (
+                  <Button key={social.platform} variant="ghost" size="icon" asChild>
+                      <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                          {getSocialIcon(social.platform)}
+                      </a>
+                  </Button>
+              ))}
               {user.email && <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`}><Mail className="w-6 h-6 text-gray-400 hover:text-blue-400" /></a></Button>}
             </div>
           </div>

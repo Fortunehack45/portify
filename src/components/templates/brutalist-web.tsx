@@ -11,6 +11,15 @@ interface TemplateProps {
 }
 
 const CardGrid: React.FC<TemplateProps> = ({ user, projects }) => {
+  const getSocialIcon = (platform: string) => {
+    switch (platform) {
+      case 'github': return <Github className="w-5 h-5" />;
+      case 'linkedin': return <Linkedin className="w-5 h-5" />;
+      case 'twitter': return <Twitter className="w-5 h-5" />;
+      default: return <LinkIcon className="w-5 h-5" />;
+    }
+  }
+
   return (
     <div className="font-body bg-gray-100 text-gray-800 min-h-screen p-4 sm:p-6 md:p-8">
       <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 max-w-7xl mx-auto">
@@ -23,9 +32,13 @@ const CardGrid: React.FC<TemplateProps> = ({ user, projects }) => {
             <p className="text-md text-gray-600 mb-4">@{user.username}</p>
             <p className="mb-6">{user.bio}</p>
             <div className="flex flex-wrap gap-2">
-              {user.socials?.github && <Button variant="outline" className="rounded-none border-2 border-black" size="icon" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-5 h-5" /></a></Button>}
-              {user.socials?.linkedin && <Button variant="outline" className="rounded-none border-2 border-black" size="icon" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-5 h-5" /></a></Button>}
-              {user.socials?.twitter && <Button variant="outline" className="rounded-none border-2 border-black" size="icon" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-5 h-5" /></a></Button>}
+              {user.socials?.map(social => (
+                  <Button key={social.platform} variant="outline" className="rounded-none border-2 border-black" size="icon" asChild>
+                      <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
+                          {getSocialIcon(social.platform)}
+                      </a>
+                  </Button>
+              ))}
               {user.email && <Button variant="outline" className="rounded-none border-2 border-black" size="icon" asChild><a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-5 h-5" /></a></Button>}
             </div>
           </CardContent>
