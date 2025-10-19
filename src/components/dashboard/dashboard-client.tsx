@@ -15,7 +15,7 @@ import ProjectsList from './projects-list';
 import ThemeSelector from './theme-selector';
 import PreviewPanel from './preview-panel';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
-import { doc, setDoc, serverTimestamp, collection, addDoc, updateDoc } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 
 interface DashboardClientProps {
