@@ -1,74 +1,60 @@
 'use client';
-
-import DashboardClient from '@/components/dashboard/dashboard-client';
-import { useUser, useCollection, useFirestore } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
-import type { User, Project } from '@/types';
-import { useEffect, useState, useMemo } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useUser } from '@/firebase';
+import { ArrowRight, Edit, Eye, PlusCircle } from 'lucide-react';
+import Link from 'next/link';
 
 export default function DashboardPage() {
-  const { user, loading: userLoading } = useUser();
-  const firestore = useFirestore();
+  const { user } = useUser();
 
-  const [initialUser, setInitialUser] = useState<User | null>(null);
-  const [initialProjects, setInitialProjects] = useState<Project[]>([]);
-  
-  // Memoize the query for projects to prevent re-renders.
-  const projectsQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'projects'), where('userId', '==', user.uid));
-  }, [firestore, user]);
-      
-  const { data: projects, loading: projectsLoading } = useCollection<Project>(
-    projectsQuery
+  const username = user?.displayName?.replace(/\s+/g, '').toLowerCase() || 'preview';
+
+  return (
+    <div className="p-4 md:p-6 space-y-6">
+       <div className="space-y-1">
+         <h1 className="text-2xl font-bold font-headline">Dashboard</h1>
+         <p className="text-muted-foreground">Welcome back, {user?.displayName || 'User'}!</p>
+       </div>
+
+      <Card className="shadow-md">
+        <CardHeader>
+          <CardTitle>Your Portfolio</CardTitle>
+          <CardDescription>
+            This is your main portfolio. Continue editing or view the public version.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between rounded-lg border p-3">
+              <span className="font-medium text-sm sm:text-base">FolioForge Portfolio</span>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" asChild>
+                    <Link href="/dashboard/editor">
+                        <Edit className="mr-2 h-4 w-4" /> Edit
+                    </Link>
+                </Button>
+                <Button size="sm" asChild>
+                    <Link href={`/${username}`} target="_blank">
+                        View <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
+              </div>
+          </div>
+           <p className="text-xs text-muted-foreground">
+              Your public portfolio is live at: <Link href={`/${username}`} className="underline font-medium" target='_blank'>{`/${username}`}</Link>
+          </p>
+        </CardContent>
+      </Card>
+
+      <Card className="bg-muted/30 border-dashed">
+         <CardContent className="p-6 flex flex-col items-center justify-center text-center">
+            <Button variant="ghost" disabled>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create New Portfolio
+            </Button>
+            <p className="text-xs text-muted-foreground mt-2">Multiple portfolios coming soon!</p>
+         </CardContent>
+      </Card>
+    </div>
   );
-
-  // Memoize the query for the user profile to prevent re-renders.
-  const userProfileQuery = useMemo(() => {
-    if (!firestore || !user) return null;
-    return query(collection(firestore, 'users'), where('id', '==', user.uid))
-  }, [firestore, user]);
-
-  const { data: userProfile, loading: profileLoading } = useCollection<User>(userProfileQuery);
-
-  useEffect(() => {
-    if (userProfile && userProfile.length > 0) {
-      setInitialUser(userProfile[0]);
-    } else if (user && !profileLoading && (!userProfile || userProfile.length === 0)) {
-        // This is a fallback if the user profile is not in the collection yet.
-        // This can happen on first sign up.
-        setInitialUser({
-          id: user.uid,
-          email: user.email || '',
-          name: user.displayName || 'New User',
-          username: user.displayName?.replace(/\s+/g, '').toLowerCase() || 'newuser',
-          bio: '',
-          skills: [],
-          socials: [],
-          selectedTemplate: 'minimal-light',
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })
-    }
-  }, [user, userProfile, profileLoading]);
-
-  useEffect(() => {
-    if (projects) {
-      // The dates will be Firebase Timestamps, convert them to JS Dates
-      const formattedProjects = projects.map(p => ({
-        ...p,
-        createdAt: p.createdAt,
-        updatedAt: p.updatedAt,
-      }));
-      setInitialProjects(formattedProjects);
-    }
-  }, [projects]);
-  
-  const isLoading = userLoading || projectsLoading || profileLoading || !initialUser;
-
-  if (isLoading) {
-    return <div className="flex items-center justify-center h-screen">Loading dashboard...</div>;
-  }
-
-  return <DashboardClient initialUser={initialUser as User} initialProjects={initialProjects} />;
 }

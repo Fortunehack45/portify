@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Github, Chrome } from 'lucide-react';
+import { Chrome, Github } from 'lucide-react';
 import { useState } from "react";
 import { signInWithEmail } from "@/firebase/auth/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -42,17 +42,17 @@ export default function LoginPage() {
   };
 
   return (
-    <Card className="mx-auto max-w-sm w-full">
-      <CardHeader>
-        <CardTitle className="text-2xl font-headline">Login</CardTitle>
-        <CardDescription>
-          Enter your email below to login to your account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleLogin}>
-          <div className="grid gap-4">
-            <div className="grid gap-2">
+    <div className="w-full max-w-md p-6">
+      <Card className="w-full border-0 shadow-none sm:border sm:shadow-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-headline">Welcome Back</CardTitle>
+          <CardDescription>
+            Enter your credentials to access your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleLogin} className="space-y-4">
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -61,13 +61,14 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-12 text-base"
               />
             </div>
-            <div className="grid gap-2">
-              <div className="flex items-center">
+            <div className="space-y-2">
+               <div className="flex items-center justify-between">
                 <Label htmlFor="password">Password</Label>
-                <Link href="#" className="ml-auto inline-block text-sm underline">
-                  Forgot your password?
+                <Link href="#" className="text-sm font-medium text-primary hover:underline">
+                  Forgot password?
                 </Link>
               </div>
               <Input 
@@ -76,12 +77,14 @@ export default function LoginPage() {
                 required 
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="h-12 text-base"
               />
             </div>
-            <Button type="submit" className="w-full">
-              Login
+            <Button type="submit" className="w-full h-12 text-base font-semibold">
+              Log In
             </Button>
-            <div className="relative">
+          </form>
+           <div className="relative my-6">
               <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
               </div>
@@ -91,25 +94,24 @@ export default function LoginPage() {
                   </span>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" disabled>
-                <Github className="mr-2 h-4 w-4" />
+             <div className="grid grid-cols-2 gap-4">
+              <Button variant="outline" className="h-11" disabled>
+                <Github className="mr-2 h-5 w-5" />
                 GitHub
               </Button>
-              <Button variant="outline" disabled>
-                <Chrome className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="h-11" disabled>
+                <Chrome className="mr-2 h-5 w-5" />
                 Google
               </Button>
             </div>
+          <div className="mt-6 text-center text-sm">
+            Don't have an account?{" "}
+            <Link href="/signup" className="font-semibold text-primary hover:underline">
+              Sign up
+            </Link>
           </div>
-        </form>
-        <div className="mt-4 text-center text-sm">
-          Don&apos;t have an account?{" "}
-          <Link href="/signup" className="underline">
-            Sign up
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

@@ -20,7 +20,7 @@ import { useRouter } from "next/navigation";
 export default function SignupPage() {
   const [name, setName] = useState('');
   const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
+  const [email, setEmail] உருவாக்கப்பட்டது('');
   const [password, setPassword] = useState('');
   const { toast } = useToast();
   const router = useRouter();
@@ -44,18 +44,18 @@ export default function SignupPage() {
   };
 
   return (
-    <Card className="mx-auto max-w-sm w-full">
-      <CardHeader>
-        <CardTitle className="text-xl font-headline">Sign Up</CardTitle>
-        <CardDescription>
-          Enter your information to create an account
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSignup}>
-          <div className="grid gap-4">
+     <div className="w-full max-w-md p-6">
+      <Card className="w-full border-0 shadow-none sm:border sm:shadow-sm">
+        <CardHeader className="text-center">
+          <CardTitle className="text-3xl font-headline">Create an Account</CardTitle>
+          <CardDescription>
+            Join FolioForge and start building your portfolio.
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <form onSubmit={handleSignup} className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 <Label htmlFor="name">Name</Label>
                 <Input 
                   id="name" 
@@ -63,9 +63,10 @@ export default function SignupPage() {
                   required 
                   value={name}
                   onChange={(e) => setName(e.target.value)}
+                  className="h-12"
                 />
               </div>
-              <div className="grid gap-2">
+              <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
                 <Input 
                   id="username" 
@@ -73,10 +74,11 @@ export default function SignupPage() {
                   required 
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
+                   className="h-12"
                 />
               </div>
             </div>
-            <div className="grid gap-2">
+            <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input
                 id="email"
@@ -85,9 +87,10 @@ export default function SignupPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                className="h-12"
               />
             </div>
-            <div className="grid gap-2">
+            <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input 
                 id="password" 
@@ -95,12 +98,13 @@ export default function SignupPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                className="h-12"
               />
             </div>
-            <Button type="submit" className="w-full">
-              Create an account
+            <Button type="submit" className="w-full h-12 text-base font-semibold">
+              Create Account
             </Button>
-            <div className="relative">
+            <div className="relative my-4">
               <div className="absolute inset-0 flex items-center">
                   <span className="w-full border-t" />
               </div>
@@ -111,24 +115,24 @@ export default function SignupPage() {
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" disabled>
-                <Github className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="h-11" disabled>
+                <Github className="mr-2 h-5 w-5" />
                 GitHub
               </Button>
-              <Button variant="outline" disabled>
-                <Chrome className="mr-2 h-4 w-4" />
+              <Button variant="outline" className="h-11" disabled>
+                <Chrome className="mr-2 h-5 w-5" />
                 Google
               </Button>
             </div>
+          </form>
+          <div className="mt-6 text-center text-sm">
+            Already have an account?{" "}
+            <Link href="/login" className="font-semibold text-primary hover:underline">
+              Log in
+            </Link>
           </div>
-        </form>
-        <div className="mt-4 text-center text-sm">
-          Already have an account?{" "}
-          <Link href="/login" className="underline">
-            Log in
-          </Link>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </div>
   )
 }

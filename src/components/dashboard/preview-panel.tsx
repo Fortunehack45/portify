@@ -3,7 +3,6 @@
 import { User, Project } from '@/types';
 import TemplateRenderer from '../templates/template-renderer';
 import { Frame } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 interface PreviewPanelProps {
   user: User;

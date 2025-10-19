@@ -7,22 +7,76 @@
       "imageHint": "code abstract"
     },
     {
-      "id": "avatar1",
-      "description": "Placeholder for a user avatar.",
-      "imageUrl": "https://images.unsplash.com/photo-1521119989659-a83eee488004?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8cGVyc29uJTIwcG9ydHJhaXR8ZW58MHx8fHwxNzYwODI1MzY2fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "person portrait"
+      "id": "template-minimal-light",
+      "description": "Preview of Minimal Light template",
+      "imageUrl": "https://images.unsplash.com/photo-1704788460536-c15da1e960d4?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxtaW5pbWFsJTIwbGlnaHR8ZW58MHx8fHwxNzYwOTE3NTQyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "minimal light"
     },
     {
-      "id": "project1",
-      "description": "Placeholder for project image 1",
-      "imageUrl": "https://images.unsplash.com/photo-1451187580459-43490279c0fa?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwyfHx0ZWNobm9sb2d5JTIwYWJzdHJhY3R8ZW58MHx8fHwxNzYwODMzNDg5fDA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "technology abstract"
+      "id": "template-modern-dark",
+      "description": "Preview of Modern Dark template",
+      "imageUrl": "https://images.unsplash.com/photo-1484319316611-467ad82fa3ac?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bW9kZXJuJTIwZGFya3xlbnwwfHx8fDE3NjA5MTc1NDN8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "modern dark"
     },
     {
-      "id": "project2",
-      "description": "Placeholder for project image 2",
-      "imageUrl": "https://images.unsplash.com/photo-1644088379091-d574269d422f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxkYXRhJTIwdmlzdWFsaXphdGlvbnxlbnwwfHx8fDE3NjA4NTA4MDh8MA&ixlib=rb-4.1.0&q=80&w=1080",
-      "imageHint": "data visualization"
+      "id": "template-professional-blue",
+      "description": "Preview of Professional Blue template",
+      "imageUrl": "https://images.unsplash.com/photo-1618591552964-837a5a315fb2?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxwcm9mZXNzaW9uYWwlMjBibHVlfGVufDB8fHx8MTc2MDkxNzU0Mnww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "professional blue"
+    },
+    {
+      "id": "template-retro-gamer",
+      "description": "Preview of Retro Gamer template",
+      "imageUrl": "https://images.unsplash.com/photo-1720855101081-2f0933765993?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw2fHxyZXRybyUyMGdhbWVyfGVufDB8fHx8MTc2MDkxNzU0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "retro gamer"
+    },
+    {
+      "id": "template-brutalist-web",
+      "description": "Preview of Brutalist Web template",
+      "imageUrl": "https://images.unsplash.com/photo-1701524252047-a3f0c8154d97?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxicnV0YWxpc3QlMjB3ZWJ8ZW58MHx8fHwxNzYwOTE3NTQzfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "brutalist web"
+    },
+    {
+      "id": "template-cyberpunk-neon",
+      "description": "Preview of Cyberpunk Neon template",
+      "imageUrl": "https://images.unsplash.com/photo-1623002126996-a38b8a41f4f3?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxjeWJlcnB1bmslMjBuZW9ufGVufDB8fHx8MTc2MDg5NzkxMXww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cyberpunk neon"
+    },
+    {
+      "id": "template-elegant-serif",
+      "description": "Preview of Elegant Serif template",
+      "imageUrl": "https://images.unsplash.com/photo-1642957931079-d743111ead08?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxlbGVnYW50JTIwc2VyaWZ8ZW58MHx8fHwxNzYwOTE3NTQyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "elegant serif"
+    },
+    {
+      "id": "template-cosmic-dream",
+      "description": "Preview of Cosmic Dream template",
+      "imageUrl": "https://images.unsplash.com/photo-1505521272875-d5f5e1b54f1f?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8Y29zbWljJTIwZHJlYW18ZW58MHx8fHwxNzYwOTE3NTQyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "cosmic dream"
+    },
+    {
+      "id": "template-hacker-terminal",
+      "description": "Preview of Hacker Terminal template",
+      "imageUrl": "https://images.unsplash.com/photo-1714846201670-1c5721196c7a?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw0fHxoYWNrZXIlMjB0ZXJtaW5hbHxlbnwwfHx8fDE3NjA5MTc1NDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "hacker terminal"
+    },
+    {
+      "id": "template-craftsman-paper",
+      "description": "Preview of Craftsman Paper template",
+      "imageUrl": "https://images.unsplash.com/photo-1505308509987-f7f783ebabfc?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxfHxjcmFmdHNtYW4lMjBwYXBlcnxlbnwwfHx8fDE3NjA5MTc1NDJ8MA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "craftsman paper"
+    },
+    {
+      "id": "template-photo-grid",
+      "description": "Preview of Photo Grid template",
+      "imageUrl": "https://images.unsplash.com/photo-1544325718-488a5064cfeb?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHw3fHxwaG90byUyMGdyaWR8ZW58MHx8fHwxNzYwOTE3NTQyfDA&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "photo grid"
+    },
+    {
+      "id": "template-lakeside-dawn",
+      "description": "Preview of Lakeside Dawn template",
+      "imageUrl": "https://images.unsplash.com/photo-1552912809-d6517611a362?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3NDE5ODJ8MHwxfHNlYXJjaHwxMHx8bGFrZXNpZGUlMjBkYXdufGVufDB8fHx8MTc2MDkxNzU0M3ww&ixlib=rb-4.1.0&q=80&w=1080",
+      "imageHint": "lakeside dawn"
     }
   ]
 }
