@@ -6,7 +6,7 @@ import ThemeRenderer from '@/components/themes/theme-renderer';
 import { collection, query, where } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import type { User, Project } from '@/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 interface PageProps {
   params: {
@@ -18,29 +18,35 @@ export default function UserPortfolioPage({ params }: PageProps) {
   const firestore = useFirestore();
   const [user, setUser] = useState<User | null>(null);
 
-  const userQuery = firestore
-    ? query(collection(firestore, 'users'), where('username', '==', params.username))
-    : null;
+  // Memoize the user query to prevent re-fetching on every render
+  const userQuery = useMemo(() => {
+    if (!firestore) return null;
+    return query(collection(firestore, 'users'), where('username', '==', params.username));
+  }, [firestore, params.username]);
 
-  const { data: userData, loading: userLoading } = useCollection<User>(userQuery, { listen: false });
+  const { data: userData, loading: userLoading, error: userError } = useCollection<User>(userQuery, { listen: false });
   
+  // Set user state when data is fetched
   useEffect(() => {
     if (userData && userData.length > 0) {
       setUser(userData[0]);
-    } else if (!userLoading && (!userData || userData.length === 0)) {
-      notFound();
     }
-  }, [userData, userLoading]);
+  }, [userData]);
 
-
-  const projectsQuery =
-    firestore && user
-      ? query(collection(firestore, 'projects'), where('userId', '==', user.id))
-      : null;
+  // Memoize the projects query, depending on the user ID
+  const projectsQuery = useMemo(() => {
+    if (!firestore || !user?.id) return null;
+    return query(collection(firestore, 'projects'), where('userId', '==', user.id));
+  }, [firestore, user?.id]);
       
-  const { data: projects, loading: projectsLoading } = useCollection<Project>(
+  const { data: projects, loading: projectsLoading, error: projectsError } = useCollection<Project>(
     projectsQuery, { listen: false }
   );
+
+  // Handle not found case after user query finishes and finds no user
+  if (!userLoading && !user) {
+    notFound();
+  }
 
   const isLoading = userLoading || projectsLoading || !user || !projects;
 
@@ -48,8 +54,8 @@ export default function UserPortfolioPage({ params }: PageProps) {
     return <div className="flex h-screen w-full items-center justify-center">Loading portfolio...</div>;
   }
   
+  // This check is unlikely to be hit due to the one above, but it's good practice
   if (!user) {
-    // This will be caught by notFound() in useEffect, but as a safeguard.
     return notFound();
   }
   
