@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { CircleUser, Menu, Package2, Search } from "lucide-react";
+import { CircleUser, Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,7 +11,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/icons";
 import { useUser } from "@/firebase";
@@ -51,13 +50,12 @@ export default function DashboardLayout({
   };
   
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
   }
 
   if (!user) {
-    // maybe we can improve this
     router.push('/login');
-    return null;
+    return <div className="flex h-screen w-full items-center justify-center">Redirecting to login...</div>;
   }
 
   return (
@@ -116,8 +114,8 @@ export default function DashboardLayout({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>My Account</DropdownMenuLabel>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Settings</DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
+              <DropdownMenuItem disabled>Settings</DropdownMenuItem>
+              <DropdownMenuItem disabled>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
