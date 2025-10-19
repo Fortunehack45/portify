@@ -2,7 +2,7 @@
 
 import { notFound } from 'next/navigation';
 import { useCollection } from '@/firebase';
-import ThemeRenderer from '@/components/themes/theme-renderer';
+import TemplateRenderer from '@/components/templates/template-renderer';
 import { collection, query, where } from 'firebase/firestore';
 import { useFirestore } from '@/firebase';
 import type { User, Project } from '@/types';
@@ -60,8 +60,8 @@ export default function UserPortfolioPage({ params }: PageProps) {
   }
   
   return (
-    <ThemeRenderer 
-      theme={user.selectedTheme}
+    <TemplateRenderer 
+      template={user.selectedTemplate}
       user={user}
       projects={projects || []}
     />

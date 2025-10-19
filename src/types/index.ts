@@ -27,12 +27,12 @@ export type User = {
   bio: string;
   skills: string[];
   socials?: Socials;
-  selectedTheme: Theme;
+  selectedTemplate: Template;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
 };
 
-export type Theme = 
+export type Template = 
   | 'minimal-light' 
   | 'modern-dark' 
   | 'professional-blue'

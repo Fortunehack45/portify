@@ -45,7 +45,7 @@ export default function DashboardPage() {
           bio: '',
           skills: [],
           socials: {},
-          selectedTheme: 'minimal-light',
+          selectedTemplate: 'minimal-light',
           createdAt: new Date(),
           updatedAt: new Date(),
         })

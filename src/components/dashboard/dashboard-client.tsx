@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { User, Project, Theme } from '@/types';
+import type { User, Project, Template } from '@/types';
 import {
   ResizableHandle,
   ResizablePanel,
@@ -12,7 +12,7 @@ import { Button } from '../ui/button';
 import { Save, Eye, EyeOff } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
-import ThemeSelector from './theme-selector';
+import TemplateSelector from './template-selector';
 import PreviewPanel from './preview-panel';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
@@ -31,7 +31,7 @@ export default function DashboardClient({
 }: DashboardClientProps) {
   const [user, setUser] = useState<User>(initialUser);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [selectedTheme, setSelectedTheme] = useState<Theme>(initialUser.selectedTheme);
+  const [selectedTemplate, setSelectedTemplate] = useState<Template>(initialUser.selectedTemplate);
   const [isPreviewOpen, setIsPreviewOpen] = useState(true);
   const isMobile = useIsMobile();
   const [editorKey, setEditorKey] = useState(0);
@@ -47,6 +47,11 @@ export default function DashboardClient({
   useEffect(() => {
     setProjects(initialProjects);
   }, [initialProjects]);
+  
+  useEffect(() => {
+    setSelectedTemplate(initialUser.selectedTemplate)
+  }, [initialUser.selectedTemplate]);
+
 
   useEffect(() => {
     // When switching to mobile, always show preview vertically
@@ -77,7 +82,7 @@ export default function DashboardClient({
       const userDocRef = doc(firestore, 'users', authUser.uid);
       const userData: Partial<User> = {
         ...user,
-        selectedTheme: selectedTheme,
+        selectedTemplate: selectedTemplate,
         updatedAt: new Date(),
       };
       await setDoc(userDocRef, userData, { merge: true });
@@ -96,8 +101,8 @@ export default function DashboardClient({
     }
   };
   
-  const handleThemeChange = (theme: Theme) => {
-    setSelectedTheme(theme);
+  const handleTemplateChange = (template: Template) => {
+    setSelectedTemplate(template);
   };
   
   if (isMobile === null) {
@@ -129,16 +134,16 @@ export default function DashboardClient({
             <Tabs defaultValue="profile" className="p-4 md:p-6" key={editorKey}>
                 <TabsList className="grid w-full grid-cols-3 mb-6">
                     <TabsTrigger value="profile">Profile</TabsTrigger>
-                    <TabsTrigger value="theme">Theme</TabsTrigger>
+                    <TabsTrigger value="template">Template</TabsTrigger>
                     <TabsTrigger value="projects">Projects</TabsTrigger>
                 </TabsList>
                 <TabsContent value="profile">
                     <ProfileForm user={user} onUserChange={handleUserChange} />
                 </TabsContent>
-                <TabsContent value="theme">
-                    <ThemeSelector 
-                        selectedTheme={selectedTheme} 
-                        onThemeChange={handleThemeChange} 
+                <TabsContent value="template">
+                    <TemplateSelector 
+                        selectedTemplate={selectedTemplate} 
+                        onTemplateChange={handleTemplateChange} 
                         projects={projects}
                     />
                 </TabsContent>
@@ -168,7 +173,7 @@ export default function DashboardClient({
             minSize={isMobile ? 20 : 30}
           >
             <PreviewPanel 
-                user={{ ...user, selectedTheme }} 
+                user={{ ...user, selectedTemplate }} 
                 projects={projects} 
             />
           </ResizablePanel>

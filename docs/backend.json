@@ -42,7 +42,7 @@
             "website": { "type": "string", "format": "uri" }
           }
         },
-        "selectedTheme": {
+        "selectedTemplate": {
           "type": "string",
           "enum": [
             "minimal-light", 
@@ -58,7 +58,7 @@
             "photo-grid",
             "lakeside-dawn"
           ],
-          "description": "The user's selected portfolio theme."
+          "description": "The user's selected portfolio template."
         },
         "createdAt": {
             "type": "string",
@@ -69,7 +69,7 @@
             "format": "date-time"
         }
       },
-      "required": ["id", "username", "name", "email", "selectedTheme", "createdAt", "updatedAt"]
+      "required": ["id", "username", "name", "email", "selectedTemplate", "createdAt", "updatedAt"]
     },
     "Project": {
       "title": "Project",

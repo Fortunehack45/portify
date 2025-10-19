@@ -1,7 +1,7 @@
 'use client';
 
 import { User, Project } from '@/types';
-import ThemeRenderer from '../themes/theme-renderer';
+import TemplateRenderer from '../templates/template-renderer';
 import { Frame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -23,8 +23,8 @@ export default function PreviewPanel({ user, projects }: PreviewPanelProps) {
       </div>
       <div className="flex-grow overflow-auto">
         <div className="w-full h-full bg-white">
-            <ThemeRenderer
-                theme={user.selectedTheme}
+            <TemplateRenderer
+                template={user.selectedTemplate}
                 user={user}
                 projects={projects}
             />
