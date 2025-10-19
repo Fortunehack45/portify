@@ -18,12 +18,6 @@ const Header = () => {
           <Link href="/#features" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Features
           </Link>
-          <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            Examples
-          </Link>
-          <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">
-            About
-          </Link>
         </nav>
         <div className="flex items-center justify-end ml-auto md:space-x-2">
            <Sheet>
@@ -47,12 +41,6 @@ const Header = () => {
                 </Link>
                 <Link href="/#features" className="hover:text-foreground">
                   Features
-                </Link>
-                <Link href="#" className="hover:text-foreground">
-                    Examples
-                </Link>
-                <Link href="#" className="hover:text-foreground">
-                    About
                 </Link>
                 <Link href="/login" className="hover:text-foreground">
                     Log in

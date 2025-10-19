@@ -64,7 +64,7 @@ export default function Home() {
                       alt={heroImage.description}
                       width={600}
                       height={400}
-                      className="rounded-2xl shadow-2xl shadow-primary/10"
+                      className="rounded-2xl shadow-2xl"
                       data-ai-hint={heroImage.imageHint}
                     />
                   )}
