@@ -1,22 +1,69 @@
+'use client';
+
 import DashboardClient from '@/components/dashboard/dashboard-client';
-import { mockUser, mockProjects } from '@/lib/mock-data';
+import { useUser, useCollection, useFirestore } from '@/firebase';
+import { collection, query, where } from 'firebase/firestore';
+import type { User, Project } from '@/types';
+import { useEffect, useState } from 'react';
 
-// Mock data fetching functions
-async function getAuthenticatedUser() {
-  // In a real app, this would get the logged-in user from Firebase Auth
-  return Promise.resolve(mockUser);
-}
+export default function DashboardPage() {
+  const { user, loading: userLoading } = useUser();
+  const firestore = useFirestore();
 
-async function getProjectsForUser(userId: string) {
-  // In a real app, this would fetch projects from Firestore
-  return Promise.resolve(mockProjects.filter(p => p.userId === userId));
-}
+  const [initialUser, setInitialUser] = useState<User | null>(null);
+  const [initialProjects, setInitialProjects] = useState<Project[]>([]);
+  
+  // Create a query for projects only when firestore and user are available
+  const projectsQuery =
+    firestore && user
+      ? query(collection(firestore, 'projects'), where('userId', '==', user.uid))
+      : null;
+      
+  const { data: projects, loading: projectsLoading } = useCollection<Project>(
+    projectsQuery
+  );
 
-export default async function DashboardPage() {
-  // In a real app, you'd have logic to handle unauthenticated users,
-  // probably in middleware or a layout.
-  const user = await getAuthenticatedUser();
-  const projects = await getProjectsForUser(user.id);
+  const { data: userProfile, loading: profileLoading } = useCollection<User>(
+    firestore && user ? query(collection(firestore, 'users'), where('id', '==', user.uid)) : null
+  );
 
-  return <DashboardClient initialUser={user} initialProjects={projects} />;
+  useEffect(() => {
+    if (userProfile && userProfile.length > 0) {
+      setInitialUser(userProfile[0]);
+    } else if (user && !profileLoading && (!userProfile || userProfile.length === 0)) {
+        // This is a fallback if the user profile is not in the collection yet.
+        // This can happen on first sign up.
+        setInitialUser({
+          id: user.uid,
+          email: user.email || '',
+          name: user.displayName || 'New User',
+          username: user.displayName?.replace(/\s+/g, '').toLowerCase() || 'newuser',
+          bio: '',
+          skills: [],
+          selectedTheme: 'minimal-light',
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        })
+    }
+  }, [user, userProfile, profileLoading]);
+
+  useEffect(() => {
+    if (projects) {
+      // The dates will be Firebase Timestamps, convert them to JS Dates
+      const formattedProjects = projects.map(p => ({
+        ...p,
+        createdAt: p.createdAt,
+        updatedAt: p.updatedAt,
+      }));
+      setInitialProjects(formattedProjects);
+    }
+  }, [projects]);
+  
+  const isLoading = userLoading || projectsLoading || profileLoading || !initialUser;
+
+  if (isLoading) {
+    return <div className="flex items-center justify-center h-screen">Loading dashboard...</div>;
+  }
+
+  return <DashboardClient initialUser={initialUser as User} initialProjects={initialProjects} />;
 }

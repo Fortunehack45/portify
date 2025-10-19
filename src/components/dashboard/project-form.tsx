@@ -8,6 +8,7 @@ import { DialogFooter } from '../ui/dialog';
 import { useEffect, useState } from 'react';
 import { Badge } from '../ui/badge';
 import { X } from 'lucide-react';
+import { useUser as useAuthUser } from '@/firebase';
 
 interface ProjectFormProps {
     project?: Project | null;
@@ -16,6 +17,7 @@ interface ProjectFormProps {
 }
 
 export default function ProjectForm({ project, onSave, onClose }: ProjectFormProps) {
+    const { user: authUser } = useAuthUser();
     const [title, setTitle] = useState('');
     const [description, setDescription] = useState('');
     const [githubLink, setGithubLink] = useState('');
@@ -30,6 +32,12 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
             setGithubLink(project.githubLink || '');
             setLiveDemo(project.liveDemo || '');
             setTechStack(project.techStack);
+        } else {
+            setTitle('');
+            setDescription('');
+            setGithubLink('');
+            setLiveDemo('');
+            setTechStack([]);
         }
     }, [project]);
     
@@ -48,9 +56,10 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
     };
 
     const handleSave = () => {
+        if (!authUser) return;
         const newProject: Project = {
-            id: project ? project.id : new Date().toISOString(),
-            userId: project ? project.userId : 'user-1', // Mock user id
+            id: project ? project.id : new Date().toISOString(), // This will be overwritten by firestore on create
+            userId: authUser.uid,
             title,
             description,
             githubLink,

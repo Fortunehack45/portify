@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 export type Project = {
   id: string;
   userId: string;
@@ -6,8 +8,8 @@ export type Project = {
   techStack: string[];
   githubLink?: string;
   liveDemo?: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
 };
 
 export type User = {
@@ -18,8 +20,8 @@ export type User = {
   bio: string;
   skills: string[];
   selectedTheme: Theme;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: Date | Timestamp;
+  updatedAt: Date | Timestamp;
 };
 
 export type Theme = 'minimal-light' | 'modern-dark' | 'professional-blue';

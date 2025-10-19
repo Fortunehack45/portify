@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { User, Project, Theme } from '@/types';
 import {
   ResizableHandle,
@@ -14,6 +14,9 @@ import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import ThemeSelector from './theme-selector';
 import PreviewPanel from './preview-panel';
+import { useFirestore, useUser as useAuthUser } from '@/firebase';
+import { doc, setDoc, serverTimestamp, collection, addDoc, updateDoc } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 interface DashboardClientProps {
   initialUser: User;
@@ -28,14 +31,50 @@ export default function DashboardClient({
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedTheme, setSelectedTheme] = useState<Theme>(initialUser.selectedTheme);
 
+  const firestore = useFirestore();
+  const { user: authUser } = useAuthUser();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    setUser(initialUser);
+  }, [initialUser]);
+
+  useEffect(() => {
+    setProjects(initialProjects);
+  }, [initialProjects]);
+
+
   const handleUserChange = (updatedUser: Partial<User>) => {
     setUser(prev => ({ ...prev, ...updatedUser }));
   };
 
-  const handleSave = () => {
-    // In a real app, you would send this data to your backend
-    console.log('Saving data:', { user, projects, selectedTheme: user.selectedTheme });
-    alert('Portfolio saved! (Check console for data)');
+  const handleSave = async () => {
+    if (!firestore || !authUser) {
+      toast({ title: "Error", description: "Could not save. User not authenticated.", variant: "destructive" });
+      return;
+    }
+  
+    try {
+      // Save user profile
+      const userDocRef = doc(firestore, 'users', authUser.uid);
+      const userData: Partial<User> = {
+        ...user,
+        updatedAt: new Date(),
+      };
+      await setDoc(userDocRef, userData, { merge: true });
+  
+      toast({
+        title: 'Portfolio Saved!',
+        description: 'Your changes have been successfully saved.',
+      });
+    } catch (error: any) {
+      console.error('Error saving portfolio:', error);
+      toast({
+        title: 'Uh oh! Something went wrong.',
+        description: error.message || 'There was a problem with saving your portfolio.',
+        variant: 'destructive',
+      });
+    }
   };
   
   const handleThemeChange = (theme: Theme) => {

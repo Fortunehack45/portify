@@ -19,6 +19,9 @@ import {
 } from '@/components/ui/dialog';
 import { useState } from 'react';
 import ProjectForm from './project-form';
+import { useFirestore, useUser as useAuthUser } from '@/firebase';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { useToast } from '@/hooks/use-toast';
 
 interface ProjectsListProps {
   projects: Project[];
@@ -28,16 +31,40 @@ interface ProjectsListProps {
 export default function ProjectsList({ projects, setProjects }: ProjectsListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
+  const firestore = useFirestore();
+  const { user: authUser } = useAuthUser();
+  const { toast } = useToast();
 
-  const handleSaveProject = (project: Project) => {
-    const projectExists = projects.some(p => p.id === project.id);
-    if (projectExists) {
-        setProjects(projects.map(p => p.id === project.id ? project : p));
-    } else {
-        setProjects([...projects, project]);
+  const handleSaveProject = async (project: Project) => {
+    if (!firestore || !authUser) return;
+
+    try {
+      if (editingProject) {
+        // Update existing project
+        const projectRef = doc(firestore, 'projects', editingProject.id);
+        await updateDoc(projectRef, {
+            ...project,
+            updatedAt: serverTimestamp(),
+        });
+        setProjects(projects.map(p => p.id === editingProject.id ? {...project, id: editingProject.id} : p));
+        toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
+      } else {
+        // Add new project
+        const docRef = await addDoc(collection(firestore, 'projects'), {
+            ...project,
+            userId: authUser.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        });
+        setProjects([...projects, {...project, id: docRef.id}]);
+        toast({ title: "Project Added", description: `"${project.title}" has been added.` });
+      }
+      setIsDialogOpen(false);
+      setEditingProject(null);
+    } catch (error: any) {
+        console.error("Error saving project: ", error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
     }
-    setIsDialogOpen(false);
-    setEditingProject(null);
   };
   
   const handleEdit = (project: Project) => {
@@ -45,8 +72,16 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (projectId: string) => {
-    setProjects(projects.filter(p => p.id !== projectId));
+  const handleDelete = async (projectId: string) => {
+    if (!firestore) return;
+    try {
+        await deleteDoc(doc(firestore, 'projects', projectId));
+        setProjects(projects.filter(p => p.id !== projectId));
+        toast({ title: "Project Deleted", description: "The project has been removed." });
+    } catch (error: any) {
+        console.error("Error deleting project: ", error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
   };
   
   const handleAddNew = () => {
@@ -61,7 +96,10 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
           <CardTitle className="font-headline">Projects</CardTitle>
           <CardDescription>Add, edit, or remove projects from your portfolio.</CardDescription>
         </div>
-        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
+          setIsDialogOpen(isOpen);
+          if (!isOpen) setEditingProject(null);
+        }}>
           <DialogTrigger asChild>
             <Button size="sm" onClick={handleAddNew}>
               <PlusCircle className="mr-2 h-4 w-4" />

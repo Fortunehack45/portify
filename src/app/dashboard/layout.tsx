@@ -1,3 +1,5 @@
+'use client';
+
 import Link from "next/link";
 import { CircleUser, Menu, Package2, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -12,12 +14,52 @@ import {
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/icons";
+import { useUser } from "@/firebase";
+import { signOut } from "firebase/auth";
+import { useAuth } from "@/firebase";
+import { useRouter } from "next/navigation";
+import { useToast } from "@/hooks/use-toast";
+
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const { user, loading } = useUser();
+  const auth = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogout = async () => {
+    if (auth) {
+      try {
+        await signOut(auth);
+        toast({
+          title: "Logged Out",
+          description: "You have been successfully logged out.",
+        });
+        router.push('/login');
+      } catch (error: any) {
+        toast({
+          title: "Error",
+          description: "Failed to log out. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+  
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!user) {
+    // maybe we can improve this
+    router.push('/login');
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen w-full flex-col">
       <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-50">
@@ -77,7 +119,7 @@ export default function DashboardLayout({
               <DropdownMenuItem>Settings</DropdownMenuItem>
               <DropdownMenuItem>Support</DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem>Logout</DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </div>

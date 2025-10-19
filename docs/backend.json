@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Represents a user's profile information.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "The user's unique ID."
+        },
+        "username": {
+          "type": "string",
+          "description": "The user's unique username."
+        },
+        "name": {
+          "type": "string",
+          "description": "The user's full name."
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "description": "The user's email address."
+        },
+        "bio": {
+          "type": "string",
+          "description": "A short biography of the user."
+        },
+        "skills": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "A list of the user's skills."
+        },
+        "selectedTheme": {
+          "type": "string",
+          "enum": ["minimal-light", "modern-dark", "professional-blue"],
+          "description": "The user's selected portfolio theme."
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+        }
+      },
+      "required": ["id", "username", "name", "email", "selectedTheme", "createdAt", "updatedAt"]
+    },
+    "Project": {
+      "title": "Project",
+      "description": "Represents a project in a user's portfolio.",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "userId": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "techStack": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "githubLink": {
+          "type": "string",
+          "format": "uri"
+        },
+        "liveDemo": {
+          "type": "string",
+          "format": "uri"
+        },
+        "createdAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+        }
+      },
+      "required": ["id", "userId", "title", "description", "techStack", "createdAt", "updatedAt"]
+    }
+  },
+  "auth": {
+    "providers": ["email"]
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": {
+        "$ref": "#/entities/UserProfile"
+      },
+      "description": "Stores user profile information."
+    },
+    "/projects/{projectId}": {
+      "schema": {
+        "$ref": "#/entities/Project"
+      },
+      "description": "Stores project information for all users."
+    }
+  }
+}
