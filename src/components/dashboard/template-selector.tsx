@@ -61,7 +61,7 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
                     aria-label={`Select ${option.label} template`}
                     tabIndex={0}
                     className={cn(
-                        "relative block w-full rounded-lg border-2 bg-card overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 aspect-[4/5] cursor-pointer",
+                        "relative block w-full rounded-lg border-2 bg-card overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 aspect-[4/3] cursor-pointer",
                         selectedTemplate === option.value ? "border-primary" : "border-border"
                     )}
                     onClick={() => onTemplateChange(option.value)}
@@ -77,7 +77,7 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
                         </div>
                     )}
                     <div className="absolute inset-0 transform scale-[0.25] origin-top-left pointer-events-none">
-                        <div className="w-[1280px] h-[1600px] bg-background">
+                        <div className="w-[1280px] h-[960px] bg-background">
                             <Suspense fallback={<Skeleton className="w-full h-full" />}>
                                 <TemplateComponent user={user} projects={projects} />
                             </Suspense>
