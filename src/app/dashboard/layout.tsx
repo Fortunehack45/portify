@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Logo } from "@/components/icons";
 import { useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
@@ -87,6 +87,7 @@ export default function DashboardLayout({
             </Button>
           </SheetTrigger>
           <SheetContent side="left">
+            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
             <nav className="grid gap-6 text-lg font-medium">
               <Link
                 href="/"
