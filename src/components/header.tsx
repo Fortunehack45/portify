@@ -15,13 +15,19 @@ const Header = () => {
           <Link href="/#features" className="transition-colors hover:text-foreground/80 text-foreground/60">
             Features
           </Link>
+          <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            Examples
+          </Link>
+          <Link href="#" className="transition-colors hover:text-foreground/80 text-foreground/60">
+            About
+          </Link>
         </nav>
         <div className="flex items-center justify-end ml-auto">
           <nav className="flex items-center space-x-2">
-            <Button variant="ghost" asChild>
+            <Button variant="ghost" asChild className="rounded-full">
               <Link href="/login">Log in</Link>
             </Button>
-            <Button asChild>
+            <Button asChild className="rounded-full">
               <Link href="/signup">Sign Up</Link>
             </Button>
           </nav>
