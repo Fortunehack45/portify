@@ -18,6 +18,7 @@ import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
 import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
+import { useEffect } from "react";
 
 
 export default function DashboardLayout({
@@ -29,6 +30,14 @@ export default function DashboardLayout({
   const auth = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+
+  useEffect(() => {
+    // If loading is finished and there's no user, redirect to login.
+    if (!loading && !user) {
+      router.push('/login');
+    }
+  }, [user, loading, router]);
+
 
   const handleLogout = async () => {
     if (auth) {
@@ -49,13 +58,10 @@ export default function DashboardLayout({
     }
   };
   
-  if (loading) {
+  // While loading or if there's no user, show a loading screen.
+  // The useEffect above will handle the redirect.
+  if (loading || !user) {
     return <div className="flex h-screen w-full items-center justify-center">Loading...</div>;
-  }
-
-  if (!user) {
-    router.push('/login');
-    return <div className="flex h-screen w-full items-center justify-center">Redirecting to login...</div>;
   }
 
   return (
