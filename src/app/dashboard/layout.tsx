@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { CircleUser, Menu, Home, Pencil, Palette, Eye } from "lucide-react";
+import { CircleUser, Menu, Home, Pencil, Palette, Eye, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,10 +15,18 @@ import { Logo } from "@/components/icons";
 import { useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
-import MobileNav from "@/components/mobile-nav";
+import { cn } from "@/lib/utils";
+
+
+const navItems = [
+  { href: "/dashboard", icon: Home, label: "Home" },
+  { href: "/dashboard/editor", icon: Pencil, label: "Editor" },
+  { href: "/dashboard/templates", icon: Palette, label: "Templates" },
+  { href: "/dashboard/settings", icon: Settings, label: "Settings" },
+];
 
 export default function DashboardLayout({
   children,
@@ -28,6 +36,7 @@ export default function DashboardLayout({
   const { user, loading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -68,21 +77,47 @@ export default function DashboardLayout({
     );
   }
 
+  const username = user?.displayName?.replace(/\s+/g, '').toLowerCase() || 'preview';
+
   return (
-    <div className="flex flex-col min-h-screen w-full bg-muted/40">
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6 z-40">
-        <div className="flex-1">
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Logo />
-          </Link>
-        </div>
-        <div className="flex items-center gap-4">
-          <Button variant="outline" asChild>
-            <Link href={`/${user.displayName?.replace(/\s+/g, '').toLowerCase() || 'preview'}`} target="_blank">
-              <Eye className="mr-2 h-4 w-4" />
-              Public View
+    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
+      <div className="hidden border-r bg-muted/40 md:block">
+        <div className="flex h-full max-h-screen flex-col gap-2">
+          <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+              <Logo />
             </Link>
-          </Button>
+          </div>
+          <div className="flex-1">
+            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+              {navItems.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                    pathname === item.href && "text-primary bg-muted"
+                  )}
+                >
+                  <item.icon className="h-4 w-4" />
+                  {item.label}
+                </Link>
+              ))}
+            </nav>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-col">
+        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
+          {/* Mobile nav can go here if needed, but the prompt focuses on desktop */}
+          <div className="w-full flex-1">
+             <Button variant="outline" size="sm" asChild>
+                <Link href={`/${username}`} target="_blank">
+                  <Eye className="mr-2 h-4 w-4" />
+                  Public View
+                </Link>
+            </Button>
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
@@ -99,10 +134,11 @@ export default function DashboardLayout({
               <DropdownMenuItem onClick={handleLogout}>Logout</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
-        </div>
-      </header>
-      <main className="flex-1 overflow-auto pb-24">{children}</main>
-      <MobileNav />
+        </header>
+        <main className="flex flex-1 flex-col p-4 lg:p-6 overflow-auto">
+          {children}
+        </main>
+      </div>
     </div>
   );
 }

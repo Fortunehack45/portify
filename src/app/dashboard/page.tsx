@@ -11,13 +11,13 @@ export default function DashboardPage() {
   const username = user?.displayName?.replace(/\s+/g, '').toLowerCase() || 'preview';
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6">
        <div className="space-y-1">
-         <h1 className="text-2xl font-bold font-headline">Dashboard</h1>
+         <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
          <p className="text-muted-foreground">Welcome back, {user?.displayName || 'User'}!</p>
        </div>
 
-      <Card className="shadow-md">
+      <Card className="shadow-sm">
         <CardHeader>
           <CardTitle>Your Portfolio</CardTitle>
           <CardDescription>
@@ -25,34 +25,34 @@ export default function DashboardPage() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-3">
-              <span className="font-medium text-sm sm:text-base">FolioForge Portfolio</span>
+          <div className="flex items-center justify-between rounded-lg border p-4">
+              <span className="font-medium text-base">FolioForge Portfolio</span>
               <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" asChild>
+                <Button variant="outline" asChild>
                     <Link href="/dashboard/editor">
                         <Edit className="mr-2 h-4 w-4" /> Edit
                     </Link>
                 </Button>
-                <Button size="sm" asChild>
+                <Button asChild>
                     <Link href={`/${username}`} target="_blank">
-                        View <ArrowRight className="ml-2 h-4 w-4" />
+                        View Public Site <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                 </Button>
               </div>
           </div>
-           <p className="text-xs text-muted-foreground">
+           <p className="text-sm text-muted-foreground">
               Your public portfolio is live at: <Link href={`/${username}`} className="underline font-medium" target='_blank'>{`/${username}`}</Link>
           </p>
         </CardContent>
       </Card>
 
-      <Card className="bg-muted/30 border-dashed">
+      <Card className="bg-muted/50 border-dashed hover:border-primary/50 hover:bg-muted transition-colors">
          <CardContent className="p-6 flex flex-col items-center justify-center text-center">
             <Button variant="ghost" disabled>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create New Portfolio
             </Button>
-            <p className="text-xs text-muted-foreground mt-2">Multiple portfolios coming soon!</p>
+            <p className="text-sm text-muted-foreground mt-2">Multiple portfolios coming soon!</p>
          </CardContent>
       </Card>
     </div>
