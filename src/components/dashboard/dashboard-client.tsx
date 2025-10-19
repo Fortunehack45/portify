@@ -32,7 +32,9 @@ export default function DashboardClient({
   const [user, setUser] = useState<User>(initialUser);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
   const [selectedTheme, setSelectedTheme] = useState<Theme>(initialUser.selectedTheme);
+  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
   const isMobile = useIsMobile();
+  const [editorKey, setEditorKey] = useState(0);
 
   const firestore = useFirestore();
   const { user: authUser } = useAuthUser();
@@ -45,6 +47,12 @@ export default function DashboardClient({
   useEffect(() => {
     setProjects(initialProjects);
   }, [initialProjects]);
+
+  useEffect(() => {
+    // Force a re-render of the editor panel when switching between mobile and desktop
+    // to ensure the tabs and content are laid out correctly.
+    setEditorKey(prev => prev + 1);
+  }, [isMobile])
 
 
   const handleUserChange = (updatedUser: Partial<User>) => {
@@ -85,8 +93,6 @@ export default function DashboardClient({
     setSelectedTheme(theme);
   };
   
-  // Prevent rendering the ResizablePanelGroup until we know if it's mobile or not.
-  // This avoids a hydration mismatch error.
   if (isMobile === null) {
     return (
         <div className="flex h-[calc(100vh-4rem)] items-center justify-center">
@@ -99,7 +105,7 @@ export default function DashboardClient({
     <ResizablePanelGroup 
       direction={isMobile ? 'vertical' : 'horizontal'} 
       className="h-[calc(100vh-4rem)]"
-      key={isMobile ? 'mobile' : 'desktop'} // Add key to force re-mount on responsive change
+      key={isMobile ? 'mobile' : 'desktop'}
     >
       <ResizablePanel defaultSize={isMobile ? 50 : 40} minSize={30}>
         <div className="flex flex-col h-full">
@@ -111,7 +117,7 @@ export default function DashboardClient({
                 </Button>
             </div>
             <ScrollArea className="flex-grow">
-                <Tabs defaultValue="profile" className="p-4 md:p-6">
+                <Tabs defaultValue="profile" className="p-4 md:p-6" key={editorKey}>
                     <TabsList className="grid w-full grid-cols-3 mb-6">
                         <TabsTrigger value="profile">Profile</TabsTrigger>
                         <TabsTrigger value="theme">Theme</TabsTrigger>
@@ -135,8 +141,21 @@ export default function DashboardClient({
         </div>
       </ResizablePanel>
       <ResizableHandle withHandle />
-      <ResizablePanel defaultSize={isMobile ? 50 : 60} minSize={30}>
-        <PreviewPanel user={{ ...user, selectedTheme }} projects={projects} />
+      <ResizablePanel 
+        defaultSize={isMobile ? 50 : 60}
+        minSize={isMobile ? 10 : 30}
+        collapsible={true}
+        collapsedSize={isMobile ? 6 : 4}
+        onCollapse={() => setIsPreviewCollapsed(true)}
+        onExpand={() => setIsPreviewCollapsed(false)}
+        className={isPreviewCollapsed ? 'transition-all duration-300 ease-in-out' : ''}
+      >
+        <PreviewPanel 
+            user={{ ...user, selectedTheme }} 
+            projects={projects} 
+            isCollapsed={isPreviewCollapsed}
+            onToggle={() => setIsPreviewCollapsed(prev => !prev)}
+        />
       </ResizablePanel>
     </ResizablePanelGroup>
   );
