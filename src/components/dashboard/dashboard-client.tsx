@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,6 +18,8 @@ import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent } from '../ui/card';
 
 interface DashboardClientProps {
   initialUser: User;
@@ -92,24 +93,37 @@ export default function DashboardClient({
       className="h-[calc(100vh-4rem)]"
     >
       <ResizablePanel defaultSize={isMobile ? 50 : 40} minSize={30}>
-        <ScrollArea className="h-full">
-          <div className="p-4 md:p-6 space-y-8">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-              <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
-              <Button onClick={handleSave}>
-                <Save className="mr-2 h-4 w-4" />
-                Save Portfolio
-              </Button>
+        <div className="flex flex-col h-full">
+            <div className="p-4 md:p-6 border-b flex items-center justify-between gap-4">
+                <h1 className="text-2xl font-bold font-headline">Dashboard</h1>
+                <Button onClick={handleSave}>
+                    <Save className="mr-2 h-4 w-4" />
+                    Save Portfolio
+                </Button>
             </div>
-            <ProfileForm user={user} onUserChange={handleUserChange} />
-            <ThemeSelector 
-              selectedTheme={selectedTheme} 
-              onThemeChange={handleThemeChange} 
-              projects={projects}
-            />
-            <ProjectsList projects={projects} setProjects={setProjects} />
-          </div>
-        </ScrollArea>
+            <ScrollArea className="flex-grow">
+                <Tabs defaultValue="profile" className="p-4 md:p-6">
+                    <TabsList className="grid w-full grid-cols-3 mb-6">
+                        <TabsTrigger value="profile">Profile</TabsTrigger>
+                        <TabsTrigger value="theme">Theme</TabsTrigger>
+                        <TabsTrigger value="projects">Projects</TabsTrigger>
+                    </TabsList>
+                    <TabsContent value="profile">
+                        <ProfileForm user={user} onUserChange={handleUserChange} />
+                    </TabsContent>
+                    <TabsContent value="theme">
+                        <ThemeSelector 
+                            selectedTheme={selectedTheme} 
+                            onThemeChange={handleThemeChange} 
+                            projects={projects}
+                        />
+                    </TabsContent>
+                    <TabsContent value="projects">
+                        <ProjectsList projects={projects} setProjects={setProjects} />
+                    </TabsContent>
+                </Tabs>
+            </ScrollArea>
+        </div>
       </ResizablePanel>
       <ResizableHandle withHandle />
       <ResizablePanel defaultSize={isMobile ? 50 : 60} minSize={30}>
