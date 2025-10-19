@@ -1,17 +1,18 @@
-// One-Page Scroll
+
 'use client'
 import { User, Project } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Github, ExternalLink, Mail, Linkedin, Twitter, Link as LinkIcon } from 'lucide-react';
 import { useEffect } from 'react';
+import { SocialPlatform } from '@/types';
 
 interface TemplateProps {
   user: User;
   projects: Project[];
 }
 
-const OnePageScroll: React.FC<TemplateProps> = ({ user, projects }) => {
+const PhotoGrid: React.FC<TemplateProps> = ({ user, projects }) => {
 
     useEffect(() => {
         document.documentElement.style.scrollBehavior = 'smooth';
@@ -20,22 +21,24 @@ const OnePageScroll: React.FC<TemplateProps> = ({ user, projects }) => {
         }
     }, [])
 
-    const getSocialIcon = (platform: string) => {
+    const getSocialIcon = (platform: SocialPlatform) => {
+        const iconClass = "w-6 h-6 text-gray-400 group-hover:text-blue-400 transition-colors";
         switch (platform) {
-            case 'github': return <Github className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
-            case 'linkedin': return <Linkedin className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
-            case 'twitter': return <Twitter className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
-            default: return <LinkIcon className="w-6 h-6 text-gray-400 hover:text-blue-400" />;
+            case 'github': return <Github className={iconClass} />;
+            case 'linkedin': return <Linkedin className={iconClass} />;
+            case 'twitter': return <Twitter className={iconClass} />;
+            case 'website': return <LinkIcon className={iconClass} />;
+            default: return <LinkIcon className={iconClass} />;
         }
     }
 
 
   return (
     <div className="font-body bg-gray-900 text-white min-h-screen">
-      <header className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-sm">
+      <header className="sticky top-0 z-50 bg-gray-900/80 backdrop-blur-sm border-b border-gray-700/50">
         <nav className="container mx-auto px-4 max-w-5xl h-16 flex justify-between items-center">
-          <span className="font-bold font-headline text-lg">{user.name}</span>
-          <div className="space-x-4 md:space-x-6">
+          <a href="#profile" className="font-bold font-headline text-lg hover:text-blue-400 transition-colors">{user.name}</a>
+          <div className="hidden sm:flex space-x-4 md:space-x-6">
             <a href="#profile" className="text-sm hover:text-blue-400 transition-colors">Profile</a>
             <a href="#skills" className="text-sm hover:text-blue-400 transition-colors">Skills</a>
             <a href="#projects" className="text-sm hover:text-blue-400 transition-colors">Projects</a>
@@ -44,32 +47,30 @@ const OnePageScroll: React.FC<TemplateProps> = ({ user, projects }) => {
       </header>
       
       <main className="scroll-smooth">
-        {/* Profile Section */}
-        <section id="profile" className="min-h-screen flex items-center justify-center pt-16">
+        <section id="profile" className="min-h-screen flex items-center justify-center pt-16 -mt-16">
           <div className="container mx-auto px-4 max-w-3xl text-center">
             <h1 className="text-6xl md:text-7xl font-bold font-headline">{user.name}</h1>
             <p className="text-xl text-gray-400 mt-2">@{user.username}</p>
             <p className="mt-8 text-lg text-gray-300 leading-relaxed">{user.bio}</p>
             <div className="flex justify-center gap-2 mt-8">
               {user.socials?.map(social => (
-                  <Button key={social.platform} variant="ghost" size="icon" asChild>
+                  <Button key={social.platform} variant="ghost" size="icon" className="group" asChild>
                       <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
                           {getSocialIcon(social.platform)}
                       </a>
                   </Button>
               ))}
-              {user.email && <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`}><Mail className="w-6 h-6 text-gray-400 hover:text-blue-400" /></a></Button>}
+              {user.email && <Button variant="ghost" size="icon" className="group" asChild><a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-6 h-6 text-gray-400 group-hover:text-blue-400 transition-colors" /></a></Button>}
             </div>
           </div>
         </section>
 
-        {/* Skills Section */}
         <section id="skills" className="min-h-screen flex items-center justify-center bg-gray-800/50">
           <div className="container mx-auto px-4 max-w-3xl text-center">
             <h2 className="text-5xl font-bold font-headline mb-12">Skills</h2>
             <div className="flex flex-wrap gap-4 justify-center">
               {user.skills.map((skill) => (
-                <Badge key={skill} className="text-xl px-6 py-3 bg-gray-700 text-gray-200">
+                <Badge key={skill} className="text-lg px-6 py-3 bg-gray-700 text-gray-200 border border-gray-600">
                   {skill}
                 </Badge>
               ))}
@@ -77,9 +78,8 @@ const OnePageScroll: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </section>
 
-        {/* Projects Section */}
         <section id="projects" className="min-h-screen flex items-center justify-center pt-24 pb-24">
-          <div className="container mx-auto px-4 max-w-3xl">
+          <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="text-5xl font-bold font-headline text-center mb-16">Projects</h2>
             <div className="space-y-16">
               {projects.map((project) => (
@@ -106,4 +106,4 @@ const OnePageScroll: React.FC<TemplateProps> = ({ user, projects }) => {
   );
 };
 
-export default OnePageScroll;
+export default PhotoGrid;

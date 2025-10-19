@@ -1,103 +1,126 @@
-// Sectioned Blocks
+
 import { User, Project } from '@/types';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Github, ExternalLink, Mail, Linkedin, Twitter, Link as LinkIcon } from 'lucide-react';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { SocialPlatform } from '@/types';
 
 interface TemplateProps {
   user: User;
   projects: Project[];
 }
 
-const SectionedBlocks: React.FC<TemplateProps> = ({ user, projects }) => {
+const HackerTerminal: React.FC<TemplateProps> = ({ user, projects }) => {
+  const [command, setCommand] = useState('');
+  const [history, setHistory] = useState<React.ReactNode[]>([]);
 
-    const getSocialButton = (platform: string, url: string) => {
-        switch (platform) {
-            case 'github': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><Github className="mr-2 h-4 w-4" /> GitHub</a></Button>;
-            case 'linkedin': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><Linkedin className="mr-2 h-4 w-4" /> LinkedIn</a></Button>;
-            case 'twitter': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><Twitter className="mr-2 h-4 w-4" /> Twitter</a></Button>;
-            case 'website': return <Button variant="outline" asChild><a href={url} target="_blank" rel="noopener noreferrer"><LinkIcon className="mr-2 h-4 w-4" /> Website</a></Button>;
-            default: return null;
+  useEffect(() => {
+    const commands = ['bio', 'skills', 'socials', 'projects', 'clear', 'help'];
+    let i = 0;
+
+    const initialCommands = [
+      `Welcome, ${user.username}.`,
+      "Type 'help' to see available commands."
+    ];
+    setHistory(initialCommands);
+
+    const typeCommand = (cmd: string, callback: () => void) => {
+      let j = 0;
+      const interval = setInterval(() => {
+        setCommand(cmd.slice(0, j + 1));
+        j++;
+        if (j >= cmd.length) {
+          clearInterval(interval);
+          setTimeout(callback, 500);
         }
+      }, 100);
+    };
+
+    const runCommand = (cmd: string) => {
+        let output: React.ReactNode[] = [];
+        switch (cmd) {
+            case 'help':
+                output = ["Available commands:", "'bio', 'skills', 'socials', 'projects', 'email', 'clear', 'help'"];
+                break;
+            case 'bio':
+                output = [user.bio];
+                break;
+            case 'skills':
+                output = [user.skills.join(' | ')];
+                break;
+            case 'socials':
+                output = user.socials.map(s => <SocialLink key={s.platform} {...s} />);
+                break;
+            case 'projects':
+                output = projects.map(p => <ProjectDisplay key={p.id} {...p} />);
+                break;
+            case 'email':
+                output = [<a key="email" href={`mailto:${user.email}`} className="text-green-400 hover:underline">{user.email}</a>];
+                break;
+            case 'clear':
+                setHistory([]);
+                return;
+            default:
+                output = [`Command not found: ${cmd}. Type 'help' for a list of commands.`];
+        }
+        setHistory(prev => [...prev, `> ${cmd}`, ...output, ' ']);
+    };
+    
+    const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            runCommand(command.toLowerCase());
+            setCommand('');
+        }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+        window.removeEventListener('keydown', handleKeyDown);
     }
 
+  }, [command, user, projects]);
+
+  const SocialLink: React.FC<{platform: SocialPlatform, url: string}> = ({ platform, url }) => (
+    <a href={url} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:underline flex items-center gap-2">
+      {platform.charAt(0).toUpperCase() + platform.slice(1)} <ExternalLink size={14} />
+    </a>
+  );
+
+  const ProjectDisplay: React.FC<Project> = (project) => (
+    <div className="mt-2">
+        <p className="font-bold text-white">{project.title}</p>
+        <p className="text-green-300">{project.description}</p>
+        <p className="text-green-500 text-sm">Stack: {project.techStack.join(', ')}</p>
+        <div className="flex gap-4">
+            {project.githubLink && <a href={project.githubLink} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:underline flex items-center gap-1"><Github size={14} /> Source</a>}
+            {project.liveDemo && <a href={project.liveDemo} target="_blank" rel="noopener noreferrer" className="text-green-400 hover:underline flex items-center gap-1"><ExternalLink size={14} /> Demo</a>}
+        </div>
+    </div>
+  );
+
   return (
-    <div className="font-body bg-white text-gray-800 min-h-screen">
-      
-      {/* Profile Block */}
-      <section id="profile" className="py-20 md:py-24 bg-white">
-        <div className="container mx-auto px-4 max-w-4xl text-center">
-            <h1 className="text-5xl md:text-6xl font-bold font-headline text-gray-900">{user.name}</h1>
-            <p className="text-xl text-gray-600 mt-2">@{user.username}</p>
-            <p className="mt-6 text-lg max-w-3xl mx-auto">{user.bio}</p>
-            <div className="flex justify-center gap-4 mt-8">
-                {user.socials?.map(social => (
-                    <React.Fragment key={social.platform}>
-                        {getSocialButton(social.platform, social.url)}
-                    </React.Fragment>
-                ))}
-              {user.email && <Button variant="outline" asChild><a href={`mailto:${user.email}`}><Mail className="mr-2 h-4 w-4" /> Email</a></Button>}
-            </div>
+    <div className="font-mono bg-black text-green-400 min-h-screen p-4 sm:p-6 md:p-8 flex flex-col" onClick={() => document.getElementById('command-input')?.focus()}>
+      <div id="terminal" className="flex-grow overflow-auto">
+        {history.map((line, index) => (
+            <div key={index} className="whitespace-pre-wrap">{line}</div>
+        ))}
+        <div className="flex">
+            <span>&gt;&nbsp;</span>
+            <input
+                id="command-input"
+                type="text"
+                value={command}
+                onChange={(e) => setCommand(e.target.value)}
+                className="bg-transparent border-none text-green-400 focus:outline-none w-full"
+                autoFocus
+                spellCheck="false"
+            />
         </div>
-      </section>
-
-      {/* Skills Block */}
-      <section id="skills" className="py-16 bg-gray-50 border-t border-b border-gray-200">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl font-bold font-headline text-center mb-8 text-gray-900">Skills</h2>
-          <div className="flex flex-wrap gap-3 justify-center">
-            {user.skills.map((skill) => (
-              <Badge key={skill} className="text-base px-4 py-2 bg-gray-200 text-gray-800">
-                {skill}
-              </Badge>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Projects Block */}
-      <section id="projects" className="py-20 md:py-24 bg-white">
-        <div className="container mx-auto px-4 max-w-4xl">
-          <h2 className="text-3xl font-bold font-headline text-center mb-12 text-gray-900">Projects</h2>
-          <div className="space-y-12">
-            {projects.map((project) => (
-              <div key={project.id} className="grid md:grid-cols-3 gap-6 items-start">
-                <div className="md:col-span-1">
-                    <h3 className="text-2xl font-bold font-headline text-gray-900">{project.title}</h3>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                        {project.techStack.map((tech) => (
-                            <Badge key={tech} variant="outline" className="font-normal">{tech}</Badge>
-                        ))}
-                    </div>
-                </div>
-                <div className="md:col-span-2">
-                  <p className="text-gray-700 mb-4">{project.description}</p>
-                  <div className="flex gap-4">
-                    {project.githubLink && (
-                      <Button variant="ghost" asChild>
-                        <a href={project.githubLink} target="_blank" rel="noopener noreferrer">
-                          <Github className="mr-2 h-4 w-4" /> View Source
-                        </a>
-                      </Button>
-                    )}
-                    {project.liveDemo && (
-                      <Button asChild>
-                        <a href={project.liveDemo} target="_blank" rel="noopener noreferrer">
-                          <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
-                        </a>
-                      </Button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <footer className="text-center py-6 text-sm text-gray-500 border-t border-gray-200">Made with FolioForge</footer>
+      </div>
+      <footer className="text-center pt-8 text-xs text-green-800">FolioForge v1.0.0</footer>
     </div>
   );
 };
 
-export default SectionedBlocks;
+export default HackerTerminal;

@@ -1,29 +1,31 @@
-// Split Hero
+
 import { User, Project } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Github, ExternalLink, Mail, Linkedin, Twitter, Link as LinkIcon } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../ui/card';
+import { SocialPlatform } from '@/types';
 
 interface TemplateProps {
   user: User;
   projects: Project[];
 }
 
-const SplitHero: React.FC<TemplateProps> = ({ user, projects }) => {
-    const getSocialIcon = (platform: string) => {
+const LakesideDawn: React.FC<TemplateProps> = ({ user, projects }) => {
+    const getSocialIcon = (platform: SocialPlatform) => {
+        const iconClass = "w-6 h-6 text-gray-500 group-hover:text-teal-700 transition-colors";
         switch (platform) {
-            case 'github': return <Github className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
-            case 'linkedin': return <Linkedin className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
-            case 'twitter': return <Twitter className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
-            default: return <LinkIcon className="w-6 h-6 text-gray-600 hover:text-gray-900" />;
+            case 'github': return <Github className={iconClass} />;
+            case 'linkedin': return <Linkedin className={iconClass} />;
+            case 'twitter': return <Twitter className={iconClass} />;
+            case 'website': return <LinkIcon className={iconClass} />;
+            default: return <LinkIcon className={iconClass} />;
         }
     }
 
   return (
-    <div className="font-body bg-white text-gray-800 min-h-screen">
-      {/* Hero Section */}
-      <header className="relative py-20 md:py-28 bg-gray-50 border-b border-gray-200">
+    <div className="font-body bg-gray-50 text-gray-800 min-h-screen">
+      <header className="relative py-20 md:py-28 bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 max-w-6xl">
           <div className="grid md:grid-cols-5 gap-8 md:gap-12 items-center">
             <div className="md:col-span-3">
@@ -32,20 +34,20 @@ const SplitHero: React.FC<TemplateProps> = ({ user, projects }) => {
               <p className="mt-6 text-lg max-w-xl">{user.bio}</p>
               <div className="flex gap-2 mt-6">
                 {user.socials?.map(social => (
-                    <Button key={social.platform} variant="ghost" size="icon" asChild>
+                    <Button key={social.platform} variant="ghost" size="icon" className="group" asChild>
                         <a href={social.url} target="_blank" rel="noopener noreferrer" aria-label={social.platform}>
                             {getSocialIcon(social.platform)}
                         </a>
                     </Button>
                 ))}
-                {user.email && <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`}><Mail className="w-6 h-6 text-gray-600 hover:text-gray-900" /></a></Button>}
+                {user.email && <Button variant="ghost" size="icon" className="group" asChild><a href={`mailto:${user.email}`} aria-label="email"><Mail className="w-6 h-6 text-gray-500 group-hover:text-teal-700 transition-colors" /></a></Button>}
               </div>
             </div>
             <div className="md:col-span-2">
               <h2 className="text-2xl font-bold font-headline mb-4 text-gray-900">Skills</h2>
               <div className="flex flex-wrap gap-2">
                 {user.skills.map((skill) => (
-                  <Badge key={skill} className="text-sm px-3 py-1 bg-teal-100 text-teal-800">
+                  <Badge key={skill} className="text-sm px-3 py-1 bg-teal-100 text-teal-800 border border-teal-200">
                     {skill}
                   </Badge>
                 ))}
@@ -53,24 +55,22 @@ const SplitHero: React.FC<TemplateProps> = ({ user, projects }) => {
             </div>
           </div>
         </div>
-        <div className="absolute bottom-0 left-0 w-full h-12 bg-gradient-to-t from-white to-transparent" />
       </header>
 
-      {/* Projects Section */}
-      <main className="py-16 md:py-20">
+      <main className="py-16 md:py-20 bg-gray-50/70">
         <div className="container mx-auto px-4 max-w-6xl">
           <h2 className="text-4xl font-bold font-headline text-center mb-12 text-gray-900">Projects</h2>
           <div className="grid md:grid-cols-2 gap-8">
             {projects.map((project) => (
-              <Card key={project.id} className="bg-gray-50/50 border hover:shadow-lg transition-shadow">
+              <Card key={project.id} className="bg-white border hover:shadow-lg transition-shadow duration-300">
                 <CardHeader>
-                  <CardTitle className="text-2xl font-headline text-gray-800">{project.title}</CardTitle>
+                  <CardTitle className="text-2xl font-headline text-teal-800">{project.title}</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-gray-600 mb-4">{project.description}</p>
                   <div className="flex flex-wrap gap-2 mb-6">
                     {project.techStack.map((tech) => (
-                      <Badge key={tech} variant="outline">{tech}</Badge>
+                      <Badge key={tech} variant="outline" className="text-gray-600">{tech}</Badge>
                     ))}
                   </div>
                   <div className="flex gap-4">
@@ -83,9 +83,9 @@ const SplitHero: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </div>
       </main>
-      <footer className="text-center py-6 text-sm text-gray-500 border-t">Made with FolioForge</footer>
+      <footer className="text-center py-6 text-sm text-gray-500 border-t bg-white">Made with FolioForge</footer>
     </div>
   );
 };
 
-export default SplitHero;
+export default LakesideDawn;
