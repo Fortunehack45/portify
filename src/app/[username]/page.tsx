@@ -1,8 +1,12 @@
-// This is a server component by default
+'use client';
+
 import { notFound } from 'next/navigation';
-import type { Metadata, ResolvingMetadata } from 'next';
-import { mockUser, mockProjects } from '@/lib/mock-data';
+import { useCollection } from '@/firebase';
 import ThemeRenderer from '@/components/themes/theme-renderer';
+import { collection, query, where } from 'firebase/firestore';
+import { useFirestore } from '@/firebase';
+import type { User, Project } from '@/types';
+import { useEffect, useState } from 'react';
 
 interface PageProps {
   params: {
@@ -10,75 +14,50 @@ interface PageProps {
   };
 }
 
-// Mock function to fetch user data. In a real app, this would query Firebase.
-async function getUserByUsername(username: string) {
-  if (username === mockUser.username) {
-    return mockUser;
-  }
-  return null;
-}
+export default function UserPortfolioPage({ params }: PageProps) {
+  const firestore = useFirestore();
+  const [user, setUser] = useState<User | null>(null);
 
-// Mock function to fetch projects.
-async function getProjectsByUserId(userId: string) {
-  return mockProjects.filter((p) => p.userId === userId);
-}
+  const userQuery = firestore
+    ? query(collection(firestore, 'users'), where('username', '==', params.username))
+    : null;
 
-
-export async function generateMetadata(
-  { params }: PageProps,
-  parent: ResolvingMetadata
-): Promise<Metadata> {
-  const user = await getUserByUsername(params.username);
-
-  if (!user) {
-    return {
-      title: 'User Not Found',
+  const { data: userData, loading: userLoading } = useCollection<User>(userQuery, { listen: false });
+  
+  useEffect(() => {
+    if (userData && userData.length > 0) {
+      setUser(userData[0]);
+    } else if (!userLoading && (!userData || userData.length === 0)) {
+      notFound();
     }
+  }, [userData, userLoading]);
+
+
+  const projectsQuery =
+    firestore && user
+      ? query(collection(firestore, 'projects'), where('userId', '==', user.id))
+      : null;
+      
+  const { data: projects, loading: projectsLoading } = useCollection<Project>(
+    projectsQuery, { listen: false }
+  );
+
+  const isLoading = userLoading || projectsLoading || !user || !projects;
+
+  if (isLoading) {
+    return <div className="flex h-screen w-full items-center justify-center">Loading portfolio...</div>;
   }
-
-  return {
-    title: `${user.name} | Portfolio`,
-    description: user.bio,
-    openGraph: {
-      title: `${user.name} | Portfolio`,
-      description: user.bio,
-      images: [
-        {
-          url: `https://picsum.photos/seed/${user.username}/1200/630`,
-          width: 1200,
-          height: 630,
-          alt: user.name,
-        },
-      ],
-    },
-  }
-}
-
-export default async function UserPortfolioPage({ params }: PageProps) {
-  const user = await getUserByUsername(params.username);
-
+  
   if (!user) {
-    notFound();
+    // This will be caught by notFound() in useEffect, but as a safeguard.
+    return notFound();
   }
-
-  const projects = await getProjectsByUserId(user.id);
   
   return (
     <ThemeRenderer 
       theme={user.selectedTheme}
       user={user}
-      projects={projects}
+      projects={projects || []}
     />
   );
 }
-
-// This function can be used to generate static paths if you have a list of users
-// For a fully dynamic app, this might not be needed if you're using server-side rendering on-demand.
-// export async function generateStaticParams() {
-//   // In a real app, fetch all usernames from your database
-//   const users = [{ username: 'janedoe' }];
- 
-//   return users.map((user) => ({
-//     username: user.username,
-//   }));
-// }
