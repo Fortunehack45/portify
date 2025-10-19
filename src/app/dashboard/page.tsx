@@ -4,7 +4,7 @@ import DashboardClient from '@/components/dashboard/dashboard-client';
 import { useUser, useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { User, Project } from '@/types';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 
 export default function DashboardPage() {
   const { user, loading: userLoading } = useUser();
@@ -13,19 +13,23 @@ export default function DashboardPage() {
   const [initialUser, setInitialUser] = useState<User | null>(null);
   const [initialProjects, setInitialProjects] = useState<Project[]>([]);
   
-  // Create a query for projects only when firestore and user are available
-  const projectsQuery =
-    firestore && user
-      ? query(collection(firestore, 'projects'), where('userId', '==', user.uid))
-      : null;
+  // Memoize the query for projects to prevent re-renders.
+  const projectsQuery = useMemo(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'projects'), where('userId', '==', user.uid));
+  }, [firestore, user]);
       
   const { data: projects, loading: projectsLoading } = useCollection<Project>(
     projectsQuery
   );
 
-  const { data: userProfile, loading: profileLoading } = useCollection<User>(
-    firestore && user ? query(collection(firestore, 'users'), where('id', '==', user.uid)) : null
-  );
+  // Memoize the query for the user profile to prevent re-renders.
+  const userProfileQuery = useMemo(() => {
+    if (!firestore || !user) return null;
+    return query(collection(firestore, 'users'), where('id', '==', user.uid))
+  }, [firestore, user]);
+
+  const { data: userProfile, loading: profileLoading } = useCollection<User>(userProfileQuery);
 
   useEffect(() => {
     if (userProfile && userProfile.length > 0) {
