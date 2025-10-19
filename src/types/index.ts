@@ -12,6 +12,13 @@ export type Project = {
   updatedAt: Date | Timestamp;
 };
 
+export type Socials = {
+  github?: string;
+  linkedin?: string;
+  twitter?: string;
+  website?: string;
+}
+
 export type User = {
   id: string;
   username: string;
@@ -19,9 +26,22 @@ export type User = {
   email: string;
   bio: string;
   skills: string[];
+  socials?: Socials;
   selectedTheme: Theme;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
 };
 
-export type Theme = 'minimal-light' | 'modern-dark' | 'professional-blue';
+export type Theme = 
+  | 'minimal-light' 
+  | 'modern-dark' 
+  | 'professional-blue'
+  | 'retro-gamer'
+  | 'brutalist-web'
+  | 'cyberpunk-neon'
+  | 'elegant-serif'
+  | 'cosmic-dream'
+  | 'hacker-terminal'
+  | 'craftsman-paper'
+  | 'photo-grid'
+  | 'lakeside-dawn';

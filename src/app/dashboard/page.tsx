@@ -44,6 +44,7 @@ export default function DashboardPage() {
           username: user.displayName?.replace(/\s+/g, '').toLowerCase() || 'newuser',
           bio: '',
           skills: [],
+          socials: {},
           selectedTheme: 'minimal-light',
           createdAt: new Date(),
           updatedAt: new Date(),

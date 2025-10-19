@@ -33,9 +33,31 @@
           },
           "description": "A list of the user's skills."
         },
+        "socials": {
+          "type": "object",
+          "properties": {
+            "github": { "type": "string", "format": "uri" },
+            "linkedin": { "type": "string", "format": "uri" },
+            "twitter": { "type": "string", "format": "uri" },
+            "website": { "type": "string", "format": "uri" }
+          }
+        },
         "selectedTheme": {
           "type": "string",
-          "enum": ["minimal-light", "modern-dark", "professional-blue"],
+          "enum": [
+            "minimal-light", 
+            "modern-dark", 
+            "professional-blue",
+            "retro-gamer",
+            "brutalist-web",
+            "cyberpunk-neon",
+            "elegant-serif",
+            "cosmic-dream",
+            "hacker-terminal",
+            "craftsman-paper",
+            "photo-grid",
+            "lakeside-dawn"
+          ],
           "description": "The user's selected portfolio theme."
         },
         "createdAt": {

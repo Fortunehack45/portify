@@ -2,7 +2,7 @@ import { User, Project } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Github, ExternalLink, Mail, Linkedin, Twitter } from 'lucide-react';
+import { Github, ExternalLink, Mail, Linkedin, Twitter, Link as LinkIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
 import { placeholderImages } from '@/lib/placeholder-images';
@@ -34,10 +34,12 @@ const ModernDark: React.FC<ThemeProps> = ({ user, projects }) => {
           <h1 className={cn("text-5xl md:text-7xl font-bold font-headline text-white", accentColor)}>{user.name}</h1>
           <p className="text-xl text-gray-400 mt-2">@{user.username}</p>
           <p className="mt-6 text-lg max-w-3xl mx-auto">{user.bio}</p>
-          <div className="flex justify-center gap-4 mt-6">
-            <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`}><Mail className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>
-            <Button variant="ghost" size="icon" asChild><a href="#"><Linkedin className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>
-            <Button variant="ghost" size="icon" asChild><a href="#"><Twitter className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>
+          <div className="flex justify-center gap-2 mt-6">
+            <Button variant="ghost" size="icon" asChild><a href={`mailto:${user.email}`} aria-label="Email"><Mail className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>
+            {user.socials?.github && <Button variant="ghost" size="icon" asChild><a href={user.socials.github} target="_blank" rel="noopener noreferrer" aria-label="GitHub"><Github className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>}
+            {user.socials?.linkedin && <Button variant="ghost" size="icon" asChild><a href={user.socials.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn"><Linkedin className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>}
+            {user.socials?.twitter && <Button variant="ghost" size="icon" asChild><a href={user.socials.twitter} target="_blank" rel="noopener noreferrer" aria-label="Twitter"><Twitter className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>}
+            {user.socials?.website && <Button variant="ghost" size="icon" asChild><a href={user.socials.website} target="_blank" rel="noopener noreferrer" aria-label="Website"><LinkIcon className="w-6 h-6 text-gray-400 hover:text-cyan-400" /></a></Button>}
           </div>
         </header>
 

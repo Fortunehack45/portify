@@ -8,16 +8,36 @@ const MinimalLight = lazy(() => import('./minimal-light'));
 const ModernDark = lazy(() => import('./modern-dark'));
 const ProfessionalBlue = lazy(() => import('./professional-blue'));
 
-const themeMap: Record<Theme, React.LazyExoticComponent<React.FC<ThemeProps>>> = {
-  'minimal-light': MinimalLight,
-  'modern-dark': ModernDark,
-  'professional-blue': ProfessionalBlue,
-};
+// Placeholders for the new themes
+const RetroGamer = lazy(() => import('./retro-gamer'));
+const BrutalistWeb = lazy(() => import('./brutalist-web'));
+const CyberpunkNeon = lazy(() => import('./cyberpunk-neon'));
+const ElegantSerif = lazy(() => import('./elegant-serif'));
+const CosmicDream = lazy(() => import('./cosmic-dream'));
+const HackerTerminal = lazy(() => import('./hacker-terminal'));
+const CraftsmanPaper = lazy(() => import('./craftsman-paper'));
+const PhotoGrid = lazy(() => import('./photo-grid'));
+const LakesideDawn = lazy(() => import('./lakeside-dawn'));
 
 interface ThemeProps {
   user: User;
   projects: Project[];
 }
+
+const themeMap: Record<Theme, React.LazyExoticComponent<React.FC<ThemeProps>>> = {
+  'minimal-light': MinimalLight,
+  'modern-dark': ModernDark,
+  'professional-blue': ProfessionalBlue,
+  'retro-gamer': RetroGamer,
+  'brutalist-web': BrutalistWeb,
+  'cyberpunk-neon': CyberpunkNeon,
+  'elegant-serif': ElegantSerif,
+  'cosmic-dream': CosmicDream,
+  'hacker-terminal': HackerTerminal,
+  'craftsman-paper': CraftsmanPaper,
+  'photo-grid': PhotoGrid,
+  'lakeside-dawn': LakesideDawn,
+};
 
 interface ThemeRendererProps {
   theme: Theme;

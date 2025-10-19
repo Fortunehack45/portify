@@ -21,13 +21,14 @@ export const signUpWithEmail = async (email: string, password: string, name: str
 
   await updateProfile(user, { displayName: name });
 
-  const userProfile: Partial<User> = {
+  const userProfile: User = {
     id: user.uid,
     name,
     username,
-    email,
+    email: email,
     bio: '',
     skills: [],
+    socials: {},
     selectedTheme: 'minimal-light',
     createdAt: new Date(),
     updatedAt: new Date(),
