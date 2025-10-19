@@ -56,26 +56,34 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
           const TemplateComponent = option.component;
           return (
             <div key={option.value} className="space-y-2">
-                <button
-                className={cn(
-                    "relative block w-full rounded-lg border-2 bg-card overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 aspect-[4/5]",
-                    selectedTemplate === option.value ? "border-primary" : "border-border"
-                )}
-                onClick={() => onTemplateChange(option.value)}
+                <div
+                    role="button"
+                    aria-label={`Select ${option.label} template`}
+                    tabIndex={0}
+                    className={cn(
+                        "relative block w-full rounded-lg border-2 bg-card overflow-hidden focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 aspect-[4/5] cursor-pointer",
+                        selectedTemplate === option.value ? "border-primary" : "border-border"
+                    )}
+                    onClick={() => onTemplateChange(option.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                        onTemplateChange(option.value);
+                        }
+                    }}
                 >
-                {selectedTemplate === option.value && (
-                    <div className="absolute top-2 right-2 z-20 bg-primary text-primary-foreground rounded-full p-0.5">
-                    <CheckCircle className="h-5 w-5" />
-                    </div>
-                )}
-                <div className="absolute inset-0 transform scale-[0.25] origin-top-left pointer-events-none">
-                    <div className="w-[1280px] h-[1600px] bg-background">
-                         <Suspense fallback={<Skeleton className="w-full h-full" />}>
-                            <TemplateComponent user={user} projects={projects} />
-                         </Suspense>
+                    {selectedTemplate === option.value && (
+                        <div className="absolute top-2 right-2 z-20 bg-primary text-primary-foreground rounded-full p-0.5">
+                        <CheckCircle className="h-5 w-5" />
+                        </div>
+                    )}
+                    <div className="absolute inset-0 transform scale-[0.25] origin-top-left pointer-events-none">
+                        <div className="w-[1280px] h-[1600px] bg-background">
+                            <Suspense fallback={<Skeleton className="w-full h-full" />}>
+                                <TemplateComponent user={user} projects={projects} />
+                            </Suspense>
+                        </div>
                     </div>
                 </div>
-                </button>
                 <p className="text-sm font-medium text-center">{option.label}</p>
             </div>
           )
