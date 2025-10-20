@@ -74,7 +74,16 @@ export default async function SpecificPortfolioPage({ params }: { params: { user
     );
 
   } catch (err: any) {
-    console.error("Error fetching portfolio data:", err);
+    if (err.code === 'permission-denied') {
+        console.error("Firestore Permission Denied on Server:", JSON.stringify({
+            message: "A server-side Firestore query was denied. Check the security rules for the collections being accessed.",
+            path: err.customData?.path || `/${err.toString().match(/denied.+resource:\s*([^/]+\/[^/]+)/)?.[1]}/`,
+            query: err.customData?.query || `userId == ${params.username}, slug == ${params.portfolioSlug}`,
+            operation: 'list/get',
+        }, null, 2));
+    } else {
+        console.error("Error fetching portfolio data:", err);
+    }
     // In case of permission errors or other server issues, treat as not found.
     notFound();
   }
