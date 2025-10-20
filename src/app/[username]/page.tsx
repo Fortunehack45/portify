@@ -4,7 +4,7 @@
 import { notFound, useParams } from 'next/navigation';
 import { useFirestore } from '@/firebase';
 import TemplateRenderer from '@/components/templates/template-renderer';
-import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import type { User, Project } from '@/types';
 import { useEffect, useState } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -57,7 +57,7 @@ const usePortfolioData = (username: string) => {
       } catch (err: any) {
         if (err.code === 'permission-denied') {
             const permissionError = new FirestorePermissionError({
-              path: `users (querying where username == ${username})`,
+              path: `users`,
               operation: 'list', 
             });
             errorEmitter.emit('permission-error', permissionError);
