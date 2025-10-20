@@ -18,14 +18,16 @@ Please download it from your Firebase project settings (Project settings > Servi
 rename it to 'serviceAccountKey.json', and place it in the root directory of your project.`);
         }
         
-        const serviceAccount = require(serviceAccountPath);
+        const serviceAccountString = fs.readFileSync(serviceAccountPath, 'utf8');
+        const serviceAccount = JSON.parse(serviceAccountString);
 
         initializeApp({
             credential: cert(serviceAccount),
         });
+        adminDb = getFirestore();
+    } else {
+        adminDb = getFirestore(getApps()[0]);
     }
-    adminDb = getFirestore(getApps()[0]);
-
 } catch (error: any) {
     console.error("Firebase Admin SDK initialization failed:", error.message);
     // We re-throw the error to ensure it's visible during development and server startup
