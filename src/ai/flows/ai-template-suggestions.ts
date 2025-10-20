@@ -25,9 +25,6 @@ const TemplateSuggestionOutputSchema = z.object({
 });
 export type TemplateSuggestionOutput = z.infer<typeof TemplateSuggestionOutputSchema>;
 
-export async function suggestTemplates(input: TemplateSuggestionInput): Promise<TemplateSuggestionOutput> {
-  return suggestTemplatesFlow(input);
-}
 
 const prompt = ai.definePrompt({
   name: 'templateSuggestionPrompt',
@@ -43,7 +40,7 @@ Project Descriptions:
 Output the names of the templates that you suggest.`, 
 });
 
-const suggestTemplatesFlow = ai.defineFlow(
+export const suggestTemplatesFlow = ai.defineFlow(
   {
     name: 'suggestTemplatesFlow',
     inputSchema: TemplateSuggestionInputSchema,
@@ -54,3 +51,12 @@ const suggestTemplatesFlow = ai.defineFlow(
     return output!;
   }
 );
+
+
+// Wrapper function for client-side invocation
+export async function suggestTemplates(input: TemplateSuggestionInput): Promise<TemplateSuggestionOutput> {
+  // In a real app, you might call your API endpoint here,
+  // but for simplicity, we're calling the flow directly.
+  // This will only work if the client and server are the same deployment.
+  return suggestTemplatesFlow(input);
+}
