@@ -1,52 +1,55 @@
 
 import { notFound } from 'next/navigation';
-import { getFirebaseForServer } from '@/firebase/server';
 import TemplateRenderer from '@/components/templates/template-renderer';
-import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import type { User, Project, Portfolio } from '@/types';
+import { adminDb } from '@/firebase/server-admin';
+import { Timestamp } from 'firebase-admin/firestore';
 
 export default async function SpecificPortfolioPage({ params }: { params: { username: string, portfolioSlug: string } }) {
   const { username, portfolioSlug } = params;
-  const { firestore } = getFirebaseForServer();
-
-  if (!firestore) {
-    console.error("Firestore is not initialized on the server.");
-    notFound();
-  }
 
   try {
     // 1. Get User ID from username
-    const usernameRef = doc(firestore, 'usernames', username.toLowerCase());
-    const usernameSnap = await getDoc(usernameRef);
-    if (!usernameSnap.exists()) {
+    const usernameDoc = await adminDb.collection('usernames').doc(username.toLowerCase()).get();
+    
+    if (!usernameDoc.exists) {
       console.log(`Username document not found for: ${username.toLowerCase()}`);
       notFound();
     }
-    const { userId } = usernameSnap.data();
+    const { userId } = usernameDoc.data()!;
 
     // 2. Get User Profile
-    const userRef = doc(firestore, 'users', userId);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
+    const userDoc = await adminDb.collection('users').doc(userId).get();
+    if (!userDoc.exists) {
       console.log(`User profile not found for userId: ${userId}`);
       notFound();
     }
-    const user = { id: userSnap.id, ...userSnap.data() } as User;
+
+    const convertTimestamp = (data: any) => {
+        for (const key in data) {
+            if (data[key] instanceof Timestamp) {
+                data[key] = data[key].toDate();
+            }
+        }
+        return data;
+    }
+
+    const user = { id: userDoc.id, ...convertTimestamp(userDoc.data()) } as User;
+
 
     // 3. Get the specific portfolio by slug
-    const portfolioQuery = query(
-        collection(firestore, 'portfolios'), 
-        where('userId', '==', userId), 
-        where('slug', '==', portfolioSlug), 
-        limit(1)
-    );
-    const portfolioSnapshot = await getDocs(portfolioQuery);
+    const portfolioSnapshot = await adminDb.collection('portfolios')
+        .where('userId', '==', userId)
+        .where('slug', '==', portfolioSlug)
+        .limit(1)
+        .get();
+
     if (portfolioSnapshot.empty) {
       console.log(`Portfolio not found for slug: ${portfolioSlug}`);
       notFound();
     }
     const portfolioDoc = portfolioSnapshot.docs[0];
-    const portfolio = { id: portfolioDoc.id, ...portfolioDoc.data() } as Portfolio;
+    const portfolio = { id: portfolioDoc.id, ...convertTimestamp(portfolioDoc.data()) } as Portfolio;
 
     // 4. Get Projects
     let projects: Project[] = [];
@@ -58,11 +61,11 @@ export default async function SpecificPortfolioPage({ params }: { params: { user
         }
         
         const projectPromises = projectChunks.map(chunk => 
-          getDocs(query(collection(firestore, 'projects'), where('__name__', 'in', chunk)))
+            adminDb.collection('projects').where('__name__', 'in', chunk).get()
         );
         
         const projectSnapshots = await Promise.all(projectPromises);
-        projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
+        projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...convertTimestamp(doc.data()) } as Project)));
     }
     
     return (
@@ -74,17 +77,9 @@ export default async function SpecificPortfolioPage({ params }: { params: { user
     );
 
   } catch (err: any) {
-    if (err.code === 'permission-denied') {
-        console.error("Firestore Permission Denied on Server:", JSON.stringify({
-            message: "A server-side Firestore query was denied. Check the security rules for the collections being accessed.",
-            path: err.customData?.path || `/${err.toString().match(/denied.+resource:\s*([^/]+\/[^/]+)/)?.[1]}/`,
-            query: err.customData?.query || `userId == ${params.username}, slug == ${params.portfolioSlug}`,
-            operation: 'list/get',
-        }, null, 2));
-    } else {
-        console.error("Error fetching portfolio data:", err);
-    }
-    // In case of permission errors or other server issues, treat as not found.
+    console.error("Error fetching portfolio data with Admin SDK:", err);
+    // If there's an error with the admin SDK, it's likely a config issue, not a permissions one.
+    // We'll treat it as a not-found to the public user, but the error will be in the server logs.
     notFound();
   }
 }
