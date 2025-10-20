@@ -1,3 +1,4 @@
+
 'use client';
 
 import {
@@ -10,7 +11,7 @@ import {
   GithubAuthProvider,
   type User as AuthUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, addDoc, writeBatch, serverTimestamp, runTransaction } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, addDoc, writeBatch, serverTimestamp, runTransaction, Transaction } from 'firebase/firestore';
 import { getFirebase } from '..';
 import { User, Project, Portfolio } from '@/types';
 import { errorEmitter } from '../error-emitter';
@@ -18,12 +19,12 @@ import { FirestorePermissionError } from '../errors';
 
 const { auth, firestore } = getFirebase();
 
-const createSampleProjectAndPortfolio = (userId: string, batch: import('firebase/firestore').WriteBatch) => {
+const createSampleProjectAndPortfolio = (userId: string, transaction: Transaction) => {
     if (!firestore) return;
     
     // Create a sample project
     const projectRef = doc(collection(firestore, 'projects'));
-    batch.set(projectRef, {
+    transaction.set(projectRef, {
         userId: userId,
         title: "My First Project",
         slug: "my-first-project",
@@ -38,7 +39,7 @@ const createSampleProjectAndPortfolio = (userId: string, batch: import('firebase
 
     // Create a primary portfolio and include the sample project
     const portfolioRef = doc(collection(firestore, 'portfolios'));
-    batch.set(portfolioRef, {
+    transaction.set(portfolioRef, {
         userId: userId,
         name: "Main Portfolio",
         slug: "main",
@@ -90,12 +91,10 @@ const createUserProfileAndUsername = async (user: AuthUser, name: string, userna
 
             transaction.set(userDocRef, finalUserData);
             transaction.set(usernameDocRef, usernameData);
+            
+            // Create sample data within the same transaction
+            createSampleProjectAndPortfolio(user.uid, transaction);
         });
-
-        // If the transaction was successful, create the sample portfolio.
-        const batch = writeBatch(firestore);
-        createSampleProjectAndPortfolio(user.uid, batch);
-        await batch.commit();
 
     } catch (error: any) {
         if (error.message === "Username is already taken.") {
