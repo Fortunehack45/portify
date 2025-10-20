@@ -1,5 +1,4 @@
 
-
 'use client';
 
 import * as React from 'react';
@@ -18,6 +17,7 @@ import {
 } from '@/components/ui/resizable';
 import type { ImperativePanelGroupHandle } from 'react-resizable-panels';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
+import { useSearchParams } from 'next/navigation';
 
 const EDITOR_TAB_STORAGE_KEY = 'folioforge-editor-active-tab';
 
@@ -26,12 +26,15 @@ export default function EditorPage() {
   const firestore = useFirestore();
   const isMobile = useIsMobile();
   const panelGroupRef = React.useRef<ImperativePanelGroupHandle>(null);
-  
+  const searchParams = useSearchParams();
+  const portfolioId = searchParams.get('portfolioId');
+
   const [activeTab, setActiveTab] = useState('editor');
   const [liveUser, setLiveUser] = useState<User | null>(null);
   const [liveProjects, setLiveProjects] = useState<Project[]>([]);
   const [livePortfolio, setLivePortfolio] = useState<Portfolio | null>(null);
-  
+
+  // Fetch all user projects
   const projectsQuery = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
     return query(collection(firestore, 'projects'), where('userId', '==', authUser.uid));
@@ -41,14 +44,31 @@ export default function EditorPage() {
     projectsQuery
   );
 
-  const portfolioQuery = useMemoFirebase(() => {
+  // Fetch the specific portfolio to edit (or the primary one if no ID is specified)
+  const portfolioRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
+    if (portfolioId) {
+      return doc(firestore, 'portfolios', portfolioId);
+    }
+    // This part will be handled by the collection query below if no ID is given
+    return null;
+  }, [firestore, authUser, portfolioId]);
+
+  const { data: singlePortfolio, loading: singlePortfolioLoading } = useDoc<Portfolio>(portfolioRef);
+
+  const primaryPortfolioQuery = useMemoFirebase(() => {
+    // Only run this query if there's no portfolioId
+    if (!firestore || !authUser || portfolioId) return null;
     return query(collection(firestore, 'portfolios'), where('userId', '==', authUser.uid), where('isPrimary', '==', true));
-  }, [firestore, authUser]);
+  }, [firestore, authUser, portfolioId]);
 
-  const { data: portfolios, loading: portfolioLoading } = useCollection<Portfolio>(portfolioQuery);
+  const { data: primaryPortfolios, loading: primaryPortfolioLoading } = useCollection<Portfolio>(primaryPortfolioQuery);
+
+  const portfolio = portfolioId ? singlePortfolio : (primaryPortfolios && primaryPortfolios[0]);
+  const portfolioLoading = portfolioId ? singlePortfolioLoading : primaryPortfolioLoading;
 
 
+  // Fetch user profile
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
     return doc(firestore, 'users', authUser.uid);
@@ -60,7 +80,6 @@ export default function EditorPage() {
     if (userProfile) {
       setLiveUser(userProfile);
     } else if (authUser && !profileLoading && !userProfile) {
-      // If authUser exists but there's no profile, create a default one in state
       setLiveUser({
         id: authUser.uid,
         email: authUser.email || '',
@@ -79,22 +98,10 @@ export default function EditorPage() {
   }, [authUser, userProfile, profileLoading]);
 
   useEffect(() => {
-    if (portfolios && portfolios.length > 0) {
-      setLivePortfolio(portfolios[0]);
-    } else if (!portfolioLoading && authUser) {
-        setLivePortfolio({
-            id: 'temp-id',
-            userId: authUser.uid,
-            name: 'Main Portfolio',
-            slug: 'main',
-            projectIds: [],
-            selectedTemplate: 'minimal-light',
-            isPrimary: true,
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now()
-        });
+    if (portfolio) {
+      setLivePortfolio(portfolio);
     }
-  }, [portfolios, authUser, portfolioLoading]);
+  }, [portfolio]);
 
 
   useEffect(() => {
@@ -215,5 +222,3 @@ export default function EditorPage() {
     </div>
   );
 }
-
-    

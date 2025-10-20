@@ -8,7 +8,7 @@ import { Save } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
-import { doc, setDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, limit, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import TemplateSelector from './template-selector';
@@ -46,8 +46,8 @@ export default function EditorClient({
   };
 
   const handleSave = async () => {
-    if (!firestore || !authUser) {
-      toast({ title: "Error", description: "Could not save. User not authenticated.", variant: "destructive" });
+    if (!firestore || !authUser || !portfolio) {
+      toast({ title: "Error", description: "Could not save. User or portfolio not available.", variant: "destructive" });
       return;
     }
   
@@ -64,40 +64,20 @@ export default function EditorClient({
     batch.set(userDocRef, userDataWithoutId, { merge: true });
     
     // 2. Update the portfolio
-    if (portfolio) {
-        let portfolioId = portfolio.id;
-        // If it's a temporary ID, fetch the real one
-        if (portfolioId === 'temp-id') {
-            const portfolioQuery = query(
-                collection(firestore, 'portfolios'),
-                where('userId', '==', authUser.uid),
-                where('isPrimary', '==', true),
-                limit(1)
-            );
-            const portfolioSnapshot = await getDocs(portfolioQuery);
-            if (!portfolioSnapshot.empty) {
-                portfolioId = portfolioSnapshot.docs[0].id;
-            } else {
-                toast({ title: "Error", description: "Primary portfolio not found.", variant: "destructive" });
-                return;
-            }
-        }
-        const portfolioDocRef = doc(firestore, 'portfolios', portfolioId);
-        const portfolioData = {
-            ...portfolio,
-            id: portfolioId, // Ensure the correct id is set
-            updatedAt: serverTimestamp(),
-        };
-        const { id: portfolioIdToRemove, ...portfolioDataWithoutId } = portfolioData;
-        batch.set(portfolioDocRef, portfolioDataWithoutId, { merge: true });
-    }
-
+    const portfolioDocRef = doc(firestore, 'portfolios', portfolio.id);
+    const portfolioData = {
+        ...portfolio,
+        updatedAt: serverTimestamp(),
+    };
+    const { id: portfolioIdToRemove, ...portfolioDataWithoutId } = portfolioData;
+    batch.set(portfolioDocRef, portfolioDataWithoutId, { merge: true });
+    
     try {
       await batch.commit();
   
       toast({
-        title: 'Profile Saved!',
-        description: 'Your profile changes have been successfully saved.',
+        title: 'Content Saved!',
+        description: 'Your changes have been successfully saved.',
       });
     } catch (error: any) {
       const permissionError = new FirestorePermissionError({
@@ -109,7 +89,7 @@ export default function EditorClient({
 
       toast({
         title: 'Uh oh! Something went wrong.',
-        description: 'Could not save your profile changes.',
+        description: 'Could not save your changes.',
         variant: 'destructive',
       });
     }
@@ -120,17 +100,22 @@ export default function EditorClient({
       <div className="flex-shrink-0 flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10 md:relative">
           <div className="space-y-1">
               <h1 className="text-2xl font-bold font-headline">Editor</h1>
-              <p className="text-muted-foreground text-sm">Update your profile and projects.</p>
+              <p className="text-muted-foreground text-sm">Editing: <span className="font-semibold text-foreground">{portfolio.name}</span></p>
           </div>
           <Button onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" />
-              Save Profile
+              Save Changes
           </Button>
       </div>
       <div className="p-6 space-y-6 h-full overflow-y-auto">
         <Accordion type="multiple" defaultValue={['profile', 'projects', 'template']} className="w-full space-y-4">
             <ProfileForm user={user} onUserChange={handleUserPropChange} />
-            <ProjectsList projects={projects} setProjects={onProjectsChange} />
+            <ProjectsList 
+              projects={projects}
+              setProjects={onProjectsChange}
+              portfolio={portfolio}
+              onPortfolioChange={onPortfolioChange}
+             />
             <AccordionItem value="template">
               <AccordionTrigger className="p-4 bg-background rounded-lg border shadow-sm text-base font-medium">
                 Template
@@ -152,5 +137,3 @@ export default function EditorClient({
     </div>
   );
 }
-
-    

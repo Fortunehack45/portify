@@ -1,5 +1,6 @@
+
 'use client';
-import { Project } from '@/types';
+import { Project, Portfolio } from '@/types';
 import { Button } from '../ui/button';
 import { PlusCircle, MoreVertical, Edit, Trash2 } from 'lucide-react';
 import {
@@ -24,13 +25,17 @@ import { useToast } from '@/hooks/use-toast';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Checkbox } from '../ui/checkbox';
+import { Label } from '../ui/label';
 
 interface ProjectsListProps {
   projects: Project[];
   setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
+  portfolio: Portfolio;
+  onPortfolioChange: (portfolio: Portfolio) => void;
 }
 
-export default function ProjectsList({ projects, setProjects }: ProjectsListProps) {
+export default function ProjectsList({ projects, setProjects, portfolio, onPortfolioChange }: ProjectsListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingProject, setEditingProject] = useState<Project | null>(null);
   const firestore = useFirestore();
@@ -141,6 +146,16 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
     setIsDialogOpen(true);
   };
 
+  const handleProjectToggle = (projectId: string, checked: boolean) => {
+    let updatedProjectIds;
+    if (checked) {
+        updatedProjectIds = [...portfolio.projectIds, projectId];
+    } else {
+        updatedProjectIds = portfolio.projectIds.filter(id => id !== projectId);
+    }
+    onPortfolioChange({ ...portfolio, projectIds: updatedProjectIds });
+  };
+
   return (
     <AccordionItem value="projects">
         <AccordionTrigger className="p-4 bg-background rounded-lg border shadow-sm text-base font-medium">
@@ -149,7 +164,7 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
         <AccordionContent className="pt-4">
              <div className="space-y-4 bg-background p-4 rounded-b-lg border-x border-b">
                 <div className="flex items-center justify-between">
-                    <p className="text-sm text-muted-foreground">Add, edit, or remove projects.</p>
+                    <p className="text-sm text-muted-foreground">Select projects to include in this portfolio.</p>
                      <Dialog open={isDialogOpen} onOpenChange={(isOpen) => {
                         setIsDialogOpen(isOpen);
                         if (!isOpen) setEditingProject(null);
@@ -157,7 +172,7 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
                         <DialogTrigger asChild>
                             <Button size="sm" onClick={handleAddNew}>
                                 <PlusCircle className="mr-2 h-4 w-4" />
-                                Add Project
+                                Add New Project
                             </Button>
                         </DialogTrigger>
                         <DialogContent className="sm:max-w-[425px]">
@@ -183,26 +198,33 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
                     {projects.length > 0 ? (
                     projects.map((project) => (
                         <div key={project.id} className="flex items-center justify-between rounded-lg border p-3 bg-muted/50">
-                        <span className="font-medium text-sm">{project.title}</span>
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                <MoreVertical className="h-4 w-4" />
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                            <DropdownMenuItem onSelect={() => handleEdit(project)}>
-                                <Edit className="mr-2 h-4 w-4" /> Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleDelete(project)} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" /> Delete
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
+                            <div className="flex items-center gap-4">
+                                <Checkbox
+                                    id={`project-${project.id}`}
+                                    checked={portfolio.projectIds.includes(project.id)}
+                                    onCheckedChange={(checked) => handleProjectToggle(project.id, !!checked)}
+                                />
+                                <Label htmlFor={`project-${project.id}`} className="font-medium text-sm cursor-pointer">{project.title}</Label>
+                            </div>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent>
+                                <DropdownMenuItem onSelect={() => handleEdit(project)}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onSelect={() => handleDelete(project)} className="text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     ))
                     ) : (
-                    <p className="text-sm text-muted-foreground text-center py-8">No projects added yet.</p>
+                    <p className="text-sm text-muted-foreground text-center py-8">No projects created yet.</p>
                     )}
                 </div>
             </div>

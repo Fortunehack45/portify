@@ -2,13 +2,14 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useDoc, useFirestore, useUser } from '@/firebase';
-import type { User } from '@/types';
-import { doc } from 'firebase/firestore';
-import { ArrowRight, Edit, Eye, PlusCircle } from 'lucide-react';
+import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
+import type { User, Portfolio } from '@/types';
+import { collection, doc, query, where } from 'firebase/firestore';
+import { ArrowRight, Edit, PlusCircle, Star } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
+import { cn } from '@/lib/utils';
 
 export default function DashboardPage() {
   const { user: authUser } = useUser();
@@ -21,6 +22,13 @@ export default function DashboardPage() {
 
   const { data: currentUser } = useDoc<User>(userProfileRef);
 
+  const portfoliosQuery = useMemoFirebase(() => {
+    if (!firestore || !authUser) return null;
+    return query(collection(firestore, 'portfolios'), where('userId', '==', authUser.uid));
+  }, [firestore, authUser]);
+
+  const { data: portfolios, loading: portfoliosLoading } = useCollection<Portfolio>(portfoliosQuery);
+
   const publicUsername = currentUser?.username || 'preview';
 
   return (
@@ -32,30 +40,40 @@ export default function DashboardPage() {
 
       <Card className="shadow-sm">
         <CardHeader>
-          <CardTitle>Your Portfolio</CardTitle>
+          <CardTitle>Your Portfolios</CardTitle>
           <CardDescription>
-            This is your main portfolio. Continue editing or view the public version.
+            Manage your portfolios. The primary portfolio is shown on your public `/{'username'}` URL.
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between rounded-lg border p-4">
-              <span className="font-medium text-base">FolioForge Portfolio</span>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" asChild>
-                    <Link href="/dashboard/editor">
-                        <Edit className="mr-2 h-4 w-4" /> Edit
-                    </Link>
-                </Button>
-                <Button asChild>
-                    <Link href={`/${publicUsername}`} target="_blank">
-                        View Public Site <ArrowRight className="ml-2 h-4 w-4" />
-                    </Link>
-                </Button>
-              </div>
-          </div>
-           <p className="text-sm text-muted-foreground">
-              Your public portfolio is live at: <Link href={`/${publicUsername}`} className="underline font-medium" target='_blank'>{`/${publicUsername}`}</Link>
-          </p>
+            {portfoliosLoading ? (
+                <p>Loading portfolios...</p>
+            ) : (
+                <div className="space-y-3">
+                {portfolios?.sort((a,b) => (a.isPrimary ? -1 : 1)).map(p => (
+                    <div key={p.id} className={cn("flex items-center justify-between rounded-lg border p-4", p.isPrimary && "border-primary/50 bg-primary/5")}>
+                        <div className="flex items-center gap-3">
+                           {p.isPrimary && <Star className="h-5 w-5 text-primary" />}
+                           <span className="font-medium text-base">{p.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" asChild>
+                                <Link href={`/dashboard/editor?portfolioId=${p.id}`}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                </Link>
+                            </Button>
+                            {p.isPrimary && (
+                                <Button asChild>
+                                    <Link href={`/${publicUsername}`} target="_blank">
+                                        View Public Site <ArrowRight className="ml-2 h-4 w-4" />
+                                    </Link>
+                                </Button>
+                            )}
+                        </div>
+                    </div>
+                ))}
+                </div>
+            )}
         </CardContent>
       </Card>
 
