@@ -1,3 +1,4 @@
+
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
@@ -12,7 +13,7 @@ export default function UserPortfolioPage() {
   const username = params.username as string;
   const firestore = useFirestore();
 
-  const [user, setUser] = useState<User | null | undefined>(undefined); // Use undefined for initial loading state
+  const [user, setUser] = useState<User | null | undefined>(undefined); // undefined for loading, null for not found
   const [projects, setProjects] = useState<Project[]>([]);
   
   useEffect(() => {
@@ -22,18 +23,25 @@ export default function UserPortfolioPage() {
       }
 
       try {
-        // Fetch user data
+        // --- NEW LOGIC: Fetch all users and find by username in client ---
         const usersRef = collection(firestore, 'users');
-        const userQuery = query(usersRef, where('username', '==', username), limit(1));
-        const userSnapshot = await getDocs(userQuery);
+        const usersSnapshot = await getDocs(usersRef);
 
-        if (userSnapshot.empty) {
+        let foundUser: User | null = null;
+        
+        usersSnapshot.forEach((doc) => {
+          const userData = doc.data() as Omit<User, 'id'>;
+          if (userData.username === username) {
+            foundUser = { id: doc.id, ...userData };
+          }
+        });
+        // --- END NEW LOGIC ---
+
+        if (!foundUser) {
           setUser(null); // User not found
         } else {
-          const userData = userSnapshot.docs[0].data() as Omit<User, 'id'>;
-          const userId = userSnapshot.docs[0].id;
-          const userWithId = { id: userId, ...userData }
-          setUser(userWithId);
+          setUser(foundUser);
+          const userId = foundUser.id;
 
           // Fetch projects for that user
           const projectsQuery = query(collection(firestore, 'projects'), where('userId', '==', userId));
@@ -43,7 +51,7 @@ export default function UserPortfolioPage() {
         }
       } catch (error) {
         console.error("Error fetching portfolio data:", error);
-        setUser(null); // Set to null on error to prevent infinite loading
+        setUser(null); // Set to null on error
       }
     };
 
