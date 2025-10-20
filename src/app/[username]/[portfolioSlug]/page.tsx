@@ -1,131 +1,89 @@
 
-'use client';
-
-import { notFound, useParams } from 'next/navigation';
-import { useFirestore } from '@/firebase';
+import { notFound } from 'next/navigation';
+import { getFirebase } from '@/firebase';
 import TemplateRenderer from '@/components/templates/template-renderer';
 import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import type { User, Project, Portfolio } from '@/types';
-import { useEffect, useState } from 'react';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
-const usePortfolioData = (username: string, portfolioSlug: string) => {
-  const firestore = useFirestore();
-  const [data, setData] = useState<{ user: User; projects: Project[], portfolio: Portfolio } | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!firestore || !username || !portfolioSlug) {
-      setLoading(false);
-      return;
-    }
-
-    const fetchPortfolio = async () => {
-      setLoading(true);
-      setError(null);
-      let portfolioQuery;
-      try {
-        const lookupUsername = username.toLowerCase();
-        
-        const usernameRef = doc(firestore, 'usernames', lookupUsername);
-        const usernameSnap = await getDoc(usernameRef);
-
-        if (!usernameSnap.exists()) {
-          setError('User not found');
-          setLoading(false);
-          return;
-        }
-
-        const { userId } = usernameSnap.data();
-
-        const userRef = doc(firestore, 'users', userId);
-        const userSnap = await getDoc(userRef);
-
-        if (!userSnap.exists()) {
-            setError('User profile not found');
-            setLoading(false);
-            return;
-        }
-
-        const user = { id: userSnap.id, ...userSnap.data() } as User;
-
-        // Fetch the specific portfolio by slug
-        const portfolioRef = collection(firestore, 'portfolios');
-        portfolioQuery = query(
-            portfolioRef, 
-            where('userId', '==', userId), 
-            where('slug', '==', portfolioSlug), 
-            limit(1)
-        );
-        const portfolioSnapshot = await getDocs(portfolioQuery);
-
-        if (portfolioSnapshot.empty) {
-            setError('Portfolio not found');
-            setLoading(false);
-            return;
-        }
-
-        const portfolio = { id: portfolioSnapshot.docs[0].id, ...portfolioSnapshot.docs[0].data() } as Portfolio;
-
-        let projects: Project[] = [];
-        if (portfolio.projectIds && portfolio.projectIds.length > 0) {
-            const projectChunks: string[][] = [];
-            for (let i = 0; i < portfolio.projectIds.length; i += 30) {
-              projectChunks.push(portfolio.projectIds.slice(i, i + 30));
-            }
-            
-            const projectPromises = projectChunks.map(chunk => 
-              getDocs(query(collection(firestore, 'projects'), where('__name__', 'in', chunk)))
-            );
-            
-            const projectSnapshots = await Promise.all(projectPromises);
-            projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
-        }
-        
-        setData({ user, projects, portfolio });
-
-      } catch (err: any) {
-        if (err.code === 'permission-denied') {
-            const permissionError = new FirestorePermissionError({
-              path: (portfolioQuery as any)?._query.path.segments.join('/') || `portfolios`,
-              operation: 'list', 
-            });
-            errorEmitter.emit('permission-error', permissionError);
-            setError('Failed to fetch data due to permission issues.');
-        } else {
-            setError('An unexpected error occurred.');
-            console.error("Portfolio fetch error:", err);
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchPortfolio();
-  }, [firestore, username, portfolioSlug]);
-
-  return { data, loading, error };
-};
-
-
-export default function SpecificPortfolioPage() {
-  const params = useParams();
-  const username = params.username as string;
-  const portfolioSlug = params.portfolioSlug as string;
-  
-  const { data, loading, error } = usePortfolioData(username, portfolioSlug);
-
-  if (loading) {
-    return <div className="flex h-screen w-full items-center justify-center">Loading portfolio...</div>;
+async function getPortfolioData(username: string, portfolioSlug: string) {
+  const { firestore } = getFirebase();
+  if (!firestore) {
+    console.error("Firestore is not initialized.");
+    return null;
   }
 
-  if (error || !data) {
-     if (error && error.includes('permission')) {
-        throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}". Check your Firestore security rules.`);
-     }
-     notFound();
+  try {
+    const lookupUsername = username.toLowerCase();
+    
+    const usernameRef = doc(firestore, 'usernames', lookupUsername);
+    const usernameSnap = await getDoc(usernameRef);
+
+    if (!usernameSnap.exists()) {
+      console.log(`Username document not found for: ${lookupUsername}`);
+      return null;
+    }
+
+    const { userId } = usernameSnap.data();
+
+    const userRef = doc(firestore, 'users', userId);
+    const userSnap = await getDoc(userRef);
+
+    if (!userSnap.exists()) {
+      console.log(`User profile not found for userId: ${userId}`);
+      return null;
+    }
+
+    const user = { id: userSnap.id, ...userSnap.data() } as User;
+
+    const portfolioRef = collection(firestore, 'portfolios');
+    const portfolioQuery = query(
+        portfolioRef, 
+        where('userId', '==', userId), 
+        where('slug', '==', portfolioSlug), 
+        limit(1)
+    );
+    const portfolioSnapshot = await getDocs(portfolioQuery);
+
+    if (portfolioSnapshot.empty) {
+      console.log(`Portfolio not found for slug: ${portfolioSlug}`);
+      return null;
+    }
+
+    const portfolio = { id: portfolioSnapshot.docs[0].id, ...portfolioSnapshot.docs[0].data() } as Portfolio;
+
+    let projects: Project[] = [];
+    if (portfolio.projectIds && portfolio.projectIds.length > 0) {
+        const projectChunks: string[][] = [];
+        for (let i = 0; i < portfolio.projectIds.length; i += 30) {
+          projectChunks.push(portfolio.projectIds.slice(i, i + 30));
+        }
+        
+        const projectPromises = projectChunks.map(chunk => 
+          getDocs(query(collection(firestore, 'projects'), where('__name__', 'in', chunk)))
+        );
+        
+        const projectSnapshots = await Promise.all(projectPromises);
+        projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
+    }
+    
+    return { user, projects, portfolio };
+
+  } catch (err: any) {
+    console.error("Error fetching portfolio data:", err);
+    // Re-throw permission errors to be caught by Next.js error boundary in dev
+    if (err.code === 'permission-denied') {
+      throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}" with slug "${portfolioSlug}". Check your Firestore security rules.`);
+    }
+    return null;
+  }
+}
+
+export default async function SpecificPortfolioPage({ params }: { params: { username: string, portfolioSlug: string } }) {
+  const { username, portfolioSlug } = params;
+  const data = await getPortfolioData(username, portfolioSlug);
+
+  if (!data) {
+    notFound();
   }
   
   return (
