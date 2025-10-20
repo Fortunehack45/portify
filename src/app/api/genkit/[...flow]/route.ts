@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { runFlow } from 'genkit/flow';
+import { runFlow } from 'genkit';
 import { suggestTemplatesFlow } from '@/ai/flows/ai-template-suggestions';
 
 // Note: This is a simplified handler. In a real-world scenario,
