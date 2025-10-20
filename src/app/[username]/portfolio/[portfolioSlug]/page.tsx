@@ -1,90 +1,161 @@
+'use client';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
+import type { User, Portfolio } from '@/types';
+import { collection, doc, query, where, deleteDoc } from 'firebase/firestore';
+import { ArrowRight, Edit, PlusCircle, Star, Trash2, View } from 'lucide-react';
+import Link from 'next/link';
+import { useMemo, useState } from 'react';
+import { useMemoFirebase } from '@/hooks/use-memo-firebase';
+import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
-import { notFound } from 'next/navigation';
-import { getFirebaseForServer } from '@/firebase/server';
-import TemplateRenderer from '@/components/templates/template-renderer';
-import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
-import type { User, Project, Portfolio } from '@/types';
+export default function DashboardPage() {
+  const { user: authUser } = useUser();
+  const firestore = useFirestore();
+  const { toast } = useToast();
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
 
-export default async function SpecificPortfolioPage({ params }: { params: { username: string, portfolioSlug: string } }) {
-  const { username, portfolioSlug } = params;
-  const { firestore } = getFirebaseForServer();
+  const userProfileRef = useMemoFirebase(() => {
+    if (!firestore || !authUser) return null;
+    return doc(firestore, 'users', authUser.uid);
+  }, [firestore, authUser]);
 
-  if (!firestore) {
-    console.error("Firestore is not initialized on the server.");
-    notFound();
+  const { data: currentUser } = useDoc<User>(userProfileRef);
+
+  const portfoliosQuery = useMemoFirebase(() => {
+    if (!firestore || !authUser) return null;
+    return query(collection(firestore, 'portfolios'), where('userId', '==', authUser.uid));
+  }, [firestore, authUser]);
+
+  const { data: fetchedPortfolios, loading: portfoliosLoading } = useCollection<Portfolio>(portfoliosQuery);
+
+  useMemo(() => {
+    if (fetchedPortfolios) {
+      setPortfolios(fetchedPortfolios);
+    }
+  }, [fetchedPortfolios]);
+
+  const publicUsername = currentUser?.username || 'preview';
+
+  const getPortfolioUrl = (portfolio: Portfolio) => {
+    if (portfolio.isPrimary) {
+      return `/${publicUsername}`;
+    }
+    return `/${publicUsername}/${portfolio.slug}`;
   }
 
-  try {
-    // 1. Get User ID from username
-    const usernameRef = doc(firestore, 'usernames', username.toLowerCase());
-    const usernameSnap = await getDoc(usernameRef);
-    if (!usernameSnap.exists()) {
-      console.log(`Username document not found for: ${username.toLowerCase()}`);
-      notFound();
-    }
-    const { userId } = usernameSnap.data();
+  const handleDeletePortfolio = (portfolioId: string) => {
+    if (!firestore) return;
 
-    // 2. Get User Profile
-    const userRef = doc(firestore, 'users', userId);
-    const userSnap = await getDoc(userRef);
-    if (!userSnap.exists()) {
-      console.log(`User profile not found for userId: ${userId}`);
-      notFound();
-    }
-    const user = { id: userSnap.id, ...userSnap.data() } as User;
-
-    // 3. Get the specific portfolio by slug
-    const portfolioQuery = query(
-        collection(firestore, 'portfolios'), 
-        where('userId', '==', userId), 
-        where('slug', '==', portfolioSlug), 
-        limit(1)
-    );
-    const portfolioSnapshot = await getDocs(portfolioQuery);
-    if (portfolioSnapshot.empty) {
-      console.log(`Portfolio not found for slug: ${portfolioSlug}`);
-      notFound();
-    }
-    const portfolioDoc = portfolioSnapshot.docs[0];
-    const portfolio = { id: portfolioDoc.id, ...portfolioDoc.data() } as Portfolio;
-
-    // 4. Get Projects
-    let projects: Project[] = [];
-    if (portfolio.projectIds && portfolio.projectIds.length > 0) {
-        // Firestore 'in' queries are limited to 30 items per query.
-        const projectChunks: string[][] = [];
-        for (let i = 0; i < portfolio.projectIds.length; i += 30) {
-          projectChunks.push(portfolio.projectIds.slice(i, i + 30));
-        }
-        
-        const projectPromises = projectChunks.map(chunk => 
-          getDocs(query(collection(firestore, 'projects'), where('__name__', 'in', chunk)))
-        );
-        
-        const projectSnapshots = await Promise.all(projectPromises);
-        projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
-    }
+    const portfolioRef = doc(firestore, 'portfolios', portfolioId);
     
-    return (
-      <TemplateRenderer
-        template={portfolio.selectedTemplate}
-        user={user}
-        projects={projects}
-      />
-    );
-
-  } catch (err: any) {
-    if (err.code === 'permission-denied') {
-        console.error("Firestore Permission Denied on Server:", JSON.stringify({
-            message: "A server-side Firestore query was denied. Check the security rules for the collections being accessed.",
-            path: err.customData?.path || `/${err.toString().match(/denied.+resource:\s*([^/]+\/[^/]+)/)?.[1]}/`,
-            query: err.customData?.query || `userId == ${params.username}, slug == ${params.portfolioSlug}`,
-            operation: 'list/get',
-        }, null, 2));
-    } else {
-        console.error("Error fetching portfolio data:", err);
-    }
-    // In case of permission errors or other server issues, treat as not found.
-    notFound();
+    deleteDoc(portfolioRef)
+      .then(() => {
+        setPortfolios(prev => prev.filter(p => p.id !== portfolioId));
+        toast({
+            title: "Success!",
+            description: "The portfolio has been deleted.",
+        });
+      })
+      .catch((err) => {
+        const permissionError = new FirestorePermissionError({
+            path: portfolioRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+    });
   }
+
+  return (
+    <div className="space-y-6">
+       <div className="space-y-1">
+         <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
+         <p className="text-muted-foreground">Welcome back, {currentUser?.name || 'User'}!</p>
+       </div>
+
+      <Card className="shadow-sm">
+        <CardHeader>
+          <CardTitle>Your Portfolios</CardTitle>
+          <CardDescription>
+            Manage your portfolios. The primary portfolio is shown on your public `/{'username'}` URL.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+            {portfoliosLoading ? (
+                <p>Loading portfolios...</p>
+            ) : (
+                <div className="space-y-3">
+                {portfolios?.sort((a,b) => (a.isPrimary ? -1 : 1)).map(p => (
+                    <div key={p.id} className={cn("flex items-center justify-between rounded-lg border p-4", p.isPrimary && "border-primary/50 bg-primary/5")}>
+                        <div className="flex items-center gap-3">
+                           {p.isPrimary && <Star className="h-5 w-5 text-primary" />}
+                           <span className="font-medium text-base">{p.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href={getPortfolioUrl(p)} target="_blank">
+                                    <View className="mr-2 h-4 w-4" /> View
+                                </Link>
+                            </Button>
+                            <Button size="sm" asChild>
+                                <Link href={`/dashboard/editor?portfolioId=${p.id}`}>
+                                    <Edit className="mr-2 h-4 w-4" /> Edit
+                                </Link>
+                            </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" disabled={p.isPrimary}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete your
+                                    portfolio. You cannot delete your primary portfolio.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeletePortfolio(p.id)}>
+                                    Continue
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
+                        </div>
+                    </div>
+                ))}
+                </div>
+            )}
+        </CardContent>
+      </Card>
+
+      <Card className="bg-muted/50 border-dashed hover:border-primary/50 hover:bg-muted transition-colors">
+         <CardContent className="p-6 flex flex-col items-center justify-center text-center">
+            <Button variant="ghost" asChild>
+              <Link href="/dashboard/create">
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Create New Portfolio
+              </Link>
+            </Button>
+         </CardContent>
+      </Card>
+    </div>
+  );
 }

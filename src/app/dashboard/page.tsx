@@ -56,7 +56,7 @@ export default function DashboardPage() {
     if (portfolio.isPrimary) {
       return `/${publicUsername}`;
     }
-    return `/${publicUsername}/portfolio/${portfolio.slug}`;
+    return `/${publicUsername}/${portfolio.slug}`;
   }
 
   const handleDeletePortfolio = (portfolioId: string) => {
