@@ -38,7 +38,7 @@ const validTemplates: Record<string, Template> = {
 };
 
 async function suggestTemplates(input: { projectDescriptions: string[] }): Promise<{ suggestedTemplates: string[] }> {
-  const response = await fetch('/api/genkit/suggestTemplates', {
+  const response = await fetch('/api/genkit/suggestTemplatesFlow', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(input),
