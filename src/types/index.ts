@@ -4,6 +4,7 @@ export type Project = {
   id: string;
   userId: string;
   title: string;
+  slug: string;
   description: string;
   imageUrl?: string;
   techStack: string[];

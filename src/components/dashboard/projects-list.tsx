@@ -19,7 +19,7 @@ import {
 import { useState } from 'react';
 import ProjectForm from './project-form';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
-import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, runTransaction, getDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -37,72 +37,71 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
   const { user: authUser } = useAuthUser();
   const { toast } = useToast();
 
-  const handleSaveProject = async (project: Project) => {
+  const handleSaveProject = async (project: Project, slug: string) => {
     if (!firestore || !authUser) return;
 
     if (editingProject) {
-      // Update existing project
-      const projectRef = doc(firestore, 'projects', editingProject.id);
-      const updatedProjectData = {
-          ...project,
-          updatedAt: new Date(), // Use client-side date for optimistic update
-      };
-      
-      setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...updatedProjectData } : p));
-      setIsDialogOpen(false);
-      setEditingProject(null);
-
-      updateDoc(projectRef, {
-          ...project,
-          updatedAt: serverTimestamp(),
-      }).then(() => {
-        toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
-      }).catch(err => {
-        // Revert optimistic update on error
-        setProjects(projects);
-        const permissionError = new FirestorePermissionError({
-          path: projectRef.path,
-          operation: 'update',
-          requestResourceData: project
+        // TODO: Implement update logic that handles slug changes
+        const projectRef = doc(firestore, 'projects', editingProject.id);
+        
+        await updateDoc(projectRef, {
+            ...project,
+            updatedAt: serverTimestamp(),
         });
-        errorEmitter.emit('permission-error', permissionError);
-        toast({ title: "Error", description: "Could not update project.", variant: "destructive" });
-      });
+        setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...project, updatedAt: new Date() } : p));
+        toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
 
     } else {
-      // Add new project
-      const newProjectData = {
-        ...project,
-        userId: authUser.uid,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
-      // Optimistically update UI
-      setProjects([...projects, newProjectData]);
-      setIsDialogOpen(false);
-      setEditingProject(null);
+      // Add new project with uniqueness check
+      const projectRef = doc(collection(firestore, 'projects'));
+      const projectNameRef = doc(firestore, 'projectNames', slug);
 
-      addDoc(collection(firestore, 'projects'), {
-          ...project,
-          userId: authUser.uid,
-          createdAt: serverTimestamp(),
-          updatedAt: serverTimestamp(),
-      }).then(docRef => {
-        // Update the optimistic entry with the real ID from firestore
-        setProjects(projects => projects.map(p => p.id === newProjectData.id ? {...p, id: docRef.id} : p));
-        toast({ title: "Project Added", description: `"${project.title}" has been added.` });
-      }).catch(err => {
-        // Revert optimistic update on error
-        setProjects(projects);
-        const permissionError = new FirestorePermissionError({
-          path: 'projects',
-          operation: 'create',
-          requestResourceData: project
+      try {
+        await runTransaction(firestore, async (transaction) => {
+          const projectNameDoc = await transaction.get(projectNameRef);
+          if (projectNameDoc.exists()) {
+            throw new Error(`Project name "${slug}" is already taken.`);
+          }
+
+          transaction.set(projectNameRef, { 
+            userId: authUser.uid, 
+            projectId: projectRef.id 
+          });
+
+          const newProjectData = {
+              ...project,
+              id: projectRef.id,
+              userId: authUser.uid,
+              createdAt: serverTimestamp(),
+              updatedAt: serverTimestamp(),
+          };
+          transaction.set(projectRef, newProjectData);
         });
-        errorEmitter.emit('permission-error', permissionError);
-        toast({ title: "Error", description: "Could not add project.", variant: "destructive" });
-      });
+
+        // Optimistically update UI after successful transaction
+        const optimisticProject = {
+            ...project,
+            id: projectRef.id,
+            userId: authUser.uid,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+        };
+        setProjects([...projects, optimisticProject]);
+        toast({ title: "Project Added", description: `"${project.title}" has been added.` });
+
+      } catch (error: any) {
+        console.error("Transaction failed: ", error);
+        toast({
+          title: "Error",
+          description: error.message || "Could not add project.",
+          variant: "destructive",
+        });
+        return; // Stop execution
+      }
     }
+    
+    setIsDialogOpen(false);
+    setEditingProject(null);
   };
   
   const handleEdit = (project: Project) => {
@@ -110,25 +109,31 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (projectId: string) => {
-    if (!firestore) return;
+  const handleDelete = async (projectToDelete: Project) => {
+    if (!firestore || !projectToDelete.slug) return;
     
     const originalProjects = projects;
     // Optimistic delete
-    setProjects(projects.filter(p => p.id !== projectId));
+    setProjects(projects.filter(p => p.id !== projectToDelete.id));
 
-    deleteDoc(doc(firestore, 'projects', projectId)).then(() => {
-        toast({ title: "Project Deleted", description: "The project has been removed." });
-    }).catch(err => {
-        // Revert on error
-        setProjects(originalProjects);
+    const projectRef = doc(firestore, 'projects', projectToDelete.id);
+    const projectNameRef = doc(firestore, 'projectNames', projectToDelete.slug);
+
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            transaction.delete(projectRef);
+            transaction.delete(projectNameRef);
+        });
+        toast({ title: "Project Deleted", description: `"${projectToDelete.title}" has been removed.` });
+    } catch (err: any) {
+        setProjects(originalProjects); // Revert on error
         const permissionError = new FirestorePermissionError({
-          path: `projects/${projectId}`,
+          path: `projects/${projectToDelete.id}`,
           operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
-        toast({ title: "Error", description: "Could not delete project.", variant: "destructive" });
-    });
+        toast({ title: "Error", description: err.message || "Could not delete project.", variant: "destructive" });
+    }
   };
   
   const handleAddNew = () => {
@@ -189,7 +194,7 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
                             <DropdownMenuItem onSelect={() => handleEdit(project)}>
                                 <Edit className="mr-2 h-4 w-4" /> Edit
                             </DropdownMenuItem>
-                            <DropdownMenuItem onSelect={() => handleDelete(project.id)} className="text-destructive">
+                            <DropdownMenuItem onSelect={() => handleDelete(project)} className="text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" /> Delete
                             </DropdownMenuItem>
                             </DropdownMenuContent>

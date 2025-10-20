@@ -12,13 +12,14 @@ import { useUser as useAuthUser } from '@/firebase';
 
 interface ProjectFormProps {
     project?: Project | null;
-    onSave: (project: Project) => void;
+    onSave: (project: Project, slug: string) => void;
     onClose: () => void;
 }
 
 export default function ProjectForm({ project, onSave, onClose }: ProjectFormProps) {
     const { user: authUser } = useAuthUser();
     const [title, setTitle] = useState('');
+    const [slug, setSlug] = useState('');
     const [description, setDescription] = useState('');
     const [imageUrl, setImageUrl] = useState('');
     const [githubLink, setGithubLink] = useState('');
@@ -29,6 +30,7 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
     useEffect(() => {
         if (project) {
             setTitle(project.title);
+            setSlug(project.slug || '');
             setDescription(project.description);
             setImageUrl(project.imageUrl || '');
             setGithubLink(project.githubLink || '');
@@ -36,6 +38,7 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
             setTechStack(project.techStack);
         } else {
             setTitle('');
+            setSlug('');
             setDescription('');
             setImageUrl('');
             setGithubLink('');
@@ -60,10 +63,17 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
 
     const handleSave = () => {
         if (!authUser) return;
+        
+        // Basic slug generation, can be improved
+        const generatedSlug = slug.trim() 
+          ? slug.trim().toLowerCase().replace(/\s+/g, '-') 
+          : title.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+
         const newProject: Project = {
             id: project ? project.id : new Date().toISOString(), // This will be overwritten by firestore on create
             userId: authUser.uid,
             title,
+            slug: generatedSlug,
             description,
             imageUrl,
             githubLink,
@@ -72,14 +82,20 @@ export default function ProjectForm({ project, onSave, onClose }: ProjectFormPro
             createdAt: project ? project.createdAt : new Date(),
             updatedAt: new Date(),
         };
-        onSave(newProject);
+        onSave(newProject, generatedSlug);
     };
 
     return (
         <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-                <Label htmlFor="title">Title</Label>
-                <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+            <div className="grid grid-cols-2 gap-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="title">Title</Label>
+                    <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
+                </div>
+                 <div className="grid gap-2">
+                    <Label htmlFor="slug">URL Slug</Label>
+                    <Input id="slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="e.g. my-awesome-project" />
+                </div>
             </div>
             <div className="grid gap-2">
                 <Label htmlFor="description">Description</Label>
