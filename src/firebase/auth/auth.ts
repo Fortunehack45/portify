@@ -30,6 +30,9 @@ const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
       username: username,
       email: user.email || '',
       bio: '',
+      jobTitle: '',
+      location: '',
+      availability: 'not available',
       skills: [],
       socials: [],
       selectedTemplate: 'minimal-light',
@@ -55,6 +58,9 @@ export const signUpWithEmail = async (email: string, password: string, name: str
     username,
     email: email,
     bio: '',
+    jobTitle: '',
+    location: '',
+    availability: 'not available',
     skills: [],
     socials: [],
     selectedTemplate: 'minimal-light',
@@ -71,7 +77,9 @@ export const signInWithEmail = async (email: string, password: string) => {
   if (!auth) {
     throw new Error('Firebase not initialized');
   }
-  return await signInWithEmailAndPassword(auth, email, password);
+  const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  await createProfileIfNotExists(userCredential.user);
+  return userCredential;
 };
 
 export const signInWithGoogle = async () => {

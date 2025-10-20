@@ -48,6 +48,7 @@ export default function EditorPage() {
     if (userProfile && userProfile.length > 0) {
       setLiveUser(userProfile[0]);
     } else if (authUser && !profileLoading && (!userProfile || userProfile.length === 0)) {
+      // If authUser exists but there's no profile, create a default one in state
       setLiveUser({
         id: authUser.uid,
         email: authUser.email || '',
