@@ -1,0 +1,25 @@
+import { EventEmitter } from 'events';
+import type { FirestorePermissionError } from './errors';
+
+type AppEvents = {
+  'permission-error': (error: FirestorePermissionError) => void;
+};
+
+// This is a simple event emitter that allows different parts of the application
+// to communicate without being directly coupled. We use it to broadcast
+// Firestore permission errors to a central listener.
+class AppEventEmitter extends EventEmitter {
+  emit<T extends keyof AppEvents>(event: T, ...args: Parameters<AppEvents[T]>) {
+    return super.emit(event, ...args);
+  }
+
+  on<T extends keyof AppEvents>(event: T, listener: AppEvents[T]) {
+    return super.on(event, listener);
+  }
+
+  off<T extends keyof AppEvents>(event: T, listener: AppEvents[T]) {
+    return super.off(event, listener);
+  }
+}
+
+export const errorEmitter = new AppEventEmitter();
