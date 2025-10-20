@@ -11,12 +11,14 @@ import {
 } from 'firebase/auth';
 import { doc, setDoc, getDoc, collection, addDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { getFirebase } from '..';
-import { User, Project } from '@/types';
+import { User, Project, Portfolio } from '@/types';
 
 const { auth, firestore } = getFirebase();
 
-const createSampleProject = (userId: string, batch: import('firebase/firestore').WriteBatch) => {
+const createSampleProjectAndPortfolio = (userId: string, batch: import('firebase/firestore').WriteBatch) => {
     if (!firestore) return;
+    
+    // Create a sample project
     const projectRef = doc(collection(firestore, 'projects'));
     batch.set(projectRef, {
         userId: userId,
@@ -29,6 +31,19 @@ const createSampleProject = (userId: string, batch: import('firebase/firestore')
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
     });
+
+    // Create a primary portfolio and include the sample project
+    const portfolioRef = doc(collection(firestore, 'portfolios'));
+    batch.set(portfolioRef, {
+        userId: userId,
+        name: "Main Portfolio",
+        slug: "main",
+        projectIds: [projectRef.id],
+        selectedTemplate: 'minimal-light',
+        isPrimary: true,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+    } as Omit<Portfolio, 'id'>);
 };
 
 // This function creates the user profile, public username mapping, and a sample project in a single transaction.
@@ -39,13 +54,12 @@ const createUserProfileAndUsername = async (user: import('firebase/auth').User, 
     const batch = writeBatch(firestore);
 
     const userDocRef = doc(firestore, 'users', user.uid);
-    // Always use lowercase for the username lookup document
     const lowercaseUsername = username.toLowerCase();
     const usernameDocRef = doc(firestore, 'usernames', lowercaseUsername);
 
     const userProfile: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
       name: name,
-      username: username, // Store the original cased username in the profile
+      username: username, 
       email: user.email || '',
       bio: 'This is my bio! I can edit it in the editor.',
       jobTitle: 'Aspiring Developer',
@@ -53,10 +67,8 @@ const createUserProfileAndUsername = async (user: import('firebase/auth').User, 
       availability: 'open to work',
       skills: ['React', 'TypeScript'],
       socials: [],
-      selectedTemplate: 'minimal-light',
     };
 
-    // Add the user profile document to the batch
     batch.set(userDocRef, { 
         ...userProfile,
         id: user.uid,
@@ -64,13 +76,10 @@ const createUserProfileAndUsername = async (user: import('firebase/auth').User, 
         updatedAt: serverTimestamp()
     });
     
-    // Add the public username mapping to the batch
     batch.set(usernameDocRef, { userId: user.uid });
 
-    // Add a sample project to the batch
-    createSampleProject(user.uid, batch);
+    createSampleProjectAndPortfolio(user.uid, batch);
     
-    // Commit all writes at once
     await batch.commit();
 };
 
@@ -83,13 +92,10 @@ const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
   const userDoc = await getDoc(userDocRef);
 
   if (!userDoc.exists()) {
-    // Generate a default name and username from the social provider info
     const name = user.displayName || 'New User';
     const emailUsername = user.email ? user.email.split('@')[0] : '';
-    // Create a unique username fallback
     const username = (emailUsername || user.displayName?.replace(/\s+/g, '') || `user${Date.now()}`).toLowerCase();
     
-    // Crucially, call the centralized function to create the profile AND the username mapping
     await createUserProfileAndUsername(user, name, username);
   }
 };
@@ -101,10 +107,8 @@ export const signUpWithEmail = async (email: string, password: string, name: str
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
 
-  // We update the auth profile display name, but the canonical source will be our Firestore doc.
   await updateProfile(user, { displayName: name });
   
-  // Call the centralized function to create everything
   await createUserProfileAndUsername(user, name, username);
 
   return user;
@@ -115,8 +119,6 @@ export const signInWithEmail = async (email: string, password: string) => {
     throw new Error('Firebase not initialized');
   }
   const userCredential = await signInWithEmailAndPassword(auth, email, password);
-  // After sign-in, check if a profile exists and create one if it doesn't.
-  // This handles users who were created but whose profile creation might have failed.
   await createProfileIfNotExists(userCredential.user);
   return userCredential;
 };

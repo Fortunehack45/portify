@@ -63,34 +63,6 @@
             "required": ["platform", "url"]
           }
         },
-        "selectedTemplate": {
-          "type": "string",
-          "enum": [
-            "minimal-light", 
-            "modern-dark", 
-            "professional-blue",
-            "retro-gamer",
-            "brutalist-web",
-            "cyberpunk-neon",
-            "elegant-serif",
-            "cosmic-dream",
-            "hacker-terminal",
-            "craftsman-paper",
-            "photo-grid",
-            "lakeside-dawn",
-            "geometric-dark",
-            "minimal-serif",
-            "corporate-clean",
-            "glassmorphism",
-            "neobrutalism",
-            "storybook",
-            "two-column-image",
-            "bold-and-blue",
-            "newspaper",
-            "dark-academia"
-          ],
-          "description": "The user's selected portfolio template."
-        },
         "createdAt": {
             "type": "string",
             "format": "date-time"
@@ -100,7 +72,7 @@
             "format": "date-time"
         }
       },
-      "required": ["id", "username", "name", "email", "selectedTemplate", "createdAt", "updatedAt"]
+      "required": ["id", "username", "name", "email", "createdAt", "updatedAt"]
     },
     "Project": {
       "title": "Project",
@@ -160,6 +132,73 @@
         }
       },
       "required": ["userId"]
+    },
+    "Portfolio": {
+        "title": "Portfolio",
+        "description": "Represents a user's portfolio.",
+        "type": "object",
+        "properties": {
+            "id": {
+                "type": "string"
+            },
+            "userId": {
+                "type": "string"
+            },
+            "name": {
+                "type": "string"
+            },
+            "slug": {
+                "type": "string",
+                "description": "The URL-friendly slug for the portfolio."
+            },
+            "projectIds": {
+                "type": "array",
+                "items": {
+                    "type": "string"
+                },
+                "description": "A list of project IDs included in this portfolio."
+            },
+            "selectedTemplate": {
+                "type": "string",
+                "enum": [
+                    "minimal-light",
+                    "modern-dark",
+                    "professional-blue",
+                    "retro-gamer",
+                    "brutalist-web",
+                    "cyberpunk-neon",
+                    "elegant-serif",
+                    "cosmic-dream",
+                    "hacker-terminal",
+                    "craftsman-paper",
+                    "photo-grid",
+                    "lakeside-dawn",
+                    "geometric-dark",
+                    "minimal-serif",
+                    "corporate-clean",
+                    "glassmorphism",
+                    "neobrutalism",
+                    "storybook",
+                    "two-column-image",
+                    "bold-and-blue",
+                    "newspaper",
+                    "dark-academia"
+                ]
+            },
+            "isPrimary": {
+                "type": "boolean",
+                "description": "Whether this is the user's primary portfolio, linked from /[username]."
+            },
+            "createdAt": {
+                "type": "string",
+                "format": "date-time"
+            },
+            "updatedAt": {
+                "type": "string",
+                "format": "date-time"
+            }
+        },
+        "required": ["id", "userId", "name", "slug", "projectIds", "selectedTemplate", "isPrimary", "createdAt", "updatedAt"]
     }
   },
   "auth": {
@@ -171,6 +210,12 @@
         "$ref": "#/entities/UserProfile"
       },
       "description": "Stores user profile information."
+    },
+    "/portfolios/{portfolioId}": {
+        "schema": {
+            "$ref": "#/entities/Portfolio"
+        },
+        "description": "Stores portfolio information."
     },
     "/projects/{projectId}": {
       "schema": {

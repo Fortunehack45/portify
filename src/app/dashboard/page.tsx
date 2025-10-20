@@ -27,7 +27,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
        <div className="space-y-1">
          <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
-         <p className="text-muted-foreground">Welcome back, {authUser?.displayName || 'User'}!</p>
+         <p className="text-muted-foreground">Welcome back, {currentUser?.name || 'User'}!</p>
        </div>
 
       <Card className="shadow-sm">
@@ -61,11 +61,12 @@ export default function DashboardPage() {
 
       <Card className="bg-muted/50 border-dashed hover:border-primary/50 hover:bg-muted transition-colors">
          <CardContent className="p-6 flex flex-col items-center justify-center text-center">
-            <Button variant="ghost" disabled>
+            <Button variant="ghost" asChild>
+              <Link href="/dashboard/create">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Create New Portfolio
+              </Link>
             </Button>
-            <p className="text-sm text-muted-foreground mt-2">Multiple portfolios coming soon!</p>
          </CardContent>
       </Card>
     </div>

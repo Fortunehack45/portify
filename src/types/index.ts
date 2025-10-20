@@ -33,10 +33,21 @@ export type User = {
   availability?: Availability;
   skills: string[];
   socials: Social[];
-  selectedTemplate: Template;
   createdAt: Date | Timestamp;
   updatedAt: Date | Timestamp;
 };
+
+export type Portfolio = {
+    id: string;
+    userId: string;
+    name: string;
+    slug: string;
+    projectIds: string[];
+    selectedTemplate: Template;
+    isPrimary: boolean;
+    createdAt: Date | Timestamp;
+    updatedAt: Date | Timestamp;
+}
 
 export type Template = 
   | 'minimal-light' 

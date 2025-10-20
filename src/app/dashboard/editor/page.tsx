@@ -4,7 +4,7 @@
 import EditorClient from '@/components/dashboard/editor-client';
 import { useUser, useCollection, useDoc, useFirestore } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
-import type { User, Project } from '@/types';
+import type { User, Project, Portfolio } from '@/types';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PreviewPanel from '@/components/dashboard/preview-panel';
@@ -28,6 +28,7 @@ export default function EditorPage() {
   const [activeTab, setActiveTab] = useState('editor');
   const [liveUser, setLiveUser] = useState<User | null>(null);
   const [liveProjects, setLiveProjects] = useState<Project[]>([]);
+  const [livePortfolio, setLivePortfolio] = useState<Portfolio | null>(null);
   
   const projectsQuery = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
@@ -37,6 +38,14 @@ export default function EditorPage() {
   const { data: projects, loading: projectsLoading } = useCollection<Project>(
     projectsQuery
   );
+
+  const portfolioQuery = useMemoFirebase(() => {
+    if (!firestore || !authUser) return null;
+    return query(collection(firestore, 'portfolios'), where('userId', '==', authUser.uid), where('isPrimary', '==', true));
+  }, [firestore, authUser]);
+
+  const { data: portfolios, loading: portfolioLoading } = useCollection<Portfolio>(portfolioQuery);
+
 
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
@@ -61,12 +70,30 @@ export default function EditorPage() {
         availability: 'not available',
         skills: [],
         socials: [],
-        selectedTemplate: 'minimal-light',
         createdAt: new Date(),
         updatedAt: new Date(),
       });
     }
   }, [authUser, userProfile, profileLoading]);
+
+  useEffect(() => {
+    if (portfolios && portfolios.length > 0) {
+      setLivePortfolio(portfolios[0]);
+    } else if (!portfolioLoading && authUser) {
+        setLivePortfolio({
+            id: 'temp-id',
+            userId: authUser.uid,
+            name: 'Main Portfolio',
+            slug: 'main',
+            projectIds: [],
+            selectedTemplate: 'minimal-light',
+            isPrimary: true,
+            createdAt: new Date(),
+            updatedAt: new Date()
+        });
+    }
+  }, [portfolios, authUser, portfolioLoading]);
+
 
   useEffect(() => {
     if (projects) {
@@ -91,7 +118,7 @@ export default function EditorPage() {
     localStorage.setItem(EDITOR_TAB_STORAGE_KEY, value);
   };
 
-  const isLoading = userLoading || projectsLoading || profileLoading || !liveUser;
+  const isLoading = userLoading || projectsLoading || profileLoading || !liveUser || !livePortfolio;
   
   const handleTogglePreview = () => {
     const panelGroup = panelGroupRef.current;
@@ -124,8 +151,10 @@ export default function EditorPage() {
             <TabsContent value="editor" className="flex-grow overflow-y-auto">
                 <EditorClient 
                   user={liveUser as User} 
+                  portfolio={livePortfolio as Portfolio}
                   projects={liveProjects}
                   onUserChange={setLiveUser}
+                  onPortfolioChange={setLivePortfolio}
                   onProjectsChange={setLiveProjects}
                 />
             </TabsContent>
@@ -133,6 +162,7 @@ export default function EditorPage() {
                 <div className="w-full h-full bg-white">
                     <PreviewPanel 
                         user={liveUser as User} 
+                        portfolio={livePortfolio as Portfolio}
                         projects={liveProjects} 
                         isMobile={true}
                     />
@@ -155,9 +185,11 @@ export default function EditorPage() {
       >
         <ResizablePanel defaultSize={50} minSize={30}>
           <EditorClient 
-            user={liveUser as User} 
+            user={liveUser as User}
+            portfolio={livePortfolio as Portfolio}
             projects={liveProjects}
             onUserChange={setLiveUser}
+            onPortfolioChange={setLivePortfolio}
             onProjectsChange={setLiveProjects}
           />
         </ResizablePanel>
@@ -169,7 +201,8 @@ export default function EditorPage() {
             collapsedSize={0}
         >
           <PreviewPanel 
-            user={liveUser as User} 
+            user={liveUser as User}
+            portfolio={livePortfolio as Portfolio}
             projects={liveProjects}
             onTogglePreview={handleTogglePreview}
           />

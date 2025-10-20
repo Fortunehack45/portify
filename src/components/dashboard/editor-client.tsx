@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { User, Project, Template } from '@/types';
+import type { User, Project, Template, Portfolio } from '@/types';
 import { Button } from '../ui/button';
 import { Save } from 'lucide-react';
 import ProfileForm from './profile-form';
@@ -16,15 +16,19 @@ import { FirestorePermissionError } from '@/firebase/errors';
 
 interface EditorClientProps {
   user: User;
+  portfolio: Portfolio;
   projects: Project[];
   onUserChange: (user: User) => void;
+  onPortfolioChange: (portfolio: Portfolio) => void;
   onProjectsChange: (projects: Project[]) => void;
 }
 
 export default function EditorClient({
   user,
+  portfolio,
   projects,
   onUserChange,
+  onPortfolioChange,
   onProjectsChange,
 }: EditorClientProps) {
 
@@ -37,7 +41,7 @@ export default function EditorClient({
   };
 
   const handleTemplateChange = (template: Template) => {
-    onUserChange({ ...user, selectedTemplate: template });
+    onPortfolioChange({ ...portfolio, selectedTemplate: template });
   };
 
   const handleSave = async () => {
@@ -46,20 +50,25 @@ export default function EditorClient({
       return;
     }
   
-    const userDocRef = doc(firestore, 'users', authUser.uid);
-    
-    // Create a write batch
     const batch = writeBatch(firestore);
 
     // 1. Update the user profile
+    const userDocRef = doc(firestore, 'users', authUser.uid);
     const userData: User = {
       ...user,
-      updatedAt: new Date(), // Client-side timestamp for optimistic update
+      updatedAt: new Date(),
     };
     batch.set(userDocRef, { ...userData, updatedAt: serverTimestamp() }, { merge: true });
     
-    // We don't need to handle projects save here as it's handled in ProjectsList
-    // This reduces complexity and separates concerns.
+    // 2. Update the portfolio
+    if (portfolio) {
+        const portfolioDocRef = doc(firestore, 'portfolios', portfolio.id);
+        const portfolioData: Portfolio = {
+            ...portfolio,
+            updatedAt: new Date(),
+        };
+        batch.set(portfolioDocRef, { ...portfolioData, updatedAt: serverTimestamp() }, { merge: true });
+    }
 
     try {
       await batch.commit();
@@ -108,7 +117,7 @@ export default function EditorClient({
                 <div className="bg-background p-4 rounded-b-lg border-x border-b">
                   <TemplateSelector 
                     display="select"
-                    selectedTemplate={user.selectedTemplate}
+                    selectedTemplate={portfolio.selectedTemplate}
                     onTemplateChange={handleTemplateChange}
                     user={user}
                     projects={projects}

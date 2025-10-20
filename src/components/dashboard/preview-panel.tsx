@@ -1,7 +1,7 @@
 
 'use client';
 
-import { User, Project } from '@/types';
+import { User, Project, Portfolio } from '@/types';
 import TemplateRenderer from '../templates/template-renderer';
 import { Eye } from 'lucide-react';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
@@ -9,13 +9,14 @@ import { Button } from '../ui/button';
 
 interface PreviewPanelProps {
   user: User;
+  portfolio: Portfolio;
   projects: Project[];
   isMobile?: boolean;
   onTogglePreview?: () => void;
   isPreviewCollapsed?: boolean;
 }
 
-export default function PreviewPanel({ user, projects, isMobile = false, onTogglePreview, isPreviewCollapsed }: PreviewPanelProps) {
+export default function PreviewPanel({ user, portfolio, projects, isMobile = false, onTogglePreview, isPreviewCollapsed }: PreviewPanelProps) {
   return (
     <div className="h-full bg-muted/40 flex flex-col">
       {!isMobile && (
@@ -44,7 +45,7 @@ export default function PreviewPanel({ user, projects, isMobile = false, onToggl
       <div className="flex-grow overflow-auto">
         <div className="w-full h-full bg-white">
             <TemplateRenderer
-                template={user.selectedTemplate}
+                template={portfolio.selectedTemplate}
                 user={user}
                 projects={projects}
             />
