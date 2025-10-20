@@ -22,6 +22,8 @@ import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { collection, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { AccordionContent, AccordionItem, AccordionTrigger } from '../ui/accordion';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface ProjectsListProps {
   projects: Project[];
@@ -38,32 +40,68 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
   const handleSaveProject = async (project: Project) => {
     if (!firestore || !authUser) return;
 
-    try {
-      if (editingProject) {
-        // Update existing project
-        const projectRef = doc(firestore, 'projects', editingProject.id);
-        await updateDoc(projectRef, {
-            ...project,
-            updatedAt: serverTimestamp(),
-        });
-        setProjects(projects.map(p => p.id === editingProject.id ? {...project, id: editingProject.id} : p));
-        toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
-      } else {
-        // Add new project
-        const docRef = await addDoc(collection(firestore, 'projects'), {
-            ...project,
-            userId: authUser.uid,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        });
-        setProjects([...projects, {...project, id: docRef.id}]);
-        toast({ title: "Project Added", description: `"${project.title}" has been added.` });
-      }
+    if (editingProject) {
+      // Update existing project
+      const projectRef = doc(firestore, 'projects', editingProject.id);
+      const updatedProjectData = {
+          ...project,
+          updatedAt: new Date(), // Use client-side date for optimistic update
+      };
+      
+      setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...updatedProjectData } : p));
       setIsDialogOpen(false);
       setEditingProject(null);
-    } catch (error: any) {
-        console.error("Error saving project: ", error);
-        toast({ title: "Error", description: error.message, variant: "destructive" });
+
+      updateDoc(projectRef, {
+          ...project,
+          updatedAt: serverTimestamp(),
+      }).then(() => {
+        toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
+      }).catch(err => {
+        // Revert optimistic update on error
+        setProjects(projects);
+        const permissionError = new FirestorePermissionError({
+          path: projectRef.path,
+          operation: 'update',
+          requestResourceData: project
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        toast({ title: "Error", description: "Could not update project.", variant: "destructive" });
+      });
+
+    } else {
+      // Add new project
+      const newProjectData = {
+        ...project,
+        userId: authUser.uid,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      };
+      // Optimistically update UI
+      setProjects([...projects, newProjectData]);
+      setIsDialogOpen(false);
+      setEditingProject(null);
+
+      addDoc(collection(firestore, 'projects'), {
+          ...project,
+          userId: authUser.uid,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+      }).then(docRef => {
+        // Update the optimistic entry with the real ID from firestore
+        setProjects(projects => projects.map(p => p.id === newProjectData.id ? {...p, id: docRef.id} : p));
+        toast({ title: "Project Added", description: `"${project.title}" has been added.` });
+      }).catch(err => {
+        // Revert optimistic update on error
+        setProjects(projects);
+        const permissionError = new FirestorePermissionError({
+          path: 'projects',
+          operation: 'create',
+          requestResourceData: project
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        toast({ title: "Error", description: "Could not add project.", variant: "destructive" });
+      });
     }
   };
   
@@ -74,14 +112,23 @@ export default function ProjectsList({ projects, setProjects }: ProjectsListProp
 
   const handleDelete = async (projectId: string) => {
     if (!firestore) return;
-    try {
-        await deleteDoc(doc(firestore, 'projects', projectId));
-        setProjects(projects.filter(p => p.id !== projectId));
+    
+    const originalProjects = projects;
+    // Optimistic delete
+    setProjects(projects.filter(p => p.id !== projectId));
+
+    deleteDoc(doc(firestore, 'projects', projectId)).then(() => {
         toast({ title: "Project Deleted", description: "The project has been removed." });
-    } catch (error: any) {
-        console.error("Error deleting project: ", error);
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
+    }).catch(err => {
+        // Revert on error
+        setProjects(originalProjects);
+        const permissionError = new FirestorePermissionError({
+          path: `projects/${projectId}`,
+          operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        toast({ title: "Error", description: "Could not delete project.", variant: "destructive" });
+    });
   };
   
   const handleAddNew = () => {

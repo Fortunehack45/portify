@@ -7,10 +7,12 @@ import { Save } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
-import { doc, setDoc } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import TemplateSelector from './template-selector';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface EditorClientProps {
   user: User;
@@ -44,23 +46,39 @@ export default function EditorClient({
       return;
     }
   
+    const userDocRef = doc(firestore, 'users', authUser.uid);
+    
+    // Create a write batch
+    const batch = writeBatch(firestore);
+
+    // 1. Update the user profile
+    const userData: User = {
+      ...user,
+      updatedAt: new Date(), // Client-side timestamp for optimistic update
+    };
+    batch.set(userDocRef, { ...userData, updatedAt: serverTimestamp() }, { merge: true });
+    
+    // We don't need to handle projects save here as it's handled in ProjectsList
+    // This reduces complexity and separates concerns.
+
     try {
-      const userDocRef = doc(firestore, 'users', authUser.uid);
-      const userData: User = {
-        ...user,
-        updatedAt: new Date(),
-      };
-      await setDoc(userDocRef, userData, { merge: true });
+      await batch.commit();
   
       toast({
-        title: 'Portfolio Saved!',
-        description: 'Your changes have been successfully saved.',
+        title: 'Profile Saved!',
+        description: 'Your profile changes have been successfully saved.',
       });
     } catch (error: any) {
-      console.error('Error saving portfolio:', error);
+      const permissionError = new FirestorePermissionError({
+        path: userDocRef.path,
+        operation: 'update',
+        requestResourceData: userData
+      });
+      errorEmitter.emit('permission-error', permissionError);
+
       toast({
         title: 'Uh oh! Something went wrong.',
-        description: error.message || 'There was a problem with saving your portfolio.',
+        description: 'Could not save your profile changes.',
         variant: 'destructive',
       });
     }
@@ -75,7 +93,7 @@ export default function EditorClient({
           </div>
           <Button onClick={handleSave}>
               <Save className="mr-2 h-4 w-4" />
-              Save
+              Save Profile
           </Button>
       </div>
       <div className="p-6 space-y-6 h-full overflow-y-auto">
