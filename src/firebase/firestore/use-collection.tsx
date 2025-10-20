@@ -1,8 +1,9 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { onSnapshot, query, collection, where, getDocs, Query, DocumentData, FirestoreError } from 'firebase/firestore';
-import { useFirestore } from '..';
+import { useEffect, useState } from 'react';
+import { onSnapshot, getDocs, Query, FirestoreError } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface HookOptions {
     listen?: boolean;
@@ -19,8 +20,6 @@ export function useCollection<T>(
     const [data, setData] = useState<T[] | null>(null);
     const [loading, setLoading] = useState<boolean>(true);
     const [error, setError] = useState<FirestoreError | null>(null);
-
-    const queryRef = useRef(query);
 
     useEffect(() => {
         if (!query) {
@@ -42,9 +41,13 @@ export function useCollection<T>(
                     setLoading(false);
                 },
                 (err) => {
+                    const permissionError = new FirestorePermissionError({
+                        path: (query as any)._query.path.segments.join('/'),
+                        operation: 'list',
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
                     setError(err);
                     setLoading(false);
-                    console.error(err);
                 }
             );
             return () => unsubscribe();
@@ -59,11 +62,16 @@ export function useCollection<T>(
                     setLoading(false);
                 })
                 .catch((err) => {
+                    const permissionError = new FirestorePermissionError({
+                        path: (query as any)._query.path.segments.join('/'),
+                        operation: 'list',
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
                     setError(err);
                     setLoading(false);
-                    console.error(err);
                 });
         }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [query, options.listen]);
 
     return { data, loading, error };

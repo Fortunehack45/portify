@@ -1,7 +1,9 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { onSnapshot, doc, getDoc, DocumentReference, DocumentData, FirestoreError } from 'firebase/firestore';
+import { onSnapshot, getDoc, DocumentReference, FirestoreError } from 'firebase/firestore';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 interface HookOptions {
     listen?: boolean;
@@ -39,9 +41,13 @@ export function useDoc<T>(
                     setLoading(false);
                 },
                 (err) => {
+                    const permissionError = new FirestorePermissionError({
+                        path: ref.path,
+                        operation: 'get',
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
                     setError(err);
                     setLoading(false);
-                    console.error(err);
                 }
             );
             return () => unsubscribe();
@@ -56,9 +62,13 @@ export function useDoc<T>(
                     setLoading(false);
                 })
                 .catch((err) => {
+                    const permissionError = new FirestorePermissionError({
+                        path: ref.path,
+                        operation: 'get',
+                    });
+                    errorEmitter.emit('permission-error', permissionError);
                     setError(err);
                     setLoading(false);
-                    console.error(err);
                 });
         }
 
