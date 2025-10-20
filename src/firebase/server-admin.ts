@@ -1,34 +1,36 @@
 
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
-import * as path from 'path';
-import * as fs from 'fs';
 
 let adminDb: Firestore;
 
 try {
     if (getApps().length === 0) {
-        const serviceAccountPath = path.resolve(process.cwd(), 'serviceAccountKey.json');
+        const privateKey = process.env.FIREBASE_PRIVATE_KEY
+            ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+            : undefined;
 
-        if (!fs.existsSync(serviceAccountPath)) {
-            throw new Error(`Firebase Admin SDK Error: serviceAccountKey.json not found. 
-Please download it from your Firebase project settings (Project settings > Service accounts > Generate new private key),
-rename it to 'serviceAccountKey.json', and place it in the root directory of your project.`);
+        if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
+            throw new Error(`Firebase Admin SDK Error: Missing credentials in environment variables. 
+Please ensure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set in your .env file.`);
         }
-        
-        const serviceAccountString = fs.readFileSync(serviceAccountPath, 'utf8');
-        const serviceAccount = JSON.parse(serviceAccountString);
+
+        const serviceAccount = {
+            projectId: process.env.FIREBASE_PROJECT_ID,
+            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+            privateKey: privateKey,
+        };
 
         initializeApp({
             credential: cert(serviceAccount),
         });
+        
         adminDb = getFirestore();
     } else {
         adminDb = getFirestore(getApps()[0]);
     }
 } catch (error: any) {
     console.error("Firebase Admin SDK initialization failed:", error.message);
-    // We re-throw the error to ensure it's visible during development and server startup
     throw error;
 }
 
