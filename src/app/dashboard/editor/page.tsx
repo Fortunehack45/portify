@@ -16,12 +16,15 @@ import {
 } from '@/components/ui/resizable';
 import type { ImperativePanelGroupHandle } from 'react-resizable-panels';
 
+const EDITOR_TAB_STORAGE_KEY = 'folioforge-editor-active-tab';
+
 export default function EditorPage() {
   const { user: authUser, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const isMobile = useIsMobile();
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
-
+  
+  const [activeTab, setActiveTab] = useState('editor');
   const [liveUser, setLiveUser] = useState<User | null>(null);
   const [liveProjects, setLiveProjects] = useState<Project[]>([]);
   
@@ -73,6 +76,18 @@ export default function EditorPage() {
       setLiveProjects(formattedProjects);
     }
   }, [projects]);
+  
+  useEffect(() => {
+    const savedTab = localStorage.getItem(EDITOR_TAB_STORAGE_KEY);
+    if (savedTab) {
+      setActiveTab(savedTab);
+    }
+  }, []);
+  
+  const handleTabChange = (value: string) => {
+    setActiveTab(value);
+    localStorage.setItem(EDITOR_TAB_STORAGE_KEY, value);
+  };
 
   const isLoading = userLoading || projectsLoading || profileLoading || !liveUser;
   
@@ -95,7 +110,11 @@ export default function EditorPage() {
   // Mobile View
   if (isMobile) {
     return (
-        <Tabs defaultValue="editor" className="w-full flex flex-col -m-4 md:-m-6 h-full">
+        <Tabs 
+          value={activeTab} 
+          onValueChange={handleTabChange}
+          className="w-full flex flex-col -m-4 md:-m-6 h-full"
+        >
             <TabsList className="grid w-full grid-cols-2 rounded-none h-14">
                 <TabsTrigger value="editor" className="text-base h-full rounded-none">Editor</TabsTrigger>
                 <TabsTrigger value="preview" className="text-base h-full rounded-none">Preview</TabsTrigger>
