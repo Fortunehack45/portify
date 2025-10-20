@@ -31,6 +31,13 @@ export default function DashboardPage() {
 
   const publicUsername = currentUser?.username || 'preview';
 
+  const getPortfolioUrl = (portfolio: Portfolio) => {
+    if (portfolio.isPrimary) {
+      return `/${publicUsername}`;
+    }
+    return `/${publicUsername}/portfolio/${portfolio.slug}`;
+  }
+
   return (
     <div className="space-y-6">
        <div className="space-y-1">
@@ -58,7 +65,7 @@ export default function DashboardPage() {
                         </div>
                         <div className="flex items-center gap-2">
                             <Button variant="outline" size="sm" asChild>
-                                <Link href={`/${publicUsername}/${p.slug}`} target="_blank">
+                                <Link href={getPortfolioUrl(p)} target="_blank">
                                     <View className="mr-2 h-4 w-4" /> View
                                 </Link>
                             </Button>
