@@ -36,37 +36,23 @@ async function getPortfolioData(username: string) {
     const user = { id: userSnap.id, ...userSnap.data() } as User;
 
     const portfolioRef = collection(firestore, 'portfolios');
-    const portfolioQuery = query(portfolioRef, where('userId', '==', userId), where('isPrimary', '==', true), limit(1));
-    const portfolioSnapshot = await getDocs(portfolioQuery);
+    let portfolioQuery = query(portfolioRef, where('userId', '==', userId), where('isPrimary', '==', true), limit(1));
+    let portfolioSnapshot = await getDocs(portfolioQuery);
 
     if (portfolioSnapshot.empty) {
-      console.log(`Primary portfolio not found for userId: ${userId}`);
+      console.log(`Primary portfolio not found for userId: ${userId}. Falling back to any portfolio.`);
       // Fallback: Try to get ANY portfolio if no primary is set.
       const anyPortfolioQuery = query(portfolioRef, where('userId', '==', userId), limit(1));
-      const anyPortfolioSnapshot = await getDocs(anyPortfolioQuery);
-      if (anyPortfolioSnapshot.empty) {
+      portfolioSnapshot = await getDocs(anyPortfolioQuery);
+      
+      if (portfolioSnapshot.empty) {
         console.log(`No portfolios found for userId: ${userId}`);
         return null;
       }
-       const portfolio = { id: anyPortfolioSnapshot.docs[0].id, ...anyPortfolioSnapshot.docs[0].data() } as Portfolio;
-       let projects: Project[] = [];
-        if (portfolio.projectIds && portfolio.projectIds.length > 0) {
-            const projectChunks: string[][] = [];
-            for (let i = 0; i < portfolio.projectIds.length; i += 30) {
-            projectChunks.push(portfolio.projectIds.slice(i, i + 30));
-            }
-            
-            const projectPromises = projectChunks.map(chunk => 
-            getDocs(query(collection(firestore, 'projects'), where('__name__', 'in', chunk)))
-            );
-            
-            const projectSnapshots = await Promise.all(projectPromises);
-            projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
-        }
-       return { user, projects, portfolio };
     }
 
-    const portfolio = { id: portfolioSnapshot.docs[0].id, ...portfolioSnapshot.docs[0].data() } as Portfolio;
+    const portfolioDoc = portfolioSnapshot.docs[0];
+    const portfolio = { id: portfolioDoc.id, ...portfolioDoc.data() } as Portfolio;
 
     let projects: Project[] = [];
     if (portfolio.projectIds && portfolio.projectIds.length > 0) {

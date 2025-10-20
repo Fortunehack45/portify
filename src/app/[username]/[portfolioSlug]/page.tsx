@@ -49,7 +49,8 @@ async function getPortfolioData(username: string, portfolioSlug: string) {
       return null;
     }
 
-    const portfolio = { id: portfolioSnapshot.docs[0].id, ...portfolioSnapshot.docs[0].data() } as Portfolio;
+    const portfolioDoc = portfolioSnapshot.docs[0];
+    const portfolio = { id: portfolioDoc.id, ...portfolioDoc.data() } as Portfolio;
 
     let projects: Project[] = [];
     if (portfolio.projectIds && portfolio.projectIds.length > 0) {
@@ -70,8 +71,6 @@ async function getPortfolioData(username: string, portfolioSlug: string) {
 
   } catch (err: any) {
     console.error("Error fetching portfolio data:", err);
-    // In a server component, throwing an error will be caught by Next.js error boundaries.
-    // For permission errors, we might want to log it and return null to trigger a 404.
     if (err.code === 'permission-denied') {
       console.error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}" with slug "${portfolioSlug}". Check your Firestore security rules.`);
     }
