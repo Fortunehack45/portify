@@ -8,8 +8,6 @@ let adminDb: Firestore;
 
 try {
     if (getApps().length === 0) {
-        // Use a service account key file for robust authentication, especially in development.
-        // This avoids issues with environment variable formatting of private keys.
         const serviceAccountPath = path.resolve(process.cwd(), 'serviceAccountKey.json');
 
         if (!fs.existsSync(serviceAccountPath)) {
