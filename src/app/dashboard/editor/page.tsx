@@ -4,7 +4,7 @@ import EditorClient from '@/components/dashboard/editor-client';
 import { useUser, useCollection, useFirestore } from '@/firebase';
 import { collection, query, where } from 'firebase/firestore';
 import type { User, Project } from '@/types';
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PreviewPanel from '@/components/dashboard/preview-panel';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -13,12 +13,14 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable';
+import type { ImperativePanelGroupHandle } from 'react-resizable-panels';
 
 export default function EditorPage() {
   const { user: authUser, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const isMobile = useIsMobile();
   const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
+  const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
 
   const [initialUser, setInitialUser] = useState<User | null>(null);
   const [initialProjects, setInitialProjects] = useState<Project[]>([]);
@@ -74,6 +76,18 @@ export default function EditorPage() {
 
   const isLoading = userLoading || projectsLoading || profileLoading || !initialUser;
   
+  const handleTogglePreview = () => {
+    const panelGroup = panelGroupRef.current;
+    if (panelGroup) {
+      const layout = panelGroup.getLayout();
+      if (layout[1] === 0) {
+        panelGroup.setLayout([50, 50]);
+      } else {
+        panelGroup.setLayout([100, 0]);
+      }
+    }
+  };
+
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading editor...</div>;
   }
@@ -95,6 +109,8 @@ export default function EditorPage() {
                         user={initialUser as User} 
                         projects={initialProjects} 
                         isMobile={true} 
+                        onTogglePreview={() => {}}
+                        isPreviewCollapsed={false}
                     />
                 </div>
             </TabsContent>
@@ -106,13 +122,14 @@ export default function EditorPage() {
   return (
     <div className="flex flex-col h-full -m-4 lg:-m-6">
       <ResizablePanelGroup 
+        ref={panelGroupRef}
         direction="horizontal" 
         className="flex-grow"
       >
         <ResizablePanel defaultSize={50} minSize={30}>
           <EditorClient initialUser={initialUser as User} initialProjects={initialProjects} />
         </ResizablePanel>
-        <ResizableHandle withHandle />
+        {!isPreviewCollapsed && <ResizableHandle withHandle />}
         <ResizablePanel 
             defaultSize={50}
             minSize={30}
@@ -120,11 +137,12 @@ export default function EditorPage() {
             collapsedSize={0}
             onCollapse={() => setIsPreviewCollapsed(true)}
             onExpand={() => setIsPreviewCollapsed(false)}
-            className={isPreviewCollapsed ? 'hidden' : 'block'}
         >
           <PreviewPanel 
             user={initialUser as User} 
             projects={initialProjects}
+            onTogglePreview={handleTogglePreview}
+            isPreviewCollapsed={isPreviewCollapsed}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

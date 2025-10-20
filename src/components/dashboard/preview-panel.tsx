@@ -2,7 +2,7 @@
 
 import { User, Project } from '@/types';
 import TemplateRenderer from '../templates/template-renderer';
-import { Frame } from 'lucide-react';
+import { Frame, PanelRightOpen, PanelLeftOpen } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
@@ -10,9 +10,11 @@ interface PreviewPanelProps {
   user: User;
   projects: Project[];
   isMobile?: boolean;
+  onTogglePreview: () => void;
+  isPreviewCollapsed: boolean;
 }
 
-export default function PreviewPanel({ user, projects, isMobile = false }: PreviewPanelProps) {
+export default function PreviewPanel({ user, projects, isMobile = false, onTogglePreview, isPreviewCollapsed }: PreviewPanelProps) {
   return (
     <div className="h-full bg-muted/40 flex flex-col">
       {!isMobile && (
@@ -23,6 +25,18 @@ export default function PreviewPanel({ user, projects, isMobile = false }: Previ
                     Live Preview
                 </p>
             </div>
+             <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button variant="ghost" size="icon" onClick={onTogglePreview} className="h-7 w-7">
+                            {isPreviewCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{isPreviewCollapsed ? 'Show Preview' : 'Collapse Preview'}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
         </div>
       )}
       <div className="flex-grow overflow-auto">
