@@ -25,13 +25,22 @@ export default async function UserPortfolioPage({ params }: { params: { username
         notFound();
     }
     
-    const convertTimestamp = (data: any) => {
+    const convertTimestamp = (data: any): any => {
+        if (!data) return data;
+        const newData: { [key: string]: any } = {};
         for (const key in data) {
-            if (data[key] instanceof Timestamp) {
-                data[key] = data[key].toDate();
-            }
+          const value = data[key];
+          if (value instanceof Timestamp) {
+            newData[key] = value.toDate();
+          } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+            newData[key] = convertTimestamp(value);
+          } else if (Array.isArray(value)) {
+            newData[key] = value.map(item => (typeof item === 'object' ? convertTimestamp(item) : item));
+          } else {
+            newData[key] = value;
+          }
         }
-        return data;
+        return newData;
     }
 
     const user = { id: userDoc.id, ...convertTimestamp(userDoc.data()) } as User;
