@@ -2,72 +2,52 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Code, Palette, Share2 } from 'lucide-react';
+import { Code, Palette, Share2, ArrowRight } from 'lucide-react';
 import Header from '@/components/header';
 import Footer from '@/components/footer';
-import Image from 'next/image';
-import { placeholderImages } from '@/lib/placeholder-images';
 
 const featureList = [
   {
     icon: <Palette className="w-8 h-8 text-primary" />,
-    title: 'Powerful Theme Options',
+    title: 'Instant Professionalism',
     description:
-      'Choose from a variety of professionally designed themes. Switch between them with a single click to find the perfect fit.',
+      'Choose from a library of meticulously crafted templates. Find the perfect design that matches your personal brand and style.',
   },
   {
     icon: <Code className="w-8 h-8 text-primary" />,
-    title: 'Intuitive Content Editing',
+    title: 'Effortless Content Management',
     description:
-      'Our intuitive editor allows you to add projects, skills, and your bio with a real-time preview of your changes.',
+      'Our intuitive editor allows you to add projects, skills, and your bio with a real-time preview of your changes, saving automatically.',
   },
   {
     icon: <Share2 className="w-8 h-8 text-primary" />,
-    title: 'Instant Live Publishing',
+    title: 'Publish and Share Instantly',
     description:
       'Get a unique, shareable URL at /[username] to showcase your work to potential employers and colleagues instantly.',
   },
 ];
 
 export default function Home() {
-  const heroImage = placeholderImages.find(p => p.id === "hero");
-
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
       <main className="flex-grow">
         <section className="w-full py-24 md:py-32 lg:py-40">
           <div className="container px-4 md:px-6">
-            <div className="grid gap-8 lg:grid-cols-2 lg:gap-16 items-center">
-              <div className="space-y-6 text-center lg:text-left">
-                <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl font-headline">
-                  Build your portfolio. Publish in minutes.
-                </h1>
-                <p className="max-w-[600px] text-muted-foreground md:text-xl mx-auto lg:mx-0">
-                  The easiest way to build and share a professional developer
-                  portfolio. Sign up, create projects, choose a theme, and get a
-                  unique public URL instantly.
-                </p>
-                <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center lg:justify-start">
-                  <Button asChild size="lg">
-                    <Link href="/signup">Get Started for Free</Link>
-                  </Button>
-                  <Button asChild variant="outline" size="lg">
-                    <Link href="#features">Learn More</Link>
-                  </Button>
-                </div>
-              </div>
-              <div className="flex justify-center">
-                {heroImage && (
-                    <Image
-                      src={heroImage.imageUrl}
-                      alt={heroImage.description}
-                      width={600}
-                      height={400}
-                      className="rounded-2xl shadow-2xl"
-                      data-ai-hint={heroImage.imageHint}
-                    />
-                  )}
+            <div className="max-w-3xl mx-auto text-center space-y-6">
+              <h1 className="text-5xl font-bold tracking-tight sm:text-6xl md:text-7xl lg:text-8xl font-headline">
+                Craft Your Digital Presence.
+              </h1>
+              <p className="text-muted-foreground md:text-xl">
+                FolioForge provides the tools to build a stunning developer portfolio in minutes. No code required. Just your talent, your projects, and your unique story.
+              </p>
+              <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center">
+                <Button asChild size="lg">
+                  <Link href="/signup">Get Started <ArrowRight className="ml-2 h-5 w-5" /></Link>
+                </Button>
+                <Button asChild variant="outline" size="lg">
+                  <Link href="#features">Explore Features</Link>
+                </Button>
               </div>
             </div>
           </div>
@@ -76,27 +56,23 @@ export default function Home() {
         <section id="features" className="w-full py-24 md:py-32 bg-secondary/50">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center mb-16">
+              <div className="inline-block rounded-lg bg-primary/10 px-3 py-1 text-sm font-medium text-primary">Key Features</div>
               <h2 className="text-4xl font-bold tracking-tight sm:text-5xl font-headline">
-                Everything You Need to Shine
+                Designed for Developers Who Build
               </h2>
               <p className="max-w-[900px] text-muted-foreground md:text-xl/relaxed">
-                FolioForge provides all the tools to create a standout
-                portfolio that truly represents your skills and projects.
+                From template selection to instant publishing, every feature is designed to get your portfolio online and in front of the right people, effortlessly.
               </p>
             </div>
             <div className="mx-auto grid max-w-5xl items-start gap-8 sm:grid-cols-2 md:gap-12 lg:grid-cols-3 lg:max-w-none">
               {featureList.map((feature) => (
-                <Card key={feature.title} className="text-left bg-card hover:shadow-lg transition-shadow">
-                    <CardHeader>
-                        <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10 mb-4">
-                            {feature.icon}
-                        </div>
-                        <CardTitle className="text-2xl font-bold font-headline">{feature.title}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-muted-foreground">{feature.description}</p>
-                    </CardContent>
-                </Card>
+                <div key={feature.title} className="text-left bg-card rounded-lg border shadow-sm hover:shadow-lg transition-shadow p-6 space-y-4">
+                    <div className="flex items-center justify-center w-12 h-12 rounded-lg bg-primary/10">
+                        {feature.icon}
+                    </div>
+                    <h3 className="text-2xl font-bold font-headline">{feature.title}</h3>
+                    <p className="text-muted-foreground">{feature.description}</p>
+                </div>
               ))}
             </div>
           </div>
