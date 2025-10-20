@@ -15,7 +15,7 @@ import { Logo } from "@/components/icons";
 import { useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -36,6 +36,7 @@ export default function DashboardLayout({
   const { user, loading } = useUser();
   const auth = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
@@ -85,18 +86,25 @@ export default function DashboardLayout({
             <Logo />
           </Link>
         </div>
-        <nav className="flex-1 grid items-start p-2 text-sm font-medium lg:p-4">
-          {navItems.map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
-            >
-              <item.icon className="h-4 w-4" />
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+        <div className="flex flex-col flex-1 overflow-y-auto">
+          <nav className="flex-1 grid items-start p-2 text-sm font-medium lg:p-4">
+            {navItems.map((item) => {
+              const isActive = pathname === item.href;
+              return (
+              <Link
+                key={item.label}
+                href={item.href}
+                className={cn(
+                  "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
+                  isActive && "bg-muted text-primary"
+                )}
+              >
+                <item.icon className="h-4 w-4" />
+                {item.label}
+              </Link>
+            )})}
+          </nav>
+        </div>
       </div>
 
       <div className="md:pl-[220px] lg:pl-[280px] flex flex-col min-h-screen">
