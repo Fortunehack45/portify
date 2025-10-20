@@ -33,9 +33,6 @@ const usePortfolioData = (username: string) => {
 
         if (!usernameSnap.exists()) {
           setError('User not found');
-          setData(null);
-          setLoading(false);
-          notFound();
           return;
         }
 
@@ -46,9 +43,6 @@ const usePortfolioData = (username: string) => {
 
         if (!userSnap.exists()) {
             setError('User profile not found');
-            setData(null);
-            setLoading(false);
-            notFound();
             return;
         }
 
@@ -61,9 +55,6 @@ const usePortfolioData = (username: string) => {
 
         if (portfolioSnapshot.empty) {
             setError('Primary portfolio not found');
-            setData(null);
-            setLoading(false);
-            notFound();
             return;
         }
 
@@ -71,12 +62,18 @@ const usePortfolioData = (username: string) => {
 
         let projects: Project[] = [];
         if (portfolio.projectIds && portfolio.projectIds.length > 0) {
-            const projectsRef = collection(firestore, 'projects');
-            // Firestore 'in' query is limited to 30 items. If more, we need multiple queries.
-            // For now, assuming less than 30 projects per portfolio for simplicity.
-            const projectsQuery = query(projectsRef, where('__name__', 'in', portfolio.projectIds));
-            const projectsSnapshot = await getDocs(projectsQuery);
-            projects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+            // Firestore 'in' query is limited to 30 items. We chunk the requests if needed.
+            const projectChunks: string[][] = [];
+            for (let i = 0; i < portfolio.projectIds.length; i += 30) {
+              projectChunks.push(portfolio.projectIds.slice(i, i + 30));
+            }
+            
+            const projectPromises = projectChunks.map(chunk => 
+              getDocs(query(collection(firestore, 'projects'), where('__name__', 'in', chunk)))
+            );
+            
+            const projectSnapshots = await Promise.all(projectPromises);
+            projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
         }
         
         setData({ user, projects, portfolio });
@@ -93,7 +90,6 @@ const usePortfolioData = (username: string) => {
             setError('An unexpected error occurred.');
             console.error("Portfolio fetch error:", err);
         }
-        setData(null);
       } finally {
         setLoading(false);
       }
@@ -116,12 +112,9 @@ export default function UserPortfolioPage() {
     return <div className="flex h-screen w-full items-center justify-center">Loading portfolio...</div>;
   }
 
-  if (error || !data?.user || !data?.portfolio) {
-    // Custom error is thrown for permission issues to be caught by the overlay
-    if (error?.includes('permission')) {
-      throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}". Check your Firestore security rules to allow public reads on 'users' and 'projects' collections.`);
-    }
-    // For other errors like "not found", just trigger the 404 page
+  // After loading, if there's an error or no data, trigger notFound
+  if (error || !data) {
+    // This will be caught by Next.js and render the 404 page
     notFound();
   }
 
