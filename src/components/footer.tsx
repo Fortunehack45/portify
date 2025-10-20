@@ -9,7 +9,7 @@ const Footer = () => {
           <Logo />
         </div>
         <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Made by Fortune.
+            © {new Date().getFullYear()} Portify. Made by Fortune. All rights reserved.
         </p>
         <div className="flex gap-4 sm:gap-6 text-sm text-muted-foreground">
             <Link href="/about" className="hover:text-foreground">About</Link>
