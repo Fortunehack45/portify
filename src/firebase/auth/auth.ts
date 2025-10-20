@@ -12,6 +12,8 @@ import {
 import { doc, setDoc, getDoc, collection, addDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
 import { getFirebase } from '..';
 import { User, Project, Portfolio } from '@/types';
+import { errorEmitter } from '../error-emitter';
+import { FirestorePermissionError } from '../errors';
 
 const { auth, firestore } = getFirebase();
 
@@ -57,7 +59,7 @@ const createUserProfileAndUsername = async (user: import('firebase/auth').User, 
     const lowercaseUsername = username.toLowerCase();
     const usernameDocRef = doc(firestore, 'usernames', lowercaseUsername);
 
-    const userProfile: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
+    const userProfileData: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
       name: name,
       username: username, 
       email: user.email || '',
@@ -68,19 +70,33 @@ const createUserProfileAndUsername = async (user: import('firebase/auth').User, 
       skills: ['React', 'TypeScript'],
       socials: [],
     };
-
-    batch.set(userDocRef, { 
-        ...userProfile,
+    
+    const finalUserData = {
+        ...userProfileData,
         id: user.uid,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp()
-    });
+    };
+    batch.set(userDocRef, finalUserData);
     
-    batch.set(usernameDocRef, { userId: user.uid });
+    const usernameData = { userId: user.uid };
+    batch.set(usernameDocRef, usernameData);
 
     createSampleProjectAndPortfolio(user.uid, batch);
     
-    await batch.commit();
+    return batch.commit().catch(async (error) => {
+        const permissionError = new FirestorePermissionError({
+            path: `users/${user.uid}`,
+            operation: 'create',
+            requestResourceData: {
+                userProfile: finalUserData,
+                username: usernameData
+            }
+        });
+        errorEmitter.emit('permission-error', permissionError);
+        // re-throw the original error
+        throw error;
+    });
 };
 
 

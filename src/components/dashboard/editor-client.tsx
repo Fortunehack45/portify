@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import type { User, Project, Template, Portfolio } from '@/types';
@@ -77,27 +75,25 @@ export default function EditorClient({
     const { id: portfolioIdToRemove, ...portfolioDataWithoutId } = portfolioData;
     batch.set(portfolioDocRef, portfolioDataWithoutId, { merge: true });
     
-    try {
-      await batch.commit();
-  
-      toast({
-        title: 'Content Saved!',
-        description: 'Your changes have been successfully saved.',
-      });
-    } catch (error: any) {
-      const permissionError = new FirestorePermissionError({
-        path: userDocRef.path,
-        operation: 'update',
-        requestResourceData: userData
-      });
-      errorEmitter.emit('permission-error', permissionError);
+    batch.commit().then(() => {
+        toast({
+            title: 'Content Saved!',
+            description: 'Your changes have been successfully saved.',
+        });
+    }).catch(async (error: any) => {
+        const permissionError = new FirestorePermissionError({
+            path: `users/${authUser.uid}`,
+            operation: 'update',
+            requestResourceData: { user: userDataWithoutId, portfolio: portfolioDataWithoutId },
+        });
+        errorEmitter.emit('permission-error', permissionError);
 
-      toast({
-        title: 'Uh oh! Something went wrong.',
-        description: 'Could not save your changes.',
-        variant: 'destructive',
-      });
-    }
+        toast({
+            title: 'Uh oh! Something went wrong.',
+            description: 'Could not save your changes.',
+            variant: 'destructive',
+        });
+    });
   };
   
   return (

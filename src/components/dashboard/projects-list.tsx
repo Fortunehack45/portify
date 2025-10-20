@@ -1,4 +1,3 @@
-
 'use client';
 import { Project, Portfolio } from '@/types';
 import { Button } from '../ui/button';
@@ -48,42 +47,48 @@ export default function ProjectsList({ projects, setProjects, portfolio, onPortf
     if (editingProject) {
         // TODO: Implement update logic that handles slug changes
         const projectRef = doc(firestore, 'projects', editingProject.id);
-        
-        await updateDoc(projectRef, {
+        const projectData = {
             ...project,
             updatedAt: serverTimestamp(),
+        };
+        
+        updateDoc(projectRef, projectData).then(() => {
+            setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...project, updatedAt: new Date() } : p));
+            toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
+        }).catch(async () => {
+             const permissionError = new FirestorePermissionError({
+                path: projectRef.path,
+                operation: 'update',
+                requestResourceData: projectData,
+            });
+            errorEmitter.emit('permission-error', permissionError);
         });
-        setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...project, updatedAt: new Date() } : p));
-        toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
 
     } else {
       // Add new project with uniqueness check
       const projectRef = doc(collection(firestore, 'projects'));
       const projectNameRef = doc(firestore, 'projectNames', slug);
 
-      try {
-        await runTransaction(firestore, async (transaction) => {
-          const projectNameDoc = await transaction.get(projectNameRef);
-          if (projectNameDoc.exists()) {
-            throw new Error(`Project name "${slug}" is already taken.`);
-          }
+      runTransaction(firestore, async (transaction) => {
+        const projectNameDoc = await transaction.get(projectNameRef);
+        if (projectNameDoc.exists()) {
+          throw new Error(`Project name "${slug}" is already taken.`);
+        }
 
-          transaction.set(projectNameRef, { 
-            userId: authUser.uid, 
-            projectId: projectRef.id 
-          });
-
-          const newProjectData = {
-              ...project,
-              id: projectRef.id,
-              userId: authUser.uid,
-              createdAt: serverTimestamp(),
-              updatedAt: serverTimestamp(),
-          };
-          transaction.set(projectRef, newProjectData);
+        transaction.set(projectNameRef, { 
+          userId: authUser.uid, 
+          projectId: projectRef.id 
         });
 
-        // Optimistically update UI after successful transaction
+        const newProjectData = {
+            ...project,
+            id: projectRef.id,
+            userId: authUser.uid,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+        };
+        transaction.set(projectRef, newProjectData);
+      }).then(() => {
         const optimisticProject = {
             ...project,
             id: projectRef.id,
@@ -93,16 +98,20 @@ export default function ProjectsList({ projects, setProjects, portfolio, onPortf
         };
         setProjects([...projects, optimisticProject]);
         toast({ title: "Project Added", description: `"${project.title}" has been added.` });
-
-      } catch (error: any) {
-        console.error("Transaction failed: ", error);
+      }).catch(async (error: any) => {
+        const permissionError = new FirestorePermissionError({
+            path: projectNameRef.path,
+            operation: 'create',
+            requestResourceData: { userId: authUser.uid, projectId: projectRef.id }
+        });
+        errorEmitter.emit('permission-error', permissionError);
         toast({
           title: "Error",
           description: error.message || "Could not add project.",
           variant: "destructive",
         });
         return; // Stop execution
-      }
+      });
     }
     
     setIsDialogOpen(false);
@@ -117,28 +126,23 @@ export default function ProjectsList({ projects, setProjects, portfolio, onPortf
   const handleDelete = async (projectToDelete: Project) => {
     if (!firestore || !projectToDelete.slug) return;
     
-    const originalProjects = projects;
-    // Optimistic delete
-    setProjects(projects.filter(p => p.id !== projectToDelete.id));
-
     const projectRef = doc(firestore, 'projects', projectToDelete.id);
     const projectNameRef = doc(firestore, 'projectNames', projectToDelete.slug);
 
-    try {
-        await runTransaction(firestore, async (transaction) => {
-            transaction.delete(projectRef);
-            transaction.delete(projectNameRef);
-        });
+    runTransaction(firestore, async (transaction) => {
+        transaction.delete(projectRef);
+        transaction.delete(projectNameRef);
+    }).then(() => {
+        setProjects(projects.filter(p => p.id !== projectToDelete.id));
         toast({ title: "Project Deleted", description: `"${projectToDelete.title}" has been removed.` });
-    } catch (err: any) {
-        setProjects(originalProjects); // Revert on error
+    }).catch(async (err: any) => {
         const permissionError = new FirestorePermissionError({
           path: `projects/${projectToDelete.id}`,
           operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
         toast({ title: "Error", description: err.message || "Could not delete project.", variant: "destructive" });
-    }
+    });
   };
   
   const handleAddNew = () => {
