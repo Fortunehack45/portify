@@ -125,11 +125,14 @@ export default function EditorPage() {
         ref={panelGroupRef}
         direction="horizontal" 
         className="flex-grow"
+        onLayout={(sizes: number[]) => {
+          document.cookie = `react-resizable-panels:layout=${JSON.stringify(sizes)}`
+        }}
       >
         <ResizablePanel defaultSize={50} minSize={30}>
           <EditorClient initialUser={initialUser as User} initialProjects={initialProjects} />
         </ResizablePanel>
-        {!isPreviewCollapsed && <ResizableHandle withHandle />}
+        <ResizableHandle withHandle />
         <ResizablePanel 
             defaultSize={50}
             minSize={30}
