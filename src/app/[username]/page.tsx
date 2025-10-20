@@ -33,6 +33,7 @@ const usePortfolioData = (username: string) => {
 
         if (!usernameSnap.exists()) {
           setError('User not found');
+          notFound();
           return;
         }
 
@@ -43,6 +44,7 @@ const usePortfolioData = (username: string) => {
 
         if (!userSnap.exists()) {
             setError('User profile not found');
+            notFound();
             return;
         }
 
@@ -55,6 +57,7 @@ const usePortfolioData = (username: string) => {
 
         if (portfolioSnapshot.empty) {
             setError('Primary portfolio not found');
+            notFound();
             return;
         }
 
@@ -81,8 +84,8 @@ const usePortfolioData = (username: string) => {
       } catch (err: any) {
         if (err.code === 'permission-denied') {
             const permissionError = new FirestorePermissionError({
-              path: `usernames/${username.toLowerCase()}`, 
-              operation: 'get', 
+              path: `portfolios`, 
+              operation: 'list', 
             });
             errorEmitter.emit('permission-error', permissionError);
             setError('Failed to fetch data due to permission issues.');
@@ -112,9 +115,14 @@ export default function UserPortfolioPage() {
     return <div className="flex h-screen w-full items-center justify-center">Loading portfolio...</div>;
   }
 
-  // After loading, if there's an error or no data, trigger notFound
-  if (error || !data) {
-    // This will be caught by Next.js and render the 404 page
+  if (error) {
+     if (error.includes('permission')) {
+      throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}". Check your Firestore security rules.`);
+    }
+    notFound();
+  }
+  
+  if (!data) {
     notFound();
   }
 
