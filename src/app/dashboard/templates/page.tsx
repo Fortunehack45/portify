@@ -4,13 +4,13 @@
 import { useState, useEffect, useMemo } from 'react';
 import type { User, Project, Template } from '@/types';
 import TemplateSelector from '@/components/dashboard/template-selector';
-import { useFirestore, useUser as useAuthUser } from '@/firebase';
+import { useFirestore, useUser as useAuthUser, useDoc, useCollection } from '@/firebase';
 import { doc, setDoc, collection, query, where } from 'firebase/firestore';
-import { useCollection } from '@/firebase';
 import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
+import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 
 export default function TemplatesPage() {
   const { user: authUser, loading: userLoading } = useAuthUser();
@@ -19,14 +19,14 @@ export default function TemplatesPage() {
   const router = useRouter();
   const { toast } = useToast();
 
-  const userProfileQuery = useMemo(() => {
+  const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
-    return query(collection(firestore, 'users'), where('id', '==', authUser.uid))
+    return doc(firestore, 'users', authUser.uid);
   }, [firestore, authUser]);
 
-  const { data: userProfile, loading: profileLoading } = useCollection<User>(userProfileQuery);
+  const { data: user, loading: profileLoading } = useDoc<User>(userProfileRef);
   
-  const projectsQuery = useMemo(() => {
+  const projectsQuery = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
     return query(collection(firestore, 'projects'), where('userId', '==', authUser.uid));
   }, [firestore, authUser]);
@@ -34,8 +34,6 @@ export default function TemplatesPage() {
   const { data: projects, loading: projectsLoading } = useCollection<Project>(
     projectsQuery
   );
-
-  const user = userProfile?.[0];
 
   useEffect(() => {
     if (user) {

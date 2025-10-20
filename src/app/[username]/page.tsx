@@ -4,7 +4,7 @@
 import { notFound, useParams } from 'next/navigation';
 import { useFirestore } from '@/firebase';
 import TemplateRenderer from '@/components/templates/template-renderer';
-import { collection, query, where, getDocs, limit } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
 import type { User, Project } from '@/types';
 import { useEffect, useState } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -26,7 +26,7 @@ const usePortfolioData = (username: string) => {
       setLoading(true);
       setError(null);
       try {
-        // Step 1: Find the user by username.
+        // Step 1: Find the user by username. This is a query that requires list permission.
         const usersRef = collection(firestore, 'users');
         const userQuery = query(usersRef, where('username', '==', username), limit(1));
         
@@ -36,6 +36,7 @@ const usePortfolioData = (username: string) => {
           setError('User not found');
           setData(null);
           setLoading(false);
+          notFound();
           return;
         }
 
@@ -43,21 +44,28 @@ const usePortfolioData = (username: string) => {
         const user = { id: userDoc.id, ...userDoc.data() } as User;
 
         // Step 2: Fetch the user's projects using their ID.
-        const projectsRef = collection(firestore, 'projects');
-        const projectsQuery = query(projectsRef, where('userId', '==', user.id));
-        const projectsSnapshot = await getDocs(projectsQuery);
-        const projects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        let projects: Project[] = [];
+        if (user.id) {
+            const projectsRef = collection(firestore, 'projects');
+            const projectsQuery = query(projectsRef, where('userId', '==', user.id));
+            const projectsSnapshot = await getDocs(projectsQuery);
+            projects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        }
         
         setData({ user, projects });
 
       } catch (err: any) {
-        // Create a more specific error for debugging
-        const permissionError = new FirestorePermissionError({
-          path: `users (querying for username: ${username})`,
-          operation: 'list', 
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        setError('Failed to fetch data due to permission issues.');
+        if (err.code === 'permission-denied') {
+            const permissionError = new FirestorePermissionError({
+              path: `users (querying where username == ${username})`,
+              operation: 'list', 
+            });
+            errorEmitter.emit('permission-error', permissionError);
+            setError('Failed to fetch data due to permission issues.');
+        } else {
+            setError('An unexpected error occurred.');
+            console.error(err);
+        }
         setData(null);
       } finally {
         setLoading(false);
@@ -87,6 +95,8 @@ export default function UserPortfolioPage() {
     if (error?.includes('permission')) {
       throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}". Check your Firestore security rules to allow public reads on 'users' and 'projects' collections.`);
     }
+    // For "User not found" or other errors, the hook already calls notFound(),
+    // but we'll call it again here as a fallback.
     notFound();
   }
 

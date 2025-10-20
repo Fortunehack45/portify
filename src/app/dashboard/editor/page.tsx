@@ -2,8 +2,8 @@
 'use client';
 
 import EditorClient from '@/components/dashboard/editor-client';
-import { useUser, useCollection, useFirestore } from '@/firebase';
-import { collection, query, where } from 'firebase/firestore';
+import { useUser, useCollection, useDoc, useFirestore } from '@/firebase';
+import { collection, query, where, doc } from 'firebase/firestore';
 import type { User, Project } from '@/types';
 import { useEffect, useState, useMemo, useRef } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -15,6 +15,7 @@ import {
   ResizableHandle,
 } from '@/components/ui/resizable';
 import type { ImperativePanelGroupHandle } from 'react-resizable-panels';
+import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 
 const EDITOR_TAB_STORAGE_KEY = 'folioforge-editor-active-tab';
 
@@ -28,7 +29,7 @@ export default function EditorPage() {
   const [liveUser, setLiveUser] = useState<User | null>(null);
   const [liveProjects, setLiveProjects] = useState<Project[]>([]);
   
-  const projectsQuery = useMemo(() => {
+  const projectsQuery = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
     return query(collection(firestore, 'projects'), where('userId', '==', authUser.uid));
   }, [firestore, authUser]);
@@ -37,17 +38,17 @@ export default function EditorPage() {
     projectsQuery
   );
 
-  const userProfileQuery = useMemo(() => {
+  const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
-    return query(collection(firestore, 'users'), where('id', '==', authUser.uid));
+    return doc(firestore, 'users', authUser.uid);
   }, [firestore, authUser]);
 
-  const { data: userProfile, loading: profileLoading } = useCollection<User>(userProfileQuery);
+  const { data: userProfile, loading: profileLoading } = useDoc<User>(userProfileRef);
 
   useEffect(() => {
-    if (userProfile && userProfile.length > 0) {
-      setLiveUser(userProfile[0]);
-    } else if (authUser && !profileLoading && (!userProfile || userProfile.length === 0)) {
+    if (userProfile) {
+      setLiveUser(userProfile);
+    } else if (authUser && !profileLoading && !userProfile) {
       // If authUser exists but there's no profile, create a default one in state
       setLiveUser({
         id: authUser.uid,

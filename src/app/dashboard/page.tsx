@@ -1,24 +1,25 @@
+
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useCollection, useFirestore, useUser } from '@/firebase';
+import { useDoc, useFirestore, useUser } from '@/firebase';
 import type { User } from '@/types';
-import { collection, query, where } from 'firebase/firestore';
+import { doc } from 'firebase/firestore';
 import { ArrowRight, Edit, Eye, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
+import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 
 export default function DashboardPage() {
   const { user: authUser } = useUser();
   const firestore = useFirestore();
 
-  const userProfileQuery = useMemo(() => {
+  const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
-    return query(collection(firestore, 'users'), where('id', '==', authUser.uid));
+    return doc(firestore, 'users', authUser.uid);
   }, [firestore, authUser]);
 
-  const { data: userProfile } = useCollection<User>(userProfileQuery);
-  const currentUser = userProfile?.[0];
+  const { data: currentUser } = useDoc<User>(userProfileRef);
 
   const publicUsername = currentUser?.username || 'preview';
 
