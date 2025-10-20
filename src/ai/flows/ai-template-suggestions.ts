@@ -30,6 +30,7 @@ const prompt = ai.definePrompt({
   name: 'templateSuggestionPrompt',
   input: {schema: TemplateSuggestionInputSchema},
   output: {schema: TemplateSuggestionOutputSchema},
+  model: 'googleai/gemini-2.5-flash',
   prompt: `You are an expert portfolio template advisor. Given the following project descriptions, suggest portfolio templates that would be visually suitable.
 
 You MUST choose from the following list of available templates:

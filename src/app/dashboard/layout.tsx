@@ -24,6 +24,7 @@ import MobileNav from "@/components/dashboard/mobile-nav";
 import type { User, Portfolio } from '@/types';
 import { useDoc } from "@/firebase";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
+import { ThemeToggle } from "@/components/theme-toggle";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Home" },
@@ -142,7 +143,7 @@ export default function DashboardLayout({
         {/* Desktop and Mobile Header */}
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 sticky top-0 bg-background z-40">
           <div className="w-full flex-1">
-            {/* The public view button was here */}
+            <ThemeToggle />
           </div>
           {/* Mobile-only logo */}
           <div className="md:hidden">
