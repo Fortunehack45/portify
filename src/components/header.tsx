@@ -2,8 +2,9 @@
 import Link from 'next/link';
 import { Button } from './ui/button';
 import { Logo } from './icons';
-import { Sheet, SheetContent, SheetTrigger } from './ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from './ui/sheet';
 import { Menu } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const Header = () => {
   return (
@@ -32,13 +33,18 @@ const Header = () => {
               </Button>
             </SheetTrigger>
             <SheetContent side="left">
+                <SheetHeader className="mb-6">
+                  <SheetTitle asChild>
+                    <Link
+                      href="/"
+                      className="flex items-center gap-2 text-lg font-semibold"
+                    >
+                      <Logo />
+                    </Link>
+                  </SheetTitle>
+                  <SheetDescription className="sr-only">Main navigation menu</SheetDescription>
+                </SheetHeader>
               <nav className="grid gap-6 text-lg font-medium">
-                <Link
-                  href="/"
-                  className="flex items-center gap-2 text-lg font-semibold"
-                >
-                  <Logo />
-                </Link>
                 <Link href="/#features" className="hover:text-foreground">
                   Features
                 </Link>
