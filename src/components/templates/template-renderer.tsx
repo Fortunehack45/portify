@@ -7,8 +7,6 @@ import { Skeleton } from '@/components/ui/skeleton';
 const MinimalLight = lazy(() => import('./minimal-light'));
 const ModernDark = lazy(() => import('./modern-dark'));
 const ProfessionalBlue = lazy(() => import('./professional-blue'));
-
-// Placeholders for the new templates
 const RetroGamer = lazy(() => import('./retro-gamer'));
 const BrutalistWeb = lazy(() => import('./brutalist-web'));
 const CyberpunkNeon = lazy(() => import('./cyberpunk-neon'));
@@ -18,6 +16,16 @@ const HackerTerminal = lazy(() => import('./hacker-terminal'));
 const CraftsmanPaper = lazy(() => import('./craftsman-paper'));
 const PhotoGrid = lazy(() => import('./photo-grid'));
 const LakesideDawn = lazy(() => import('./lakeside-dawn'));
+const GeometricDark = lazy(() => import('./geometric-dark'));
+const MinimalSerif = lazy(() => import('./minimal-serif'));
+const CorporateClean = lazy(() => import('./corporate-clean'));
+const Glassmorphism = lazy(() => import('./glassmorphism'));
+const Neobrutalism = lazy(() => import('./neobrutalism'));
+const Storybook = lazy(() => import('./storybook'));
+const TwoColumnImage = lazy(() => import('./two-column-image'));
+const BoldAndBlue = lazy(() => import('./bold-and-blue'));
+const Newspaper = lazy(() => import('./newspaper'));
+const DarkAcademia = lazy(() => import('./dark-academia'));
 
 interface TemplateProps {
   user: User;
@@ -37,6 +45,16 @@ const templateMap: Record<Template, React.LazyExoticComponent<React.FC<TemplateP
   'craftsman-paper': CraftsmanPaper,
   'photo-grid': PhotoGrid,
   'lakeside-dawn': LakesideDawn,
+  'geometric-dark': GeometricDark,
+  'minimal-serif': MinimalSerif,
+  'corporate-clean': CorporateClean,
+  'glassmorphism': Glassmorphism,
+  'neobrutalism': Neobrutalism,
+  'storybook': Storybook,
+  'two-column-image': TwoColumnImage,
+  'bold-and-blue': BoldAndBlue,
+  'newspaper': Newspaper,
+  'dark-academia': DarkAcademia,
 };
 
 interface TemplateRendererProps {

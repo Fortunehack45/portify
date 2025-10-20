@@ -20,6 +20,16 @@ import HackerTerminal from '../templates/hacker-terminal';
 import CraftsmanPaper from '../templates/craftsman-paper';
 import PhotoGrid from '../templates/photo-grid';
 import LakesideDawn from '../templates/lakeside-dawn';
+import GeometricDark from '../templates/geometric-dark';
+import MinimalSerif from '../templates/minimal-serif';
+import CorporateClean from '../templates/corporate-clean';
+import Glassmorphism from '../templates/glassmorphism';
+import Neobrutalism from '../templates/neobrutalism';
+import Storybook from '../templates/storybook';
+import TwoColumnImage from '../templates/two-column-image';
+import BoldAndBlue from '../templates/bold-and-blue';
+import Newspaper from '../templates/newspaper';
+import DarkAcademia from '../templates/dark-academia';
 
 interface TemplateSelectorProps {
   selectedTemplate: Template;
@@ -41,6 +51,16 @@ const templateOptions: { value: Template; label: string; component: React.FC<{us
     { value: 'craftsman-paper', label: 'Craftsman Paper', component: CraftsmanPaper },
     { value: 'photo-grid', label: 'Photo Grid', component: PhotoGrid },
     { value: 'lakeside-dawn', label: 'Lakeside Dawn', component: LakesideDawn },
+    { value: 'geometric-dark', label: 'Geometric Dark', component: GeometricDark },
+    { value: 'minimal-serif', label: 'Minimal Serif', component: MinimalSerif },
+    { value: 'corporate-clean', label: 'Corporate Clean', component: CorporateClean },
+    { value: 'glassmorphism', label: 'Glassmorphism', component: Glassmorphism },
+    { value: 'neobrutalism', label: 'Neobrutalism', component: Neobrutalism },
+    { value: 'storybook', label: 'Storybook', component: Storybook },
+    { value: 'two-column-image', label: 'Two Column Image', component: TwoColumnImage },
+    { value: 'bold-and-blue', label: 'Bold and Blue', component: BoldAndBlue },
+    { value: 'newspaper', label: 'Newspaper', component: Newspaper },
+    { value: 'dark-academia', label: 'Dark Academia', component: DarkAcademia },
 ];
 
 export default function TemplateSelector({ selectedTemplate, onTemplateChange, projects, user }: TemplateSelectorProps) {

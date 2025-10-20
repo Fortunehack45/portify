@@ -50,4 +50,14 @@ export type Template =
   | 'hacker-terminal'
   | 'craftsman-paper'
   | 'photo-grid'
-  | 'lakeside-dawn';
+  | 'lakeside-dawn'
+  | 'geometric-dark'
+  | 'minimal-serif'
+  | 'corporate-clean'
+  | 'glassmorphism'
+  | 'neobrutalism'
+  | 'storybook'
+  | 'two-column-image'
+  | 'bold-and-blue'
+  | 'newspaper'
+  | 'dark-academia';
