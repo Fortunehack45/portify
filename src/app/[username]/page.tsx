@@ -1,107 +1,116 @@
+'use client';
 
+import { useState, useEffect } from 'react';
 import { notFound } from 'next/navigation';
+import { useFirestore } from '@/firebase';
+import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import TemplateRenderer from '@/components/templates/template-renderer';
 import type { User, Project, Portfolio } from '@/types';
-import { adminDb } from '@/firebase/server-admin';
-import { Timestamp } from 'firebase-admin/firestore';
+import { Logo } from '@/components/icons';
 
-export default async function UserPortfolioPage({ params }: { params: { username: string } }) {
+export default function UserPortfolioPage({ params }: { params: { username: string } }) {
   const { username } = params;
+  const firestore = useFirestore();
 
-  if (!adminDb) {
-    console.error("Firebase Admin SDK is not initialized.");
-    notFound();
-  }
+  const [user, setUser] = useState<User | null>(null);
+  const [portfolio, setPortfolio] = useState<Portfolio | null>(null);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  try {
-    // 1. Get User ID from username
-    const usernameDoc = await adminDb.collection('usernames').doc(username.toLowerCase()).get();
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!firestore) return;
 
-    if (!usernameDoc.exists) {
-        console.log(`Username document not found for: ${username.toLowerCase()}`);
-        notFound();
-    }
-    const { userId } = usernameDoc.data()!;
+      try {
+        setLoading(true);
+        // 1. Get User ID from username
+        const usernameDocRef = doc(firestore, 'usernames', username.toLowerCase());
+        const usernameDoc = await getDoc(usernameDocRef);
 
-    // 2. Get User Profile
-    const userDoc = await adminDb.collection('users').doc(userId).get();
-    if (!userDoc.exists) {
-        console.log(`User profile not found for userId: ${userId}`);
-        notFound();
-    }
-    
-    const convertTimestamp = (data: any): any => {
-        if (!data) return data;
-        const newData: { [key: string]: any } = {};
-        for (const key in data) {
-          const value = data[key];
-          if (value instanceof Timestamp) {
-            newData[key] = value.toDate();
-          } else if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
-            newData[key] = convertTimestamp(value);
-          } else if (Array.isArray(value)) {
-            newData[key] = value.map(item => (typeof item === 'object' ? convertTimestamp(item) : item));
-          } else {
-            newData[key] = value;
+        if (!usernameDoc.exists()) {
+          throw new Error(`Username not found: ${username}`);
+        }
+        const { userId } = usernameDoc.data();
+
+        // 2. Get User Profile
+        const userDocRef = doc(firestore, 'users', userId);
+        const userDoc = await getDoc(userDocRef);
+
+        if (!userDoc.exists()) {
+          throw new Error(`User profile not found for userId: ${userId}`);
+        }
+        setUser({ id: userDoc.id, ...userDoc.data() } as User);
+
+        // 3. Get Primary Portfolio
+        const portfoliosRef = collection(firestore, 'portfolios');
+        const primaryPortfolioQuery = query(portfoliosRef, where('userId', '==', userId), where('isPrimary', '==', true));
+        let portfolioSnapshot = await getDocs(primaryPortfolioQuery);
+
+        if (portfolioSnapshot.empty) {
+          const anyPortfolioQuery = query(portfoliosRef, where('userId', '==', userId));
+          portfolioSnapshot = await getDocs(anyPortfolioQuery);
+          if (portfolioSnapshot.empty) {
+            throw new Error(`No portfolios found for user: ${userId}`);
           }
         }
-        return newData;
-    }
+        
+        const portfolioData = { id: portfolioSnapshot.docs[0].id, ...portfolioSnapshot.docs[0].data() } as Portfolio;
+        setPortfolio(portfolioData);
 
-    const user = { id: userDoc.id, ...convertTimestamp(userDoc.data()) } as User;
+        // 4. Get Projects
+        if (portfolioData.projectIds && portfolioData.projectIds.length > 0) {
+            const projectChunks: string[][] = [];
+            for (let i = 0; i < portfolioData.projectIds.length; i += 30) {
+              projectChunks.push(portfolioData.projectIds.slice(i, i + 30));
+            }
 
-    // 3. Get Primary Portfolio
-    let portfolioSnapshot = await adminDb.collection('portfolios')
-        .where('userId', '==', userId)
-        .where('isPrimary', '==', true)
-        .limit(1)
-        .get();
-
-    // Fallback: If no primary, get *any* portfolio
-    if (portfolioSnapshot.empty) {
-      console.log(`Primary portfolio not found for userId: ${userId}. Falling back to any portfolio.`);
-      const anyPortfolioSnapshot = await adminDb.collection('portfolios')
-        .where('userId', '==', userId)
-        .limit(1)
-        .get();
-      
-      if (anyPortfolioSnapshot.empty) {
-        console.log(`No portfolios found for userId: ${userId}`);
-        notFound();
-      }
-      portfolioSnapshot = anyPortfolioSnapshot;
-    }
-    const portfolioDoc = portfolioSnapshot.docs[0];
-    const portfolio = { id: portfolioDoc.id, ...convertTimestamp(portfolioDoc.data()) } as Portfolio;
-
-    // 4. Get Projects
-    let projects: Project[] = [];
-    if (portfolio.projectIds && portfolio.projectIds.length > 0) {
-        // Firestore 'in' queries are limited to 30 items per query.
-        const projectChunks: string[][] = [];
-        for (let i = 0; i < portfolio.projectIds.length; i += 30) {
-          projectChunks.push(portfolio.projectIds.slice(i, i + 30));
+            const fetchedProjects: Project[] = [];
+            for(const chunk of projectChunks) {
+              const projectsQuery = query(collection(firestore, 'projects'), where('__name__', 'in', chunk));
+              const projectsSnapshot = await getDocs(projectsQuery);
+              projectsSnapshot.forEach(doc => {
+                  fetchedProjects.push({ id: doc.id, ...doc.data() } as Project);
+              });
+            }
+            setProjects(fetchedProjects);
         }
-        
-        const projectPromises = projectChunks.map(chunk => 
-          adminDb.collection('projects').where('__name__', 'in', chunk).get()
-        );
-        
-        const projectSnapshots = await Promise.all(projectPromises);
-        projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...convertTimestamp(doc.data()) } as Project)));
-    }
-    
-    return (
-      <TemplateRenderer
-        template={portfolio.selectedTemplate}
-        user={user}
-        projects={projects}
-      />
-    );
 
-  } catch (err: any) {
-    console.error("Error fetching portfolio data with Admin SDK:", err);
-    // We'll treat it as a not-found to the public user, but the error will be in the server logs.
+      } catch (err: any) {
+        console.error("Error fetching portfolio data:", err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [firestore, username]);
+
+  if (loading) {
+    return (
+        <div className="flex h-screen w-full items-center justify-center bg-background">
+            <div className="flex flex-col items-center gap-4">
+            <Logo />
+            <p className="text-muted-foreground">Loading portfolio...</p>
+            </div>
+      </div>
+    );
+  }
+
+  if (error) {
     notFound();
   }
+
+  if (!user || !portfolio) {
+    return notFound();
+  }
+
+  return (
+    <TemplateRenderer
+      template={portfolio.selectedTemplate}
+      user={user}
+      projects={projects}
+    />
+  );
 }
