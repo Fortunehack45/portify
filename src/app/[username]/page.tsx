@@ -45,11 +45,10 @@ export default function UserPortfolioPage() {
         })
         .catch(serverError => {
           const permissionError = new FirestorePermissionError({
-            path: userQuery.converter ? 'complex_query_path' : (userQuery as any)._query.path.toString(),
+            path: `users`,
             operation: 'list',
           });
           errorEmitter.emit('permission-error', permissionError);
-          console.error("Original Firestore error:", serverError);
           setUser(null); // Set to null on error to trigger notFound
         });
     };
