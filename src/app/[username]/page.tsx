@@ -42,12 +42,13 @@ function PortfolioContent({ user }: { user: User }) {
 
 
 export default function UserPortfolioPage({ params }: PageProps) {
+  const { username } = params;
   const firestore = useFirestore();
 
   const userQuery = useMemoFirebase(() => {
     if (!firestore) return null;
-    return query(collection(firestore, 'users'), where('username', '==', params.username));
-  }, [firestore, params.username]);
+    return query(collection(firestore, 'users'), where('username', '==', username));
+  }, [firestore, username]);
 
   const { data: userData, loading: userLoading } = useCollection<User>(userQuery, { listen: false });
   
