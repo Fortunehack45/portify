@@ -1,25 +1,17 @@
 
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
-import type { User, Project, Template, Portfolio } from '@/types';
+import { useState, useMemo } from 'react';
+import type { User, Project, Template } from '@/types';
 import TemplateSelector from '@/components/dashboard/template-selector';
 import { useFirestore, useUser as useAuthUser, useDoc, useCollection } from '@/firebase';
-import { doc, setDoc, collection, query, where, updateDoc } from 'firebase/firestore';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-import { Save } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import { doc, query, where } from 'firebase/firestore';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
-import { errorEmitter } from '@/firebase/error-emitter';
-import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function TemplatesPage() {
   const { user: authUser, loading: userLoading } = useAuthUser();
   const firestore = useFirestore();
-  const [selectedTemplate, setSelectedTemplate] = useState<Template | undefined>(undefined);
-  const router = useRouter();
-  const { toast } = useToast();
+  const [selectedTemplate, setSelectedTemplate] = useState<Template>('minimal-light');
 
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
@@ -37,80 +29,27 @@ export default function TemplatesPage() {
     projectsQuery
   );
 
-  const portfoliosQuery = useMemoFirebase(() => {
-    if (!firestore || !authUser) return null;
-    return query(collection(firestore, 'portfolios'), where('userId', '==', authUser.uid));
-  }, [firestore, authUser]);
-
-  const { data: portfolios, loading: portfolioLoading } = useCollection<Portfolio>(portfoliosQuery);
-
-  const primaryPortfolio = useMemo(() => (portfolios ? portfolios.find(p => p.isPrimary) : null), [portfolios]);
-
-  useEffect(() => {
-    if (primaryPortfolio) {
-      setSelectedTemplate(primaryPortfolio.selectedTemplate);
-    }
-  }, [primaryPortfolio]);
-
-  const handleSave = async () => {
-    if (!firestore || !authUser || !selectedTemplate || !primaryPortfolio) {
-        toast({ title: "Error", description: "Could not save. User or portfolio not available.", variant: "destructive" });
-        return;
-    }
-    const portfolioDocRef = doc(firestore, 'portfolios', primaryPortfolio.id);
-    try {
-        await updateDoc(portfolioDocRef, { selectedTemplate: selectedTemplate });
-        toast({
-            title: 'Template Saved!',
-            description: 'Your new template has been applied.',
-        });
-        router.push(`/dashboard/editor`);
-    } catch (error: any) {
-        console.error("Error saving template: ", error);
-        const permissionError = new FirestorePermissionError({
-          path: portfolioDocRef.path,
-          operation: 'update',
-          requestResourceData: { selectedTemplate }
-        });
-        errorEmitter.emit('permission-error', permissionError);
-        toast({ title: "Error", description: error.message, variant: "destructive" });
-    }
-  };
-
-  const isLoading = userLoading || profileLoading || projectsLoading || portfolioLoading;
+  const isLoading = userLoading || profileLoading || projectsLoading;
 
   if (isLoading) {
     return <div className="p-4 md:p-6">Loading templates...</div>;
   }
   
-  if (!primaryPortfolio) {
-    return (
-        <div className="p-4 md:p-6 space-y-4">
-            <h1 className="text-2xl font-bold font-headline">No Primary Portfolio Found</h1>
-            <p className="text-muted-foreground">You need to set a primary portfolio on the dashboard before you can assign a template to it.</p>
-        </div>
-    )
-  }
-  
   if (!user || !projects) {
-    return <div className="p-4 md:p-6">Could not load user or project data.</div>;
+    return <div className="p-4 md:p-6">Could not load user or project data to preview templates.</div>;
   }
 
   return (
     <div className="p-4 md:p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <h1 className="text-2xl font-bold font-headline">Templates</h1>
-          <p className="text-muted-foreground text-sm">Choose a template for your primary portfolio: <span className="font-semibold text-foreground">{primaryPortfolio.name}</span></p>
-        </div>
-        <Button onClick={handleSave} disabled={!selectedTemplate || selectedTemplate === primaryPortfolio.selectedTemplate}>
-          <Save className="mr-2 h-4 w-4" />
-          Save Template
-        </Button>
+      <div className="space-y-1">
+        <h1 className="text-2xl font-bold font-headline">Explore Templates</h1>
+        <p className="text-muted-foreground text-sm">
+            Browse the available designs. You can assign a template to a portfolio in the editor.
+        </p>
       </div>
       <TemplateSelector
         display='grid'
-        selectedTemplate={selectedTemplate || primaryPortfolio.selectedTemplate}
+        selectedTemplate={selectedTemplate}
         onTemplateChange={setSelectedTemplate}
         user={user}
         projects={projects}
