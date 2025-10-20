@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -135,6 +136,8 @@ export default function EditorPage() {
                 <EditorClient 
                   user={liveUser as User} portfolio={livePortfolio as Portfolio} projects={liveProjects}
                   onUserChange={setLiveUser} onPortfolioChange={setLivePortfolio} onProjectsChange={setLiveProjects}
+                  onTogglePreview={handleTogglePreview}
+                  isMobile={isMobile}
                 />
             </TabsContent>
             <TabsContent value="preview" className="flex-grow overflow-y-auto bg-muted/30">
@@ -153,13 +156,14 @@ export default function EditorPage() {
           <EditorClient 
             user={liveUser as User} portfolio={livePortfolio as Portfolio} projects={liveProjects}
             onUserChange={setLiveUser} onPortfolioChange={setLivePortfolio} onProjectsChange={setLiveProjects}
+            onTogglePreview={handleTogglePreview}
+            isMobile={isMobile}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50} minSize={30} collapsible={true} collapsedSize={0}>
           <PreviewPanel 
             user={liveUser as User} portfolio={livePortfolio as Portfolio} projects={liveProjects}
-            onTogglePreview={handleTogglePreview}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

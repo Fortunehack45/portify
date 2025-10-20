@@ -4,16 +4,17 @@
 
 import type { User, Project, Template, Portfolio } from '@/types';
 import { Button } from '../ui/button';
-import { Save } from 'lucide-react';
+import { Eye, Save } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
-import { doc, setDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, limit, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, updateDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import TemplateSelector from './template-selector';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
 interface EditorClientProps {
   user: User;
@@ -22,6 +23,8 @@ interface EditorClientProps {
   onUserChange: (user: User) => void;
   onPortfolioChange: (portfolio: Portfolio) => void;
   onProjectsChange: (projects: Project[]) => void;
+  onTogglePreview: () => void;
+  isMobile: boolean;
 }
 
 export default function EditorClient({
@@ -31,6 +34,8 @@ export default function EditorClient({
   onUserChange,
   onPortfolioChange,
   onProjectsChange,
+  onTogglePreview,
+  isMobile
 }: EditorClientProps) {
 
   const firestore = useFirestore();
@@ -102,10 +107,26 @@ export default function EditorClient({
               <h1 className="text-2xl font-bold font-headline">Editor</h1>
               <p className="text-muted-foreground text-sm">Editing: <span className="font-semibold text-foreground">{portfolio.name}</span></p>
           </div>
-          <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" />
-              Save Changes
-          </Button>
+          <div className='flex items-center gap-2'>
+            {!isMobile && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button variant="outline" size="icon" onClick={onTogglePreview}>
+                        <Eye className="w-5 h-5" />
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Toggle Preview</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+            )}
+            <Button onClick={handleSave}>
+                <Save className="mr-2 h-4 w-4" />
+                Save Changes
+            </Button>
+          </div>
       </div>
       <div className="p-6 space-y-6 h-full overflow-y-auto">
         <Accordion type="multiple" defaultValue={['profile', 'projects', 'template']} className="w-full space-y-4">

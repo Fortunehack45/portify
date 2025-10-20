@@ -12,11 +12,9 @@ interface PreviewPanelProps {
   portfolio: Portfolio;
   projects: Project[];
   isMobile?: boolean;
-  onTogglePreview?: () => void;
-  isPreviewCollapsed?: boolean;
 }
 
-export default function PreviewPanel({ user, portfolio, projects, isMobile = false, onTogglePreview, isPreviewCollapsed }: PreviewPanelProps) {
+export default function PreviewPanel({ user, portfolio, projects, isMobile = false }: PreviewPanelProps) {
   return (
     <div className="h-full bg-muted/40 flex flex-col">
       {!isMobile && (
@@ -26,20 +24,6 @@ export default function PreviewPanel({ user, portfolio, projects, isMobile = fal
                     Live Preview
                 </p>
             </div>
-             {onTogglePreview && (
-                 <TooltipProvider>
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                            <Button variant="ghost" size="icon" onClick={onTogglePreview}>
-                                <Eye className="w-5 h-5" />
-                            </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                            <p>{isPreviewCollapsed ? 'Show Preview' : 'Hide Preview'}</p>
-                        </TooltipContent>
-                    </Tooltip>
-                </TooltipProvider>
-            )}
         </div>
       )}
       <div className="flex-grow overflow-auto">
