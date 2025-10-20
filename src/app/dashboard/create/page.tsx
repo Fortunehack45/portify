@@ -11,7 +11,7 @@ import { useState } from "react";
 import { useUser, useFirestore } from "@/firebase";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
-import { collection, addDoc, serverTimestamp } from "firebase/firestore";
+import { collection, addDoc, serverTimestamp, doc, runTransaction, query, where, getDocs, Transaction } from "firebase/firestore";
 
 export default function CreatePortfolioPage() {
   const [name, setName] = useState('');
@@ -33,18 +33,41 @@ export default function CreatePortfolioPage() {
     }
     setLoading(true);
 
-    const slug = name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    let slug = name.trim().toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
 
     try {
-        await addDoc(collection(firestore, 'portfolios'), {
-            userId: authUser.uid,
-            name: name.trim(),
-            slug: slug,
-            projectIds: [],
-            selectedTemplate: 'minimal-light',
-            isPrimary: false,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp()
+        await runTransaction(firestore, async (transaction: Transaction) => {
+            const portfoliosRef = collection(firestore, 'portfolios');
+            let currentSlug = slug;
+            let slugIsUnique = false;
+            let attempt = 0;
+
+            while (!slugIsUnique) {
+                if (attempt > 0) {
+                    currentSlug = `${slug}-${attempt}`;
+                }
+                const slugQuery = query(portfoliosRef, where('userId', '==', authUser.uid), where('slug', '==', currentSlug));
+                const slugSnapshot = await getDocs(slugQuery); // Firestore requires getDocs for queries in transactions
+                
+                if (slugSnapshot.empty) {
+                    slugIsUnique = true;
+                    slug = currentSlug; // Set the final unique slug
+                } else {
+                    attempt++;
+                }
+            }
+
+            const newPortfolioRef = doc(collection(firestore, 'portfolios'));
+            transaction.set(newPortfolioRef, {
+                userId: authUser.uid,
+                name: name.trim(),
+                slug: slug,
+                projectIds: [],
+                selectedTemplate: 'minimal-light',
+                isPrimary: false,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            });
         });
 
         toast({

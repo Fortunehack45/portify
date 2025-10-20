@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import type { User, Portfolio } from '@/types';
 import { collection, doc, query, where } from 'firebase/firestore';
-import { ArrowRight, Edit, PlusCircle, Star } from 'lucide-react';
+import { ArrowRight, Edit, PlusCircle, Star, View } from 'lucide-react';
 import Link from 'next/link';
 import { useMemo } from 'react';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
@@ -57,18 +57,16 @@ export default function DashboardPage() {
                            <span className="font-medium text-base">{p.name}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                            <Button variant="outline" asChild>
+                            <Button variant="outline" size="sm" asChild>
+                                <Link href={`/${publicUsername}/${p.slug}`} target="_blank">
+                                    <View className="mr-2 h-4 w-4" /> View
+                                </Link>
+                            </Button>
+                            <Button asChild>
                                 <Link href={`/dashboard/editor?portfolioId=${p.id}`}>
                                     <Edit className="mr-2 h-4 w-4" /> Edit
                                 </Link>
                             </Button>
-                            {p.isPrimary && (
-                                <Button asChild>
-                                    <Link href={`/${publicUsername}`} target="_blank">
-                                        View Public Site <ArrowRight className="ml-2 h-4 w-4" />
-                                    </Link>
-                                </Button>
-                            )}
                         </div>
                     </div>
                 ))}
