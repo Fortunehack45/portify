@@ -5,7 +5,7 @@
 import * as React from 'react';
 import EditorClient from '@/components/dashboard/editor-client';
 import { useUser, useCollection, useDoc, useFirestore } from '@/firebase';
-import { collection, query, where, doc } from 'firebase/firestore';
+import { collection, query, where, doc, Timestamp } from 'firebase/firestore';
 import type { User, Project, Portfolio } from '@/types';
 import { useEffect, useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -72,8 +72,8 @@ export default function EditorPage() {
         availability: 'not available',
         skills: [],
         socials: [],
-        createdAt: new Date(),
-        updatedAt: new Date(),
+        createdAt: Timestamp.now(),
+        updatedAt: Timestamp.now(),
       });
     }
   }, [authUser, userProfile, profileLoading]);
@@ -90,8 +90,8 @@ export default function EditorPage() {
             projectIds: [],
             selectedTemplate: 'minimal-light',
             isPrimary: true,
-            createdAt: new Date(),
-            updatedAt: new Date()
+            createdAt: Timestamp.now(),
+            updatedAt: Timestamp.now()
         });
     }
   }, [portfolios, authUser, portfolioLoading]);

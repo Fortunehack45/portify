@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import type { User, Project, Template, Portfolio } from '@/types';
@@ -54,11 +55,13 @@ export default function EditorClient({
 
     // 1. Update the user profile
     const userDocRef = doc(firestore, 'users', authUser.uid);
-    const userData: User = {
+    const userData = {
       ...user,
-      updatedAt: new Date(),
+      updatedAt: serverTimestamp(),
     };
-    batch.set(userDocRef, { ...userData, updatedAt: serverTimestamp() }, { merge: true });
+    // remove id from userData to avoid saving it in the document
+    const { id, ...userDataWithoutId } = userData;
+    batch.set(userDocRef, userDataWithoutId, { merge: true });
     
     // 2. Update the portfolio
     if (portfolio) {
@@ -80,12 +83,13 @@ export default function EditorClient({
             }
         }
         const portfolioDocRef = doc(firestore, 'portfolios', portfolioId);
-        const portfolioData: Portfolio = {
+        const portfolioData = {
             ...portfolio,
             id: portfolioId, // Ensure the correct id is set
-            updatedAt: new Date(),
+            updatedAt: serverTimestamp(),
         };
-        batch.set(portfolioDocRef, { ...portfolioData, updatedAt: serverTimestamp() }, { merge: true });
+        const { id: portfolioIdToRemove, ...portfolioDataWithoutId } = portfolioData;
+        batch.set(portfolioDocRef, portfolioDataWithoutId, { merge: true });
     }
 
     try {
