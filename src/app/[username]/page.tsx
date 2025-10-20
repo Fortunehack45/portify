@@ -117,9 +117,11 @@ export default function UserPortfolioPage() {
   }
 
   if (error || !data?.user || !data?.portfolio) {
+    // Custom error is thrown for permission issues to be caught by the overlay
     if (error?.includes('permission')) {
       throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}". Check your Firestore security rules to allow public reads on 'users' and 'projects' collections.`);
     }
+    // For other errors like "not found", just trigger the 404 page
     notFound();
   }
 
