@@ -90,7 +90,7 @@ const CyberpunkNeon: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </section>
       </main>
-      <footer className="relative z-10 text-center py-6 text-sm text-cyan-800">system.log(&#39;Made with Portify&#39;)</footer>
+      <footer className="relative z-10 text-center py-6 text-sm text-cyan-800">Made with Portify</footer>
     </div>
   );
 };

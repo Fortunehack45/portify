@@ -83,7 +83,7 @@ const MinimalSerif: React.FC<TemplateProps> = ({ user, projects }) => {
                     </React.Fragment>
                 ))}
             </div>
-            <p className="text-gray-400 font-sans">&copy; {new Date().getFullYear()}</p>
+            <p className="text-gray-400 font-sans">Made with Portify</p>
         </footer>
       </main>
     </div>

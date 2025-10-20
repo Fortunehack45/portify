@@ -81,6 +81,9 @@ const Neobrutalism: React.FC<TemplateProps> = ({ user, projects }) => {
                 </section>
             </div>
         </div>
+        <Box as="footer" className="p-4 bg-white text-center">
+            <p className="text-sm">Made with Portify</p>
+        </Box>
       </main>
     </div>
   );

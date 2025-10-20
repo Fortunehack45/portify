@@ -33,12 +33,12 @@ const Glassmorphism: React.FC<TemplateProps> = ({ user, projects }) => {
     )
 
   return (
-    <div className="font-body bg-gray-900 text-white min-h-screen">
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-600 to-blue-500 z-0" />
-      <div className="fixed inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSIvPgo8cGF0aCBkPSJNMCAyMEwyMCAwWk0tNSA1TDUsLTVaTS0xMCAxMEwxMCAtMTBaIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPgo8L3N2Zz4=')] opacity-50"/>
-      <div className="fixed -bottom-40 -left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
-      <div className="fixed -top-40 -right-40 w-80 h-80 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
-      <div className="fixed -bottom-40 -right-20 w-80 h-80 bg-green-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
+    <div className="font-body bg-gray-900 text-white min-h-screen relative overflow-hidden">
+      <div className="absolute inset-0 bg-gradient-to-br from-purple-600 to-blue-500 z-0" />
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCI+CjxyZWN0IHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgZmlsbD0ibm9uZSIvPgo8cGF0aCBkPSJNMCAyMEwyMCAwWk0tNSA1TDUsLTVaTS0xMCAxMEwxMCAtMTBaIiBzdHJva2U9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiIHN0cm9rZS13aWR0aD0iMSIvPgo8L3N2Zz4=')] opacity-50"/>
+      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob" />
+      <div className="absolute -top-40 -right-40 w-80 h-80 bg-yellow-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-2000" />
+      <div className="absolute -bottom-40 -right-20 w-80 h-80 bg-green-500 rounded-full mix-blend-multiply filter blur-xl opacity-30 animate-blob animation-delay-4000" />
 
       <main className="relative z-10 container mx-auto px-4 py-12 md:py-20 max-w-6xl">
         <GlassCard className="p-8 md:p-12 mb-12">
@@ -94,6 +94,7 @@ const Glassmorphism: React.FC<TemplateProps> = ({ user, projects }) => {
             </div>
         </div>
       </main>
+      <footer className="relative z-10 text-center py-6 text-sm text-white/50">Made with Portify</footer>
     </div>
   );
 };

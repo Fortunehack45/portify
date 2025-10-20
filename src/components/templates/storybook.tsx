@@ -90,6 +90,7 @@ const Storybook: React.FC<TemplateProps> = ({ user, projects }) => {
                     </React.Fragment>
                 ))}
             </div>
+            <p className="text-xs text-amber-800/50 mt-10">Made with Portify</p>
         </div>
       </footer>
     </div>

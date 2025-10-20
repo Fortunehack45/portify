@@ -90,7 +90,7 @@ const DarkAcademia: React.FC<TemplateProps> = ({ user, projects }) => {
             </div>
         </div>
       </main>
-      <footer className="relative z-10 text-center py-8 mt-12 text-sm text-amber-200/40">Finis.</footer>
+      <footer className="relative z-10 text-center py-8 mt-12 text-sm text-amber-200/40">Made with Portify</footer>
     </div>
   );
 };

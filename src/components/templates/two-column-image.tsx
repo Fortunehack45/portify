@@ -82,6 +82,7 @@ const TwoColumnImage: React.FC<TemplateProps> = ({ user, projects }) => {
                 ))}
                 </div>
             </section>
+             <footer className="text-center py-6 mt-8 text-sm text-gray-400">Made with Portify</footer>
         </main>
       </div>
     </div>

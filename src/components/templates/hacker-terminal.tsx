@@ -118,7 +118,7 @@ const HackerTerminal: React.FC<TemplateProps> = ({ user, projects }) => {
             />
         </div>
       </div>
-      <footer className="text-center pt-8 text-xs text-green-800">Portify v1.0.0</footer>
+      <footer className="text-center pt-8 text-xs text-green-800">Made with Portify</footer>
     </div>
   );
 };
