@@ -2,7 +2,6 @@
 'use client';
 
 import { Template, Project, User } from '@/types';
-import AiTemplateAssistant from './ai-template-assistant';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
@@ -97,8 +96,6 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
         ) : (
             <TemplateDropdown selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
         )}
-      
-      <AiTemplateAssistant projects={projects} onSelectTemplate={onTemplateChange} />
     </div>
   );
 }
