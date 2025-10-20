@@ -1,7 +1,8 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { User, Project } from '@/types';
+import type { User, Project, Template } from '@/types';
 import { Button } from '../ui/button';
 import { Save, Eye } from 'lucide-react';
 import ProfileForm from './profile-form';
@@ -9,8 +10,9 @@ import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Accordion } from '@/components/ui/accordion';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import TemplateSelector from './template-selector';
 
 interface EditorClientProps {
   initialUser: User;
@@ -42,6 +44,10 @@ export default function EditorClient({
 
   const handleUserChange = (updatedUser: Partial<User>) => {
     setUser(prev => ({ ...prev, ...updatedUser }));
+  };
+
+  const handleTemplateChange = (template: Template) => {
+    setUser(prev => ({ ...prev, selectedTemplate: template }));
   };
 
   const handleSave = async () => {
@@ -99,9 +105,24 @@ export default function EditorClient({
           </div>
       </div>
       <div className="p-6 space-y-6 h-full overflow-y-auto">
-        <Accordion type="multiple" defaultValue={['profile', 'projects']} className="w-full space-y-4">
+        <Accordion type="multiple" defaultValue={['profile', 'projects', 'template']} className="w-full space-y-4">
             <ProfileForm user={user} onUserChange={handleUserChange} />
             <ProjectsList projects={projects} setProjects={setProjects} />
+            <AccordionItem value="template">
+              <AccordionTrigger className="p-4 bg-background rounded-lg border shadow-sm text-base font-medium">
+                Template
+              </AccordionTrigger>
+              <AccordionContent className="pt-4">
+                <div className="bg-background p-4 rounded-b-lg border-x border-b">
+                  <TemplateSelector 
+                    selectedTemplate={user.selectedTemplate}
+                    onTemplateChange={handleTemplateChange}
+                    user={user}
+                    projects={projects}
+                  />
+                </div>
+              </AccordionContent>
+            </AccordionItem>
         </Accordion>
       </div>
     </div>
