@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, use } from 'react';
 import { notFound } from 'next/navigation';
 import { useFirestore } from '@/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
@@ -9,7 +9,8 @@ import TemplateRenderer from '@/components/templates/template-renderer';
 import type { User, Project, Portfolio } from '@/types';
 import { Logo } from '@/components/icons';
 
-export default function SpecificPortfolioPage({ params: { username, portfolioSlug } }: { params: { username: string, portfolioSlug: string } }) {
+export default function SpecificPortfolioPage({ params }: { params: Promise<{ username: string, portfolioSlug: string }> }) {
+  const { username, portfolioSlug } = use(params);
   const firestore = useFirestore();
 
   const [user, setUser] = useState<User | null>(null);
