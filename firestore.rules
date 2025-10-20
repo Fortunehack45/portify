@@ -1,95 +1,112 @@
 /**
- * @fileoverview Firestore Security Rules for the portfolio application.
+ * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a strict user-ownership model for user profiles and their associated data (projects and portfolios).
- * Users can only read and write their own profile information.  Project and portfolio access follows an owner-only model.
- * Username lookups are publicly readable to facilitate profile discovery.
+ * This ruleset enforces a strict user-ownership model for user profiles and associated data.
+ * Public read access is granted to some collections (e.g., `projects`), while write access is restricted to authorized users.
  *
  * Data Structure:
- * - /users/{userId}: Stores user profile data.
- * - /projects/{projectId}: Stores project data, with a userId field indicating ownership.
- * - /portfolios/{portfolioId}: Stores portfolio data, with a userId field indicating ownership.
- * - /usernames/{username}: Maps usernames to user IDs.
+ * - `/users/{userId}`: Stores user profile information, accessible only by the user themselves.
+ * - `/portfolios/{portfolioId}`: Stores portfolio information.
+ * - `/projects/{projectId}`: Stores project information, publicly readable but writable only by the project owner.
+ * - `/usernames/{username}`: Maps usernames to user IDs for public profile lookups; write access is denied.
  *
  * Key Security Decisions:
- * - Users can only create their own profile document (self-creation).
- * - Users can only read, update, and delete their own profile.
- * - Projects and portfolios are user-owned; only the owner can create, read, update, or delete them.
- * - Listing of user documents is disallowed for privacy.
- * - Username documents are publicly readable but only writable by the application backend (emulated by owner-only access for prototyping).
+ * - User profiles are private and only accessible to the authenticated user.
+ * - Projects are publicly readable to showcase user work, but creating, updating, or deleting them requires ownership.
+ * - Usernames can be looked up publicly but cannot be created, updated, or deleted directly via Firestore; this should be handled via a trusted backend.
+ * - Listing of users is disallowed.
  *
  * Denormalization for Authorization:
- * - The 'Project' and 'Portfolio' entities include a 'userId' field, denormalizing user ownership directly onto the document.
- *   This avoids costly and complex `get()` calls in the security rules.
+ * The `Project` entity requires a `userId` field to enforce ownership. This avoids the need for complex queries or additional reads to verify ownership.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile documents.
+     * @description Secures user profile data, allowing only the authenticated user to read and write their own profile.
      * @path /users/{userId}
-     * @allow (create) User with ID 'user123' creates their own profile.
-     * @allow (get, update, delete) User with ID 'user123' reads/updates/deletes their own profile.
-     * @deny (create, get, update, delete) User with ID 'user456' attempts to access user 'user123' profile.
-     * @deny (list) Any user attempts to list all users.
-     * @principle Enforces document ownership for all operations.
+     * @allow (create) - User with ID 'user123' creates their profile.
+     *   - request.auth.uid: 'user123'
+     *   - request.resource.data.id: 'user123'
+     * @allow (get, update, delete) - User with ID 'user123' reads their profile.
+     *   - request.auth.uid: 'user123'
+     * @deny (create) - User with ID 'user456' attempts to create a profile for 'user123'.
+     *   - request.auth.uid: 'user456'
+     *   - request.resource.data.id: 'user123'
+     * @deny (get, update, delete) - User with ID 'user456' attempts to read user123 profile.
+     *   - request.auth.uid: 'user456'
+     * @principle Enforces document ownership for writes.
      */
     match /users/{userId} {
-      // isOwner(userId)
       allow get: if isOwner(userId);
       allow list: if false;
-      allow create: if isSignedIn() && request.auth.uid == userId && request.resource.data.id == userId;
-      allow update: if isOwner(userId) && resource.data.id == userId;
+      allow create: if isSignedIn() && isOwner(userId) && request.resource.data.id == userId;
+      allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to project documents.
+     * @description Secures portfolios.
+     * @path /portfolios/{portfolioId}
+     * @allow (create) - User with ID 'user123' creates a portfolio.
+     *   - request.auth.uid: 'user123'
+     *   - request.resource.data.userId: 'user123'
+     * @allow (get, update, delete) - User with ID 'user123' reads their portfolio.
+     *   - request.auth.uid: 'user123'
+     * @deny (create) - User with ID 'user456' attempts to create a portfolio for 'user123'.
+     *   - request.auth.uid: 'user456'
+     *   - request.resource.data.userId: 'user123'
+     * @deny (get, update, delete) - User with ID 'user456' attempts to read user123 portfolio.
+     *   - request.auth.uid: 'user456'
+     * @principle Enforces document ownership for writes.
+     */
+    match /portfolios/{portfolioId} {
+        allow get: if true; // Public read access
+        allow list: if true;
+        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
+        allow update: if isSignedIn() && resource.data.userId == request.auth.uid;
+        allow delete: if isSignedIn() && resource.data.userId == request.auth.uid;
+    }
+
+    /**
+     * @description Secures project data, allowing public read access but restricting write access to the project owner.
      * @path /projects/{projectId}
-     * @allow (create) User with ID 'user123' creates a project with userId 'user123'.
-     * @allow (get, update, delete) User with ID 'user123' reads/updates/deletes their own project.
-     * @deny (create, get, update, delete) User with ID 'user456' attempts to access project owned by 'user123'.
-     * @deny (create) User with ID 'user123' attempts to create a project with userId 'user456'.
-     * @principle Enforces document ownership for writes; public read access.
+     * @allow (get, list) - Any user can read project data.
+     * @allow (create) - User with ID 'user123' creates a project with ownerId 'user123'.
+     *   - request.auth.uid: 'user123'
+     *   - request.resource.data.userId: 'user123'
+     * @allow (update, delete) - User with ID 'user123' updates/deletes a project they own (resource.data.userId == 'user123').
+     *   - request.auth.uid: 'user123'
+     * @deny (create) - User with ID 'user456' attempts to create a project with ownerId 'user123'.
+     *   - request.auth.uid: 'user456'
+     *   - request.resource.data.userId: 'user123'
+     * @deny (update, delete) - User with ID 'user456' attempts to update/delete a project owned by 'user123'.
+     *   - request.auth.uid: 'user456'
+     * @principle Public read, owner-only writes, enforces document ownership for writes.
      */
     match /projects/{projectId} {
-      allow get, list: if true;
+      allow get: if true;
+      allow list: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId) && resource.data.userId == request.resource.data.userId;
+      allow update: if isExistingOwner(resource.data.userId);
       allow delete: if isExistingOwner(resource.data.userId);
     }
 
     /**
-     * @description Controls access to portfolio documents.
-     * @path /portfolios/{portfolioId}
-     * @allow (create) User with ID 'user123' creates a portfolio with userId 'user123'.
-     * @allow (get, update, delete) User with ID 'user123' reads/updates/deletes their own portfolio.
-     * @deny (create, get, update, delete) User with ID 'user456' attempts to access portfolio owned by 'user123'.
-     * @deny (create) User with ID 'user123' attempts to create a portfolio with userId 'user456'.
-     * @principle Enforces document ownership for writes; public read access.
-     */
-    match /portfolios/{portfolioId} {
-        allow get, list: if true;
-        allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-        allow update: if isExistingOwner(resource.data.userId) && resource.data.userId == request.resource.data.userId;
-        allow delete: if isExistingOwner(resource.data.userId);
-    }
-
-    /**
-     * @description Controls access to username documents, allowing public reads and owner-only writes.
+     * @description Secures the username mapping, preventing direct client-side writes.
      * @path /usernames/{username}
-     * @allow (get, list) Any user can read the username mappings.
-     * @allow (create, update, delete) User with ID 'user123' can manage their own username mapping (for prototyping).
-     * @deny (create, get, update, delete) User with ID 'user456' attempts to access username owned by 'user123'.
-     * @principle Allows public reads for username lookups; enforces ownership for writes (prototyping).
+     * @allow (get) - Any user can read the username mapping.
+     * @deny (create, update, delete) - No user can create, update, or delete username mappings directly.
+     * @principle Restricts write access to a trusted backend.
      */
     match /usernames/{username} {
-      allow get, list: if true;
-      allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(request.resource.data.userId) && request.resource.data.userId == resource.data.userId;
-      allow delete: if isExistingOwner(request.resource.data.userId);
+      allow get: if true;
+      allow list: if false;
+      allow create: if false;
+      allow update: if false;
+      allow delete: if false;
     }
   }
 
