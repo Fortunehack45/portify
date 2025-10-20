@@ -2,31 +2,31 @@
  * @fileoverview Firestore Security Rules for the application.
  *
  * Core Philosophy:
- * This ruleset enforces a user-ownership model for user profiles. Only the authenticated user can read/write their own profile data.
- * Projects are publicly accessible for reading but can only be created, updated, or deleted by their respective owners.
+ * This ruleset enforces a strict user-ownership model for user profiles and a public-read, owner-write model for projects.
  *
  * Data Structure:
- * - /users/{userId}: Stores individual user profiles. The `userId` segment must match the authenticated user's UID.
- * - /projects/{projectId}: Stores project data. Each project document must contain a `userId` field indicating the owner.
+ * - User profiles are stored under `/users/{userId}`, accessible only to the owning user.
+ * - Projects are stored under `/projects/{projectId}`, publicly readable but writable only by the project's owner.
  *
  * Key Security Decisions:
- * - User listing is disallowed.
- * - All write operations are authenticated and authorized.
- * - Read access to projects is public.
+ * - Users can only access their own profile data.
+ * - Projects are publicly readable to showcase user portfolios.
+ * - Project creation, updates, and deletion are restricted to the project's owner.
  *
  * Denormalization for Authorization:
- * The 'Project' entity requires a `userId` field to associate it with the owner. This allows the rules to quickly verify ownership during write operations without additional `get()` calls.
+ * - Projects contain a `userId` field to denote ownership, enabling efficient owner-based security rules without additional `get()` calls.
  */
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
     /**
-     * @description Controls access to user profile documents.
+     * @description Secure user profiles, ensuring only the owning user can read and write their data.
      * @path /users/{userId}
-     * @allow (get, create, update, delete) - Authenticated user with matching UID can access their own profile.
-     * @deny (get, create, update, delete) - Any other user attempting to access this profile.
-     * @principle Enforces strict user ownership for profile data.
+     * @allow (get, update, delete) User with ID 'user123' attempts to read/write their profile at /users/user123.
+     * @allow (create) User with ID 'user123' attempts to create their profile at /users/user123.
+     * @deny (get, update, delete) User with ID 'user456' attempts to read/write profile of user 'user123' at /users/user123.
+     * @principle Enforces document ownership for all operations on user profiles.
      */
     match /users/{userId} {
       function isSignedIn() {
@@ -34,7 +34,7 @@ service cloud.firestore {
       }
 
       function isOwner(userId) {
-        return isSignedIn() && request.auth.uid == userId;
+        return request.auth.uid == userId;
       }
 
       function isExistingOwner(userId) {
@@ -43,20 +43,20 @@ service cloud.firestore {
 
       allow get: if isOwner(userId);
       allow list: if false;
-
       allow create: if isOwner(userId) && request.resource.data.id == userId;
       allow update: if isExistingOwner(userId) && request.resource.data.id == resource.data.id;
       allow delete: if isExistingOwner(userId);
     }
 
     /**
-     * @description Controls access to project documents.
+     * @description Secure projects, allowing public reads but restricting writes to the project owner.
      * @path /projects/{projectId}
-     * @allow (get, list) - Public read access for all projects.
-     * @allow (create) - Authenticated user can create a project with their UID as the owner.
-     * @allow (update, delete) - Project owner can update or delete their projects.
-     * @deny (create, update, delete) - Any unauthorized user attempting to modify a project.
-     * @principle Public read, owner-only write access for projects.
+     * @allow (get, list) Any user can read project data at /projects/{projectId}.
+     * @allow (create) User 'user123' creates a project at /projects/{projectId} with project.userId == 'user123'.
+     * @allow (update, delete) User 'user123' updates/deletes their project at /projects/{projectId} where project.userId == 'user123'.
+     * @deny (create) User 'user456' attempts to create a project at /projects/{projectId} with project.userId != 'user456'.
+     * @deny (update, delete) User 'user456' attempts to updates/deletes project of user 'user123' at /projects/{projectId} where project.userId == 'user123'.
+     * @principle Allows public read access while enforcing owner-only write access, with ownership validated by the `userId` field.
      */
     match /projects/{projectId} {
       function isSignedIn() {
@@ -64,18 +64,22 @@ service cloud.firestore {
       }
 
       function isOwner(userId) {
-        return isSignedIn() && resource.data.userId == request.auth.uid;
+        return request.auth.uid == userId;
       }
 
-      function isExistingOwner(userId) {
-        return isOwner(userId) && resource != null;
+      function isProjectOwner(userId) {
+        return resource.data.userId == request.auth.uid;
+      }
+
+      function isExistingProjectOwner(userId) {
+          return isProjectOwner(userId) && resource != null;
       }
 
       allow get: if true;
       allow list: if true;
       allow create: if isSignedIn() && request.resource.data.userId == request.auth.uid;
-      allow update: if isExistingOwner(resource.data.userId);
-      allow delete: if isExistingOwner(resource.data.userId);
+      allow update: if isExistingProjectOwner(resource.data.userId);
+      allow delete: if isExistingProjectOwner(resource.data.userId);
     }
   }
 }
