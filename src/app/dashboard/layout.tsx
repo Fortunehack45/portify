@@ -14,12 +14,14 @@ import {
 import { Logo } from "@/components/icons";
 import { useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { useAuth } from "@/firebase";
+import { useAuth, useCollection, useFirestore } from "@/firebase";
 import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import MobileNav from "@/components/dashboard/mobile-nav";
+import type { User } from '@/types';
+import { collection, query, where } from "firebase/firestore";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Home" },
@@ -33,17 +35,26 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, loading } = useUser();
+  const { user: authUser, loading: userLoading } = useUser();
   const auth = useAuth();
+  const firestore = useFirestore();
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
 
+  const userProfileQuery = useMemo(() => {
+    if (!firestore || !authUser) return null;
+    return query(collection(firestore, 'users'), where('id', '==', authUser.uid));
+  }, [firestore, authUser]);
+
+  const { data: userProfile, loading: profileLoading } = useCollection<User>(userProfileQuery);
+  const currentUser = userProfile?.[0];
+
   useEffect(() => {
-    if (!loading && !user) {
+    if (!userLoading && !authUser) {
       router.push('/login');
     }
-  }, [user, loading, router]);
+  }, [authUser, userLoading, router]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -64,7 +75,9 @@ export default function DashboardLayout({
     }
   };
   
-  if (loading || !user) {
+  const isLoading = userLoading || profileLoading;
+
+  if (isLoading || !authUser) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
@@ -75,7 +88,7 @@ export default function DashboardLayout({
     );
   }
 
-  const username = user?.displayName?.replace(/\s+/g, '').toLowerCase() || 'preview';
+  const publicUsername = currentUser?.username || 'preview';
 
   return (
     <div className="min-h-screen w-full">
@@ -112,7 +125,7 @@ export default function DashboardLayout({
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 sticky top-0 bg-background z-40">
           <div className="w-full flex-1">
              <Button variant="outline" size="sm" asChild>
-                <Link href={`/${username}`} target="_blank">
+                <Link href={`/${publicUsername}`} target="_blank">
                   <Eye className="mr-2 h-4 w-4" />
                   Public View
                 </Link>
@@ -130,7 +143,7 @@ export default function DashboardLayout({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
+              <DropdownMenuLabel>{authUser.email}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>Settings</DropdownMenuItem>
               <DropdownMenuItem disabled>Support</DropdownMenuItem>

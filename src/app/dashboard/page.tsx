@@ -1,20 +1,32 @@
 'use client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { useUser } from '@/firebase';
+import { useCollection, useFirestore, useUser } from '@/firebase';
+import type { User } from '@/types';
+import { collection, query, where } from 'firebase/firestore';
 import { ArrowRight, Edit, Eye, PlusCircle } from 'lucide-react';
 import Link from 'next/link';
+import { useMemo } from 'react';
 
 export default function DashboardPage() {
-  const { user } = useUser();
+  const { user: authUser } = useUser();
+  const firestore = useFirestore();
 
-  const username = user?.displayName?.replace(/\s+/g, '').toLowerCase() || 'preview';
+  const userProfileQuery = useMemo(() => {
+    if (!firestore || !authUser) return null;
+    return query(collection(firestore, 'users'), where('id', '==', authUser.uid));
+  }, [firestore, authUser]);
+
+  const { data: userProfile } = useCollection<User>(userProfileQuery);
+  const currentUser = userProfile?.[0];
+
+  const publicUsername = currentUser?.username || 'preview';
 
   return (
     <div className="space-y-6">
        <div className="space-y-1">
          <h1 className="text-3xl font-bold font-headline">Dashboard</h1>
-         <p className="text-muted-foreground">Welcome back, {user?.displayName || 'User'}!</p>
+         <p className="text-muted-foreground">Welcome back, {authUser?.displayName || 'User'}!</p>
        </div>
 
       <Card className="shadow-sm">
@@ -34,14 +46,14 @@ export default function DashboardPage() {
                     </Link>
                 </Button>
                 <Button asChild>
-                    <Link href={`/${username}`} target="_blank">
+                    <Link href={`/${publicUsername}`} target="_blank">
                         View Public Site <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
                 </Button>
               </div>
           </div>
            <p className="text-sm text-muted-foreground">
-              Your public portfolio is live at: <Link href={`/${username}`} className="underline font-medium" target='_blank'>{`/${username}`}</Link>
+              Your public portfolio is live at: <Link href={`/${publicUsername}`} className="underline font-medium" target='_blank'>{`/${publicUsername}`}</Link>
           </p>
         </CardContent>
       </Card>

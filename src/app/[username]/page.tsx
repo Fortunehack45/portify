@@ -19,39 +19,33 @@ export default function UserPortfolioPage() {
   useEffect(() => {
     const fetchData = async () => {
       if (!firestore || !username) {
+        setUser(null);
         return;
       }
 
       try {
-        // --- NEW LOGIC: Fetch all users and find by username in client ---
-        const usersRef = collection(firestore, 'users');
-        const usersSnapshot = await getDocs(usersRef);
+        // Fetch user by username
+        const userQuery = query(collection(firestore, 'users'), where('username', '==', username), limit(1));
+        const userSnapshot = await getDocs(userQuery);
 
-        let foundUser: User | null = null;
-        
-        usersSnapshot.forEach((doc) => {
-          const userData = doc.data() as Omit<User, 'id'>;
-          if (userData.username === username) {
-            foundUser = { id: doc.id, ...userData };
-          }
-        });
-        // --- END NEW LOGIC ---
-
-        if (!foundUser) {
+        if (userSnapshot.empty) {
           setUser(null); // User not found
-        } else {
-          setUser(foundUser);
-          const userId = foundUser.id;
+          return;
+        } 
+        
+        const foundUser = { id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
+        setUser(foundUser);
+        const userId = foundUser.id;
 
-          // Fetch projects for that user
-          const projectsQuery = query(collection(firestore, 'projects'), where('userId', '==', userId));
-          const projectsSnapshot = await getDocs(projectsQuery);
-          const projectsData = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-          setProjects(projectsData);
-        }
+        // Fetch projects for that user
+        const projectsQuery = query(collection(firestore, 'projects'), where('userId', '==', userId));
+        const projectsSnapshot = await getDocs(projectsQuery);
+        const projectsData = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        setProjects(projectsData);
+        
       } catch (error) {
         console.error("Error fetching portfolio data:", error);
-        setUser(null); // Set to null on error
+        setUser(null); // Set to null on error to trigger notFound
       }
     };
 
