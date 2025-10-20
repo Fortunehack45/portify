@@ -2,7 +2,7 @@
 
 import { User, Project } from '@/types';
 import TemplateRenderer from '../templates/template-renderer';
-import { Frame, PanelRightOpen, PanelLeftOpen } from 'lucide-react';
+import { Frame, Eye } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
 
@@ -29,11 +29,11 @@ export default function PreviewPanel({ user, projects, isMobile = false, onToggl
                 <Tooltip>
                     <TooltipTrigger asChild>
                          <Button variant="ghost" size="icon" onClick={onTogglePreview} className="h-7 w-7">
-                            {isPreviewCollapsed ? <PanelLeftOpen className="w-5 h-5" /> : <PanelRightOpen className="w-5 h-5" />}
+                            <Eye className="w-5 h-5" />
                         </Button>
                     </TooltipTrigger>
                     <TooltipContent>
-                        <p>{isPreviewCollapsed ? 'Show Preview' : 'Collapse Preview'}</p>
+                        <p>{isPreviewCollapsed ? 'Show Preview' : 'Hide Preview'}</p>
                     </TooltipContent>
                 </Tooltip>
             </TooltipProvider>
