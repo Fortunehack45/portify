@@ -1,3 +1,4 @@
+
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
@@ -23,8 +24,9 @@ const usePortfolioData = (username: string) => {
 
     const fetchPortfolio = async () => {
       setLoading(true);
+      setError(null);
       try {
-        // Step 1: Find the user by username. This is the query that is failing.
+        // Step 1: Find the user by username.
         const usersRef = collection(firestore, 'users');
         const userQuery = query(usersRef, where('username', '==', username), limit(1));
         
@@ -37,7 +39,8 @@ const usePortfolioData = (username: string) => {
           return;
         }
 
-        const user = { id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
+        const userDoc = userSnapshot.docs[0];
+        const user = { id: userDoc.id, ...userDoc.data() } as User;
 
         // Step 2: Fetch the user's projects using their ID.
         const projectsRef = collection(firestore, 'projects');
@@ -48,9 +51,10 @@ const usePortfolioData = (username: string) => {
         setData({ user, projects });
 
       } catch (err: any) {
+        // Create a more specific error for debugging
         const permissionError = new FirestorePermissionError({
-          path: 'users',
-          operation: 'list', // The failing operation
+          path: `users (querying for username: ${username})`,
+          operation: 'list', 
         });
         errorEmitter.emit('permission-error', permissionError);
         setError('Failed to fetch data due to permission issues.');
@@ -78,6 +82,11 @@ export default function UserPortfolioPage() {
   }
 
   if (error || !data?.user) {
+    // We explicitly throw the error here if it's a permission issue,
+    // which will be caught by the Next.js overlay in development.
+    if (error?.includes('permission')) {
+      throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}". Check your Firestore security rules to allow public reads on 'users' and 'projects' collections.`);
+    }
     notFound();
   }
 
