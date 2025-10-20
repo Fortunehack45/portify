@@ -94,6 +94,10 @@ export default function ProfileForm({ user, onUserChange }: ProfileFormProps) {
                     <Input id="username" value={user.username || ''} onChange={(e) => onUserChange({ username: e.target.value })} />
                   </div>
                 </div>
+                 <div className="space-y-2">
+                    <Label htmlFor="email">Email</Label>
+                    <Input id="email" type="email" value={user.email || ''} onChange={(e) => onUserChange({ email: e.target.value })} />
+                </div>
                  <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="jobTitle">Job Title</Label>
