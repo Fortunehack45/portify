@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -8,8 +9,7 @@ import TemplateRenderer from '@/components/templates/template-renderer';
 import type { User, Project, Portfolio } from '@/types';
 import { Logo } from '@/components/icons';
 
-export default function UserPortfolioPage({ params }: { params: { username: string } }) {
-  const { username } = params;
+export default function UserPortfolioPage({ params: { username } }: { params: { username: string } }) {
   const firestore = useFirestore();
 
   const [user, setUser] = useState<User | null>(null);
@@ -77,7 +77,6 @@ export default function UserPortfolioPage({ params }: { params: { username: stri
         }
 
       } catch (err: any) {
-        console.error("Error fetching portfolio data:", err);
         setError(err.message);
       } finally {
         setLoading(false);
