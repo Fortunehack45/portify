@@ -53,13 +53,15 @@ const TemplateGrid = ({ selectedTemplate, onTemplateChange, user, projects }: Pi
             )}
           >
             <CardContent className="p-4 space-y-3">
-              <div className="aspect-video w-full rounded-md bg-muted overflow-hidden border">
-                <div className="w-full h-full scale-[0.3] -translate-y-[33%] -translate-x-[33%] origin-top-left pointer-events-none">
-                  <TemplateRenderer
-                    template={template.value}
-                    user={user}
-                    projects={projects}
-                  />
+              <div className="aspect-video w-full rounded-md bg-muted overflow-hidden border relative">
+                <div className="absolute inset-0 transform scale-[0.25] origin-top-left pointer-events-none">
+                  <div className='w-[1280px] h-[720px] bg-white'>
+                    <TemplateRenderer
+                      template={template.value}
+                      user={user}
+                      projects={projects}
+                    />
+                  </div>
                 </div>
               </div>
               <p className="text-sm font-medium text-center">{template.label}</p>
