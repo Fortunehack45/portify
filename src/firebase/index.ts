@@ -9,20 +9,24 @@ import { useUser } from './auth/use-user';
 import { useCollection } from './firestore/use-collection';
 import { useDoc } from './firestore/use-doc';
 
-let app: FirebaseApp;
-let auth: Auth;
-let firestore: Firestore;
-
+// This function is intended for CLIENT-SIDE use only.
 function getFirebase() {
+    if (typeof window === 'undefined') {
+        // Return null or a mock object on the server
+        return { app: null, auth: null, firestore: null };
+    }
+
+    let app: FirebaseApp;
+
     if (!getApps().length) {
         app = initializeApp(firebaseConfig);
-        auth = getAuth(app);
-        firestore = getFirestore(app);
     } else {
         app = getApp();
-        auth = getAuth(app);
-        firestore = getFirestore(app);
     }
+    
+    const auth = getAuth(app);
+    const firestore = getFirestore(app);
+
     return { app, auth, firestore };
 }
 

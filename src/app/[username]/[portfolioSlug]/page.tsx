@@ -1,14 +1,14 @@
 
 import { notFound } from 'next/navigation';
-import { getFirebase } from '@/firebase';
+import { getFirebaseForServer } from '@/firebase/server';
 import TemplateRenderer from '@/components/templates/template-renderer';
 import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import type { User, Project, Portfolio } from '@/types';
 
 async function getPortfolioData(username: string, portfolioSlug: string) {
-  const { firestore } = getFirebase();
+  const { firestore } = getFirebaseForServer();
   if (!firestore) {
-    console.error("Firestore is not initialized.");
+    console.error("Firestore is not initialized on the server.");
     return null;
   }
 
@@ -70,9 +70,10 @@ async function getPortfolioData(username: string, portfolioSlug: string) {
 
   } catch (err: any) {
     console.error("Error fetching portfolio data:", err);
-    // Re-throw permission errors to be caught by Next.js error boundary in dev
+    // In a server component, throwing an error will be caught by Next.js error boundaries.
+    // For permission errors, we might want to log it and return null to trigger a 404.
     if (err.code === 'permission-denied') {
-      throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}" with slug "${portfolioSlug}". Check your Firestore security rules.`);
+      console.error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}" with slug "${portfolioSlug}". Check your Firestore security rules.`);
     }
     return null;
   }

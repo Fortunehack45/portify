@@ -1,14 +1,14 @@
 
 import { notFound } from 'next/navigation';
-import { getFirebase } from '@/firebase';
+import { getFirebaseForServer } from '@/firebase/server';
 import TemplateRenderer from '@/components/templates/template-renderer';
 import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import type { User, Project, Portfolio } from '@/types';
 
 async function getPortfolioData(username: string) {
-  const { firestore } = getFirebase();
+  const { firestore } = getFirebaseForServer();
   if (!firestore) {
-    console.error("Firestore is not initialized.");
+    console.error("Firestore is not initialized on the server.");
     return null;
   }
 
@@ -41,7 +41,29 @@ async function getPortfolioData(username: string) {
 
     if (portfolioSnapshot.empty) {
       console.log(`Primary portfolio not found for userId: ${userId}`);
-      return null;
+      // Fallback: Try to get ANY portfolio if no primary is set.
+      const anyPortfolioQuery = query(portfolioRef, where('userId', '==', userId), limit(1));
+      const anyPortfolioSnapshot = await getDocs(anyPortfolioQuery);
+      if (anyPortfolioSnapshot.empty) {
+        console.log(`No portfolios found for userId: ${userId}`);
+        return null;
+      }
+       const portfolio = { id: anyPortfolioSnapshot.docs[0].id, ...anyPortfolioSnapshot.docs[0].data() } as Portfolio;
+       let projects: Project[] = [];
+        if (portfolio.projectIds && portfolio.projectIds.length > 0) {
+            const projectChunks: string[][] = [];
+            for (let i = 0; i < portfolio.projectIds.length; i += 30) {
+            projectChunks.push(portfolio.projectIds.slice(i, i + 30));
+            }
+            
+            const projectPromises = projectChunks.map(chunk => 
+            getDocs(query(collection(firestore, 'projects'), where('__name__', 'in', chunk)))
+            );
+            
+            const projectSnapshots = await Promise.all(projectPromises);
+            projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
+        }
+       return { user, projects, portfolio };
     }
 
     const portfolio = { id: portfolioSnapshot.docs[0].id, ...portfolioSnapshot.docs[0].data() } as Portfolio;
@@ -65,9 +87,8 @@ async function getPortfolioData(username: string) {
 
   } catch (err: any) {
     console.error("Error fetching portfolio data:", err);
-    // Re-throw permission errors to be caught by Next.js error boundary in dev
     if (err.code === 'permission-denied') {
-      throw new Error(`Firestore Permission Denied: Could not fetch primary portfolio for user "${username}". Check your Firestore security rules.`);
+      console.error(`Firestore Permission Denied: Could not fetch primary portfolio for user "${username}". Check your Firestore security rules.`);
     }
     return null;
   }
