@@ -91,7 +91,6 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
             <TemplateGrid selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} user={user} projects={projects} />
         ) : (
              <div className="space-y-2">
-                <h3 className="text-lg font-semibold">Choose a Template</h3>
                 <p className="text-sm text-muted-foreground">Select a template to change the look of your portfolio.</p>
                 <TemplateDropdown selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
             </div>

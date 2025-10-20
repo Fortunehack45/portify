@@ -11,15 +11,12 @@ import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import TemplateSelector from './template-selector';
-import { Eye } from 'lucide-react';
 
 interface EditorClientProps {
   user: User;
   projects: Project[];
   onUserChange: (user: User) => void;
   onProjectsChange: (projects: Project[]) => void;
-  onTogglePreview: () => void;
-  isPreviewCollapsed: boolean;
 }
 
 export default function EditorClient({
@@ -27,8 +24,6 @@ export default function EditorClient({
   projects,
   onUserChange,
   onProjectsChange,
-  onTogglePreview,
-  isPreviewCollapsed
 }: EditorClientProps) {
 
   const firestore = useFirestore();
@@ -78,15 +73,10 @@ export default function EditorClient({
               <h1 className="text-2xl font-bold font-headline">Editor</h1>
               <p className="text-muted-foreground text-sm">Update your profile and projects.</p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" size="icon" onClick={onTogglePreview}>
-              <Eye className="w-5 h-5" />
-            </Button>
-            <Button onClick={handleSave}>
-                <Save className="mr-2 h-4 w-4" />
-                Save
-            </Button>
-          </div>
+          <Button onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              Save
+          </Button>
       </div>
       <div className="p-6 space-y-6 h-full overflow-y-auto">
         <Accordion type="multiple" defaultValue={['profile', 'projects', 'template']} className="w-full space-y-4">
