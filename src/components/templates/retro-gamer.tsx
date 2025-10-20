@@ -86,7 +86,7 @@ const RetroGamer: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </section>
       </main>
-      <footer className="text-center py-4 text-xs text-gray-500">Made with Portify</footer>
+      <footer className="text-center py-4 text-xs text-gray-500">Made by Fortune</footer>
     </div>
   );
 };

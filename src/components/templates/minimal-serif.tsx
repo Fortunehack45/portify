@@ -83,7 +83,7 @@ const MinimalSerif: React.FC<TemplateProps> = ({ user, projects }) => {
                     </React.Fragment>
                 ))}
             </div>
-            <p className="text-gray-400 font-sans">Made with Portify</p>
+            <p className="text-gray-400 font-sans">Made by Fortune</p>
         </footer>
       </main>
     </div>

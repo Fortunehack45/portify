@@ -90,7 +90,7 @@ const ModernDark: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </section>
       </main>
-      <footer className="text-center py-6 text-xs text-gray-600">Made with Portify</footer>
+      <footer className="text-center py-6 text-xs text-gray-600">Made by Fortune</footer>
     </div>
   );
 };

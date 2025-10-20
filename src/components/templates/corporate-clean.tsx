@@ -107,7 +107,7 @@ const CorporateClean: React.FC<TemplateProps> = ({ user, projects }) => {
                     </React.Fragment>
                 ))}
             </div>
-             <p className="text-sm text-gray-400 mt-10">Made with Portify</p>
+             <p className="text-sm text-gray-400 mt-10">Made by Fortune</p>
           </div>
       </footer>
     </div>

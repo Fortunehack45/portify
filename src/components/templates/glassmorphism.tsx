@@ -94,7 +94,7 @@ const Glassmorphism: React.FC<TemplateProps> = ({ user, projects }) => {
             </div>
         </div>
       </main>
-      <footer className="relative z-10 text-center py-6 text-sm text-white/50">Made with Portify</footer>
+      <footer className="relative z-10 text-center py-6 text-sm text-white/50">Made by Fortune</footer>
     </div>
   );
 };

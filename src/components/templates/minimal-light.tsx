@@ -94,7 +94,7 @@ const MinimalLight: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </div>
       </main>
-      <footer className="text-center py-4 text-xs text-gray-500 border-t border-gray-100 mt-8">Made with Portify</footer>
+      <footer className="text-center py-4 text-xs text-gray-500 border-t border-gray-100 mt-8">Made by Fortune</footer>
     </div>
   );
 };

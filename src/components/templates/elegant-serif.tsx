@@ -85,7 +85,7 @@ const ElegantSerif: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </section>
       </main>
-      <footer className="text-center py-8 text-sm text-gray-400 border-t border-gray-200 mt-8">Made with Portify</footer>
+      <footer className="text-center py-8 text-sm text-gray-400 border-t border-gray-200 mt-8">Made by Fortune</footer>
     </div>
   );
 };

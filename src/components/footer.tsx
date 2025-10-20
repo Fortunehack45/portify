@@ -9,12 +9,12 @@ const Footer = () => {
           <Logo />
         </div>
         <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built by Portify.
+            Made by Fortune.
         </p>
-        <div className="flex gap-6 text-sm text-muted-foreground">
-            <Link href="#" className="hover:text-foreground">Docs</Link>
-            <Link href="#" className="hover:text-foreground">About</Link>
-            <Link href="/login" className="hover:text-foreground">Login</Link>
+        <div className="flex gap-4 sm:gap-6 text-sm text-muted-foreground">
+            <Link href="/about" className="hover:text-foreground">About</Link>
+            <Link href="/terms" className="hover:text-foreground">Terms</Link>
+            <Link href="/privacy" className="hover:text-foreground">Privacy</Link>
         </div>
       </div>
     </footer>

@@ -83,7 +83,7 @@ const LakesideDawn: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </div>
       </main>
-      <footer className="text-center py-6 text-sm text-gray-500 border-t bg-white">Made with Portify</footer>
+      <footer className="text-center py-6 text-sm text-gray-500 border-t bg-white">Made by Fortune</footer>
     </div>
   );
 };

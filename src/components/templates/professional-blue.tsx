@@ -135,7 +135,7 @@ const ProfessionalBlue: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </div>
       </main>
-      <footer className="text-center py-6 text-xs text-slate-500 bg-slate-100 mt-8">Made with Portify</footer>
+      <footer className="text-center py-6 text-xs text-slate-500 bg-slate-100 mt-8">Made by Fortune</footer>
     </div>
   );
 };
