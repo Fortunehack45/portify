@@ -1,11 +1,10 @@
 'use client';
 
 import { notFound, useParams } from 'next/navigation';
-import { useCollection, useFirestore } from '@/firebase';
+import { useFirestore } from '@/firebase';
 import TemplateRenderer from '@/components/templates/template-renderer';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit } from 'firebase/firestore';
 import type { User, Project } from '@/types';
-import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 import { useEffect, useState } from 'react';
 
 export default function UserPortfolioPage() {
@@ -13,54 +12,51 @@ export default function UserPortfolioPage() {
   const username = params.username as string;
   const firestore = useFirestore();
 
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<User | null | undefined>(undefined); // Use undefined for initial loading state
   const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const fetchData = async () => {
       if (!firestore || !username) {
-        setLoading(false);
         return;
       }
 
-      setLoading(true);
-
       try {
         // Fetch user data
-        const userQuery = query(collection(firestore, 'users'), where('username', '==', username));
+        const usersRef = collection(firestore, 'users');
+        const userQuery = query(usersRef, where('username', '==', username), limit(1));
         const userSnapshot = await getDocs(userQuery);
 
         if (userSnapshot.empty) {
-          setUser(null);
-          setLoading(false);
-          return;
+          setUser(null); // User not found
+        } else {
+          const userData = userSnapshot.docs[0].data() as Omit<User, 'id'>;
+          const userId = userSnapshot.docs[0].id;
+          const userWithId = { id: userId, ...userData }
+          setUser(userWithId);
+
+          // Fetch projects for that user
+          const projectsQuery = query(collection(firestore, 'projects'), where('userId', '==', userId));
+          const projectsSnapshot = await getDocs(projectsQuery);
+          const projectsData = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+          setProjects(projectsData);
         }
-
-        const userData = { id: userSnapshot.docs[0].id, ...userSnapshot.docs[0].data() } as User;
-        setUser(userData);
-
-        // Fetch projects for that user
-        const projectsQuery = query(collection(firestore, 'projects'), where('userId', '==', userData.id));
-        const projectsSnapshot = await getDocs(projectsQuery);
-        const projectsData = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
-        
-        setProjects(projectsData);
       } catch (error) {
         console.error("Error fetching portfolio data:", error);
-      } finally {
-        setLoading(false);
+        setUser(null); // Set to null on error to prevent infinite loading
       }
     };
 
     fetchData();
   }, [firestore, username]);
 
-  if (loading) {
+  // Initial loading state before fetch completes
+  if (user === undefined) {
     return <div className="flex h-screen w-full items-center justify-center">Loading portfolio...</div>;
   }
 
-  if (!user) {
+  // After fetch: user is null, so not found
+  if (user === null) {
     notFound();
   }
 
@@ -68,7 +64,7 @@ export default function UserPortfolioPage() {
     <TemplateRenderer
       template={user.selectedTemplate}
       user={user}
-      projects={projects || []}
+      projects={projects}
     />
   );
 }
