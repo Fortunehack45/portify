@@ -1,12 +1,12 @@
 'use client';
 
 import { notFound } from 'next/navigation';
-import { useCollection } from '@/firebase';
+import { useCollection, useFirestore } from '@/firebase';
 import TemplateRenderer from '@/components/templates/template-renderer';
 import { collection, query, where } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
 import type { User, Project } from '@/types';
-import { useEffect, useState, useMemo } from 'react';
+import { useMemo } from 'react';
+import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 
 interface PageProps {
   params: {
@@ -17,7 +17,7 @@ interface PageProps {
 function PortfolioContent({ user }: { user: User }) {
   const firestore = useFirestore();
 
-  const projectsQuery = useMemo(() => {
+  const projectsQuery = useMemoFirebase(() => {
     if (!firestore || !user.id) return null;
     return query(collection(firestore, 'projects'), where('userId', '==', user.id));
   }, [firestore, user.id]);
@@ -44,7 +44,7 @@ function PortfolioContent({ user }: { user: User }) {
 export default function UserPortfolioPage({ params }: PageProps) {
   const firestore = useFirestore();
 
-  const userQuery = useMemo(() => {
+  const userQuery = useMemoFirebase(() => {
     if (!firestore) return null;
     return query(collection(firestore, 'users'), where('username', '==', params.username));
   }, [firestore, params.username]);
