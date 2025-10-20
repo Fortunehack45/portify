@@ -26,9 +26,11 @@ const usePortfolioData = (username: string) => {
       setLoading(true);
       setError(null);
       try {
+        // Standardize on lowercase for the lookup
+        const lookupUsername = username.toLowerCase();
+        
         // Step 1: Look up the userId from the public 'usernames' collection.
-        // This is a direct `get` which is allowed for public visitors.
-        const usernameRef = doc(firestore, 'usernames', username);
+        const usernameRef = doc(firestore, 'usernames', lookupUsername);
         const usernameSnap = await getDoc(usernameRef);
 
         if (!usernameSnap.exists()) {
@@ -42,7 +44,6 @@ const usePortfolioData = (username: string) => {
         const { userId } = usernameSnap.data();
 
         // Step 2: Fetch the user's profile directly by their ID.
-        // This is also a direct `get` which is allowed for public reads.
         const userRef = doc(firestore, 'users', userId);
         const userSnap = await getDoc(userRef);
 
@@ -57,7 +58,6 @@ const usePortfolioData = (username: string) => {
         const user = { id: userSnap.id, ...userSnap.data() } as User;
 
         // Step 3: Fetch the user's projects using their ID.
-        // This query is on the 'projects' collection and is allowed by security rules.
         const projectsRef = collection(firestore, 'projects');
         const projectsQuery = query(projectsRef, where('userId', '==', userId));
         const projectsSnapshot = await getDocs(projectsQuery);
@@ -68,7 +68,7 @@ const usePortfolioData = (username: string) => {
       } catch (err: any) {
         if (err.code === 'permission-denied') {
             const permissionError = new FirestorePermissionError({
-              path: `usernames/${username}`, // The initial failing query would be on the username lookup
+              path: `usernames/${username.toLowerCase()}`, // The initial failing query would be on the username lookup
               operation: 'get', 
             });
             errorEmitter.emit('permission-error', permissionError);

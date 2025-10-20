@@ -9,16 +9,17 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, addDoc } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, addDoc, writeBatch } from 'firebase/firestore';
 import { getFirebase } from '..';
 import { User, Project } from '@/types';
 
 const { auth, firestore } = getFirebase();
 
-const createSampleProject = async (userId: string) => {
+const createSampleProject = async (userId: string, batch: import('firebase/firestore').WriteBatch) => {
     if (!firestore) return;
-    const projectsCollection = collection(firestore, 'projects');
-    await addDoc(projectsCollection, {
+    // Use a unique ID for the new project document
+    const projectRef = doc(collection(firestore, 'projects'));
+    batch.set(projectRef, {
         userId: userId,
         title: "My First Project",
         description: "This is a sample project to get you started. You can edit or delete this in the dashboard editor.",
@@ -36,13 +37,17 @@ const createUserProfileAndUsername = async (user: import('firebase/auth').User, 
     if (!firestore) {
         throw new Error('Firestore not initialized');
     }
+    const batch = writeBatch(firestore);
+
     const userDocRef = doc(firestore, 'users', user.uid);
-    const usernameDocRef = doc(firestore, 'usernames', username);
+    // Always use lowercase for the username lookup document
+    const lowercaseUsername = username.toLowerCase();
+    const usernameDocRef = doc(firestore, 'usernames', lowercaseUsername);
 
     const userProfile: User = {
       id: user.uid,
       name: name,
-      username: username,
+      username: username, // Store the original cased username in the profile
       email: user.email || '',
       bio: 'This is my bio! I can edit it in the editor.',
       jobTitle: 'Aspiring Developer',
@@ -55,12 +60,17 @@ const createUserProfileAndUsername = async (user: import('firebase/auth').User, 
       updatedAt: new Date(),
     };
 
-    // Create the user profile document
-    await setDoc(userDocRef, userProfile);
-    // Create the public username mapping
-    await setDoc(usernameDocRef, { userId: user.uid });
-    // Create a sample project for the new user
-    await createSampleProject(user.uid);
+    // Add the user profile document to the batch
+    batch.set(userDocRef, userProfile);
+    
+    // Add the public username mapping to the batch
+    batch.set(usernameDocRef, { userId: user.uid });
+
+    // Add a sample project to the batch
+    await createSampleProject(user.uid, batch);
+    
+    // Commit all writes at once
+    await batch.commit();
 };
 
 
