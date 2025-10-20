@@ -8,6 +8,11 @@ import { Timestamp } from 'firebase-admin/firestore';
 export default async function UserPortfolioPage({ params }: { params: { username: string } }) {
   const { username } = params;
 
+  if (!adminDb) {
+    console.error("Firebase Admin SDK is not initialized.");
+    notFound();
+  }
+
   try {
     // 1. Get User ID from username
     const usernameDoc = await adminDb.collection('usernames').doc(username.toLowerCase()).get();
