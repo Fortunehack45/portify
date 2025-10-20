@@ -4,16 +4,32 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCollection, useDoc, useFirestore, useUser } from '@/firebase';
 import type { User, Portfolio } from '@/types';
-import { collection, doc, query, where } from 'firebase/firestore';
-import { ArrowRight, Edit, PlusCircle, Star, View } from 'lucide-react';
+import { collection, doc, query, where, deleteDoc } from 'firebase/firestore';
+import { ArrowRight, Edit, PlusCircle, Star, Trash2, View } from 'lucide-react';
 import Link from 'next/link';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 import { cn } from '@/lib/utils';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { useToast } from '@/hooks/use-toast';
+import { errorEmitter } from '@/firebase/error-emitter';
+import { FirestorePermissionError } from '@/firebase/errors';
 
 export default function DashboardPage() {
   const { user: authUser } = useUser();
   const firestore = useFirestore();
+  const { toast } = useToast();
+  const [portfolios, setPortfolios] = useState<Portfolio[]>([]);
 
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
@@ -27,7 +43,13 @@ export default function DashboardPage() {
     return query(collection(firestore, 'portfolios'), where('userId', '==', authUser.uid));
   }, [firestore, authUser]);
 
-  const { data: portfolios, loading: portfoliosLoading } = useCollection<Portfolio>(portfoliosQuery);
+  const { data: fetchedPortfolios, loading: portfoliosLoading } = useCollection<Portfolio>(portfoliosQuery);
+
+  useMemo(() => {
+    if (fetchedPortfolios) {
+      setPortfolios(fetchedPortfolios);
+    }
+  }, [fetchedPortfolios]);
 
   const publicUsername = currentUser?.username || 'preview';
 
@@ -36,6 +58,32 @@ export default function DashboardPage() {
       return `/${publicUsername}`;
     }
     return `/${publicUsername}/portfolio/${portfolio.slug}`;
+  }
+
+  const handleDeletePortfolio = (portfolioId: string) => {
+    if (!firestore) return;
+
+    const portfolioRef = doc(firestore, 'portfolios', portfolioId);
+    
+    deleteDoc(portfolioRef).then(() => {
+        setPortfolios(prev => prev.filter(p => p.id !== portfolioId));
+        toast({
+            title: "Success!",
+            description: "The portfolio has been deleted.",
+        });
+    }).catch((err) => {
+        const permissionError = new FirestorePermissionError({
+            path: portfolioRef.path,
+            operation: 'delete',
+        });
+        errorEmitter.emit('permission-error', permissionError);
+
+        toast({
+            title: "Error",
+            description: "You don't have permission to delete this portfolio.",
+            variant: "destructive"
+        });
+    });
   }
 
   return (
@@ -69,11 +117,33 @@ export default function DashboardPage() {
                                     <View className="mr-2 h-4 w-4" /> View
                                 </Link>
                             </Button>
-                            <Button asChild>
+                            <Button size="sm" asChild>
                                 <Link href={`/dashboard/editor?portfolioId=${p.id}`}>
                                     <Edit className="mr-2 h-4 w-4" /> Edit
                                 </Link>
                             </Button>
+                            <AlertDialog>
+                              <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" disabled={p.isPrimary}>
+                                  <Trash2 className="mr-2 h-4 w-4" /> Delete
+                                </Button>
+                              </AlertDialogTrigger>
+                              <AlertDialogContent>
+                                <AlertDialogHeader>
+                                  <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                                  <AlertDialogDescription>
+                                    This action cannot be undone. This will permanently delete your
+                                    portfolio. You cannot delete your primary portfolio.
+                                  </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                  <AlertDialogAction onClick={() => handleDeletePortfolio(p.id)}>
+                                    Continue
+                                  </AlertDialogAction>
+                                </AlertDialogFooter>
+                              </AlertDialogContent>
+                            </AlertDialog>
                         </div>
                     </div>
                 ))}

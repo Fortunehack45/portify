@@ -1,3 +1,4 @@
+
 'use client';
 import { Project, Portfolio } from '@/types';
 import { Button } from '../ui/button';
@@ -45,15 +46,16 @@ export default function ProjectsList({ projects, setProjects, portfolio, onPortf
     if (!firestore || !authUser) return;
 
     if (editingProject) {
-        // TODO: Implement update logic that handles slug changes
+        // Just update the project doc, no need to worry about unique slugs globally
         const projectRef = doc(firestore, 'projects', editingProject.id);
         const projectData = {
             ...project,
+            slug,
             updatedAt: serverTimestamp(),
         };
         
         updateDoc(projectRef, projectData).then(() => {
-            setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...project, updatedAt: new Date() } : p));
+            setProjects(projects.map(p => p.id === editingProject.id ? { ...p, ...project, slug, updatedAt: new Date() } : p));
             toast({ title: "Project Updated", description: `"${project.title}" has been updated.` });
         }).catch(async () => {
              const permissionError = new FirestorePermissionError({
@@ -65,34 +67,21 @@ export default function ProjectsList({ projects, setProjects, portfolio, onPortf
         });
 
     } else {
-      // Add new project with uniqueness check
+      // Add new project
       const projectRef = doc(collection(firestore, 'projects'));
-      const projectNameRef = doc(firestore, 'projectNames', slug);
-
-      runTransaction(firestore, async (transaction) => {
-        const projectNameDoc = await transaction.get(projectNameRef);
-        if (projectNameDoc.exists()) {
-          throw new Error(`Project name "${slug}" is already taken.`);
-        }
-
-        transaction.set(projectNameRef, { 
-          userId: authUser.uid, 
-          projectId: projectRef.id 
-        });
-
-        const newProjectData = {
-            ...project,
-            id: projectRef.id,
-            userId: authUser.uid,
-            createdAt: serverTimestamp(),
-            updatedAt: serverTimestamp(),
-        };
-        transaction.set(projectRef, newProjectData);
-      }).then(() => {
+      const newProjectData = {
+          ...project,
+          id: projectRef.id,
+          userId: authUser.uid,
+          slug,
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
+      };
+      
+      addDoc(collection(firestore, 'projects'), newProjectData).then((docRef) => {
         const optimisticProject = {
-            ...project,
-            id: projectRef.id,
-            userId: authUser.uid,
+            ...newProjectData,
+            id: docRef.id,
             createdAt: new Date(),
             updatedAt: new Date(),
         };
@@ -100,9 +89,9 @@ export default function ProjectsList({ projects, setProjects, portfolio, onPortf
         toast({ title: "Project Added", description: `"${project.title}" has been added.` });
       }).catch(async (error: any) => {
         const permissionError = new FirestorePermissionError({
-            path: projectNameRef.path,
+            path: `projects/${projectRef.id}`,
             operation: 'create',
-            requestResourceData: { userId: authUser.uid, projectId: projectRef.id }
+            requestResourceData: newProjectData
         });
         errorEmitter.emit('permission-error', permissionError);
         toast({
@@ -124,15 +113,11 @@ export default function ProjectsList({ projects, setProjects, portfolio, onPortf
   };
 
   const handleDelete = async (projectToDelete: Project) => {
-    if (!firestore || !projectToDelete.slug) return;
+    if (!firestore) return;
     
     const projectRef = doc(firestore, 'projects', projectToDelete.id);
-    const projectNameRef = doc(firestore, 'projectNames', projectToDelete.slug);
 
-    runTransaction(firestore, async (transaction) => {
-        transaction.delete(projectRef);
-        transaction.delete(projectNameRef);
-    }).then(() => {
+    deleteDoc(projectRef).then(() => {
         setProjects(projects.filter(p => p.id !== projectToDelete.id));
         toast({ title: "Project Deleted", description: `"${projectToDelete.title}" has been removed.` });
     }).catch(async (err: any) => {

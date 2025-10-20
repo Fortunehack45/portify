@@ -1,3 +1,4 @@
+
 {
   "entities": {
     "UserProfile": {
@@ -136,22 +137,6 @@
       },
       "required": ["userId"]
     },
-    "ProjectName": {
-        "title": "Project Name",
-        "description": "Maps a project name slug to a user and project ID for uniqueness.",
-        "type": "object",
-        "properties": {
-            "userId": {
-                "type": "string",
-                "description": "The unique ID of the user who owns the project."
-            },
-            "projectId": {
-                "type": "string",
-                "description": "The unique ID of the project."
-            }
-        },
-        "required": ["userId", "projectId"]
-    },
     "Portfolio": {
         "title": "Portfolio",
         "description": "Represents a user's portfolio.",
@@ -247,12 +232,6 @@
         "$ref": "#/entities/Username"
       },
       "description": "Maps usernames to user IDs for public profile lookups."
-    },
-    "/projectNames/{projectName}": {
-        "schema": {
-            "$ref": "#/entities/ProjectName"
-        },
-        "description": "Ensures project names (slugs) are unique across the platform."
     }
   }
 }
