@@ -66,7 +66,7 @@ export default function SignupPage() {
       <CardHeader className="text-center">
         <CardTitle className="text-3xl font-headline">Create an Account</CardTitle>
         <CardDescription>
-          Join FolioForge and start building your portfolio.
+          Join Portify and start building your portfolio.
         </CardDescription>
       </CardHeader>
       <CardContent>

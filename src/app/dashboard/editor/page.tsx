@@ -20,7 +20,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { ImperativePanelGroupHandle } from 'react-resizable-panels';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 
-const EDITOR_TAB_STORAGE_KEY = 'folioforge-editor-active-tab';
+const EDITOR_TAB_STORAGE_KEY = 'portify-editor-active-tab';
 
 export default function EditorPage() {
   const { user: authUser, loading: userLoading } = useUser();

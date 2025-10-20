@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import { FirebaseClientProvider } from '@/firebase/client-provider';
 
 export const metadata: Metadata = {
-  title: 'FolioForge - Craft Your Perfect Developer Portfolio',
+  title: 'Portify - Craft Your Perfect Developer Portfolio',
   description:
     'The easiest way to build and share a professional developer portfolio. Sign up, create projects, choose a theme, and get a unique public URL instantly.',
 };

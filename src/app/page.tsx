@@ -39,7 +39,7 @@ export default function Home() {
                 Craft Your Digital Presence.
               </h1>
               <p className="text-muted-foreground md:text-xl">
-                FolioForge provides the tools to build a stunning developer portfolio in minutes. No code required. Just your talent, your projects, and your unique story.
+                Portify provides the tools to build a stunning developer portfolio in minutes. No code required. Just your talent, your projects, and your unique story.
               </p>
               <div className="flex flex-col gap-4 min-[400px]:flex-row justify-center">
                 <Button asChild size="lg">
@@ -85,7 +85,7 @@ export default function Home() {
                 Ready to Forge Your Legacy?
               </h2>
               <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed">
-                Join hundreds of developers who have built their online presence with FolioForge. It's free to get started.
+                Join hundreds of developers who have built their online presence with Portify. It's free to get started.
               </p>
             </div>
             <div className="mx-auto w-full max-w-sm space-y-2">

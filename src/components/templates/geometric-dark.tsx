@@ -97,7 +97,7 @@ const GeometricDark: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </section>
       </main>
-      <footer className="relative z-10 text-center py-6 text-sm text-gray-600">Engineered with FolioForge</footer>
+      <footer className="relative z-10 text-center py-6 text-sm text-gray-600">Engineered with Portify</footer>
     </div>
   );
 };

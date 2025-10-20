@@ -9,7 +9,7 @@ const Footer = () => {
           <Logo />
         </div>
         <p className="text-center text-sm leading-loose text-muted-foreground md:text-left">
-            Built by FolioForge.
+            Built by Portify.
         </p>
         <div className="flex gap-6 text-sm text-muted-foreground">
             <Link href="#" className="hover:text-foreground">Docs</Link>

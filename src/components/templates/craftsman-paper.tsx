@@ -104,7 +104,7 @@ const CraftsmanPaper: React.FC<TemplateProps> = ({ user, projects }) => {
           </TabsContent>
         </Tabs>
       </main>
-      <footer className="text-center py-6 text-sm text-stone-500">Made with FolioForge</footer>
+      <footer className="text-center py-6 text-sm text-stone-500">Made with Portify</footer>
     </div>
   );
 };

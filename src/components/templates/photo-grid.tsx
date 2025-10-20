@@ -101,7 +101,7 @@ const PhotoGrid: React.FC<TemplateProps> = ({ user, projects }) => {
           </div>
         </section>
       </main>
-      <footer className="text-center py-6 text-sm text-gray-600">Made with FolioForge</footer>
+      <footer className="text-center py-6 text-sm text-gray-600">Made with Portify</footer>
     </div>
   );
 };

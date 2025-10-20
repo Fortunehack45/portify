@@ -50,7 +50,7 @@ const CosmicDream: React.FC<TemplateProps> = ({ user, projects }) => {
                         ))}
                         {user.email && <a href={`mailto:${user.email}`} aria-label="Email" className="group"><Mail className="w-5 h-5 text-purple-300 group-hover:text-purple-100 transition-colors" /></a>}
                     </div>
-                    <p className="text-xs text-purple-400/50 mt-6">Made with FolioForge</p>
+                    <p className="text-xs text-purple-400/50 mt-6">Made with Portify</p>
                 </div>
             </aside>
             

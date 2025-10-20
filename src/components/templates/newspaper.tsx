@@ -73,7 +73,7 @@ const Newspaper: React.FC<TemplateProps> = ({ user, projects }) => {
             </div>
         </main>
       <footer className="text-center py-6 text-xs text-gray-600 border-t border-gray-300 mt-8">
-        Published by FolioForge
+        Published by Portify
       </footer>
     </div>
   );
