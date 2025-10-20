@@ -3,11 +3,13 @@ import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
 import * as admin from 'firebase-admin';
 
+// This function ensures the Admin SDK is initialized only once.
 const getAdminDb = (): Firestore => {
   if (admin.apps.length > 0) {
     return admin.firestore();
   }
 
+  // This block runs only on the first call in a given environment.
   const privateKey = process.env.FIREBASE_PRIVATE_KEY
     ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
     : undefined;
