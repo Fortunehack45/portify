@@ -70,18 +70,21 @@ const TemplateGrid = ({ selectedTemplate, onTemplateChange, user, projects }: Pi
 )
 
 const TemplateDropdown = ({ selectedTemplate, onTemplateChange }: Pick<TemplateSelectorProps, 'selectedTemplate' | 'onTemplateChange'>) => (
-    <Select value={selectedTemplate} onValueChange={(value) => onTemplateChange(value as Template)}>
-        <SelectTrigger>
-          <SelectValue placeholder="Select a template" />
-        </SelectTrigger>
-        <SelectContent>
-          {templateOptions.map(option => (
-            <SelectItem key={option.value} value={option.value}>
-              {option.label}
-            </SelectItem>
-          ))}
-        </SelectContent>
-    </Select>
+    <div className="space-y-2">
+        <p className="text-sm text-muted-foreground">Select a template to change the look of your portfolio.</p>
+        <Select value={selectedTemplate} onValueChange={(value) => onTemplateChange(value as Template)}>
+            <SelectTrigger>
+              <SelectValue placeholder="Select a template" />
+            </SelectTrigger>
+            <SelectContent>
+              {templateOptions.map(option => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+        </Select>
+    </div>
 )
 
 export default function TemplateSelector({ selectedTemplate, onTemplateChange, projects, user, display = 'grid' }: TemplateSelectorProps) {
@@ -90,10 +93,7 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
         {display === 'grid' ? (
             <TemplateGrid selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} user={user} projects={projects} />
         ) : (
-             <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">Select a template to change the look of your portfolio.</p>
-                <TemplateDropdown selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
-            </div>
+            <TemplateDropdown selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
         )}
       
       <AiTemplateAssistant projects={projects} onSelectTemplate={onTemplateChange} />
