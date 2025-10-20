@@ -86,8 +86,8 @@ export default function DashboardLayout({
             <Logo />
           </Link>
         </div>
-        <div className="flex flex-col flex-1 overflow-y-auto">
-          <nav className="flex-1 grid items-start p-2 text-sm font-medium lg:p-4">
+        <div className="flex-1 overflow-y-auto">
+          <nav className="grid items-start p-2 text-sm font-medium lg:p-4">
             {navItems.map((item) => {
               const isActive = pathname === item.href;
               return (
@@ -145,7 +145,7 @@ export default function DashboardLayout({
         </main>
         
         {/* Mobile Bottom Nav */}
-        <MobileNav items={navItems} />
+        <MobileNav />
       </div>
     </div>
   );

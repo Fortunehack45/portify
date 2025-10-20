@@ -3,15 +3,13 @@
 import { useState, useEffect } from 'react';
 import type { User, Project } from '@/types';
 import { Button } from '../ui/button';
-import { Save, Eye, PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { Save } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion } from '@/components/ui/accordion';
-import { ResizablePanelGroup, ResizablePanel, ResizableHandle } from '../ui/resizable';
-import PreviewPanel from './preview-panel';
 
 interface EditorClientProps {
   initialUser: User;
@@ -24,7 +22,6 @@ export default function EditorClient({
 }: EditorClientProps) {
   const [user, setUser] = useState<User>(initialUser);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
-  const [isPreviewOpen, setIsPreviewOpen] = useState(true);
 
   const firestore = useFirestore();
   const { user: authUser } = useAuthUser();
@@ -71,41 +68,25 @@ export default function EditorClient({
   };
   
   return (
-    <div className="flex flex-col h-full -m-4 lg:-m-6">
-      <div className="flex-shrink-0 flex items-center justify-between p-4 border-b bg-background">
+    <div className="flex flex-col h-full">
+      <div className="flex-shrink-0 flex items-center justify-between p-4 border-b bg-background sticky top-0 z-10 md:relative">
           <div className="space-y-1">
               <h1 className="text-2xl font-bold font-headline">Editor</h1>
-              <p className="text-muted-foreground text-sm">Update your profile, skills, and projects.</p>
+              <p className="text-muted-foreground text-sm">Update your profile and projects.</p>
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => setIsPreviewOpen(!isPreviewOpen)}>
-                {isPreviewOpen ? <PanelRightClose className="mr-2 h-4 w-4"/> : <PanelRightOpen className="mr-2 h-4 w-4"/>}
-                Preview
-            </Button>
             <Button onClick={handleSave}>
                 <Save className="mr-2 h-4 w-4" />
-                Save Portfolio
+                Save
             </Button>
           </div>
       </div>
-      <ResizablePanelGroup direction="horizontal" className="flex-grow">
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <div className="p-6 space-y-6 h-full overflow-y-auto">
-            <Accordion type="multiple" defaultValue={['profile', 'projects']} className="w-full space-y-4">
-                <ProfileForm user={user} onUserChange={handleUserChange} />
-                <ProjectsList projects={projects} setProjects={setProjects} />
-            </Accordion>
-          </div>
-        </ResizablePanel>
-        {isPreviewOpen && (
-           <>
-             <ResizableHandle withHandle />
-             <ResizablePanel defaultSize={50} minSize={30}>
-                <PreviewPanel user={user} projects={projects} />
-             </ResizablePanel>
-           </>
-        )}
-      </ResizablePanelGroup>
+      <div className="p-6 space-y-6 h-full overflow-y-auto">
+        <Accordion type="multiple" defaultValue={['profile', 'projects']} className="w-full space-y-4">
+            <ProfileForm user={user} onUserChange={handleUserChange} />
+            <ProjectsList projects={projects} setProjects={setProjects} />
+        </Accordion>
+      </div>
     </div>
   );
 }

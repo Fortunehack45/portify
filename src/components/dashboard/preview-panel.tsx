@@ -7,19 +7,22 @@ import { Frame } from 'lucide-react';
 interface PreviewPanelProps {
   user: User;
   projects: Project[];
+  isMobile?: boolean;
 }
 
-export default function PreviewPanel({ user, projects }: PreviewPanelProps) {
+export default function PreviewPanel({ user, projects, isMobile = false }: PreviewPanelProps) {
   return (
     <div className="h-full bg-muted/40 flex flex-col">
-      <div className="flex-shrink-0 bg-background border-b p-3 flex items-center justify-between gap-2 h-[57px]">
-        <div className="flex items-center gap-2">
-            <Frame className="w-4 h-4 text-muted-foreground" />
-            <p className="text-sm font-medium text-muted-foreground transition-opacity">
-                Live Preview
-            </p>
+      {!isMobile && (
+        <div className="flex-shrink-0 bg-background border-b p-3 flex items-center justify-between gap-2 h-[57px]">
+            <div className="flex items-center gap-2">
+                <Frame className="w-4 h-4 text-muted-foreground" />
+                <p className="text-sm font-medium text-muted-foreground transition-opacity">
+                    Live Preview
+                </p>
+            </div>
         </div>
-      </div>
+      )}
       <div className="flex-grow overflow-auto">
         <div className="w-full h-full bg-white">
             <TemplateRenderer
