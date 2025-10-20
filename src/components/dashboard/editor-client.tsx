@@ -7,7 +7,7 @@ import { Save } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
-import { doc, setDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, writeBatch, serverTimestamp, collection, query, where, getDocs, limit } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import TemplateSelector from './template-selector';
@@ -62,9 +62,27 @@ export default function EditorClient({
     
     // 2. Update the portfolio
     if (portfolio) {
-        const portfolioDocRef = doc(firestore, 'portfolios', portfolio.id);
+        let portfolioId = portfolio.id;
+        // If it's a temporary ID, fetch the real one
+        if (portfolioId === 'temp-id') {
+            const portfolioQuery = query(
+                collection(firestore, 'portfolios'),
+                where('userId', '==', authUser.uid),
+                where('isPrimary', '==', true),
+                limit(1)
+            );
+            const portfolioSnapshot = await getDocs(portfolioQuery);
+            if (!portfolioSnapshot.empty) {
+                portfolioId = portfolioSnapshot.docs[0].id;
+            } else {
+                toast({ title: "Error", description: "Primary portfolio not found.", variant: "destructive" });
+                return;
+            }
+        }
+        const portfolioDocRef = doc(firestore, 'portfolios', portfolioId);
         const portfolioData: Portfolio = {
             ...portfolio,
+            id: portfolioId, // Ensure the correct id is set
             updatedAt: new Date(),
         };
         batch.set(portfolioDocRef, { ...portfolioData, updatedAt: serverTimestamp() }, { merge: true });
@@ -130,3 +148,5 @@ export default function EditorClient({
     </div>
   );
 }
+
+    

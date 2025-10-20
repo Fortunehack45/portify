@@ -64,6 +64,12 @@ export default function TemplatesPage() {
         router.push(`/dashboard/editor`);
     } catch (error: any) {
         console.error("Error saving template: ", error);
+        const permissionError = new FirestorePermissionError({
+          path: portfolioDocRef.path,
+          operation: 'update',
+          requestResourceData: { selectedTemplate }
+        });
+        errorEmitter.emit('permission-error', permissionError);
         toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
@@ -100,3 +106,5 @@ export default function TemplatesPage() {
     </div>
   );
 }
+
+    

@@ -5,7 +5,7 @@ import EditorClient from '@/components/dashboard/editor-client';
 import { useUser, useCollection, useDoc, useFirestore } from '@/firebase';
 import { collection, query, where, doc } from 'firebase/firestore';
 import type { User, Project, Portfolio } from '@/types';
-import { useEffect, useState, useMemo, useRef } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PreviewPanel from '@/components/dashboard/preview-panel';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -23,7 +23,7 @@ export default function EditorPage() {
   const { user: authUser, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const isMobile = useIsMobile();
-  const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
+  const panelGroupRef = React.useRef<ImperativePanelGroupHandle>(null);
   
   const [activeTab, setActiveTab] = useState('editor');
   const [liveUser, setLiveUser] = useState<User | null>(null);
@@ -118,7 +118,7 @@ export default function EditorPage() {
     localStorage.setItem(EDITOR_TAB_STORAGE_KEY, value);
   };
 
-  const isLoading = userLoading || projectsLoading || profileLoading || !liveUser || !livePortfolio;
+  const isLoading = userLoading || projectsLoading || profileLoading || portfolioLoading || !liveUser || !livePortfolio;
   
   const handleTogglePreview = () => {
     const panelGroup = panelGroupRef.current;
@@ -180,7 +180,9 @@ export default function EditorPage() {
         direction="horizontal" 
         className="flex-grow"
         onLayout={(sizes: number[]) => {
-          document.cookie = `react-resizable-panels:layout=${JSON.stringify(sizes)}`
+          if (typeof document !== 'undefined') {
+            document.cookie = `react-resizable-panels:layout=${JSON.stringify(sizes)}`
+          }
         }}
       >
         <ResizablePanel defaultSize={50} minSize={30}>
@@ -211,3 +213,5 @@ export default function EditorPage() {
     </div>
   );
 }
+
+    
