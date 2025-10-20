@@ -4,7 +4,7 @@ import { Button } from './ui/button';
 import { Logo } from './icons';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetDescription } from './ui/sheet';
 import { Menu } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { ThemeToggle } from './theme-toggle';
 
 const Header = () => {
   return (
@@ -26,7 +26,7 @@ const Header = () => {
               <Button
                 variant="outline"
                 size="icon"
-                className="shrink-0 md:hidden"
+                className="shrink-0 md:hidden mr-2"
               >
                 <Menu className="h-5 w-5" />
                 <span className="sr-only">Toggle navigation menu</span>
@@ -57,13 +57,16 @@ const Header = () => {
               </nav>
             </SheetContent>
           </Sheet>
-          <div className="hidden md:flex items-center space-x-2">
-            <Button variant="ghost" asChild>
-              <Link href="/login">Log in</Link>
-            </Button>
-            <Button asChild>
-              <Link href="/signup">Sign Up</Link>
-            </Button>
+          <div className="flex items-center gap-2">
+            <ThemeToggle />
+            <div className="hidden md:flex items-center space-x-2">
+              <Button variant="ghost" asChild>
+                <Link href="/login">Log in</Link>
+              </Button>
+              <Button asChild>
+                <Link href="/signup">Sign Up</Link>
+              </Button>
+            </div>
           </div>
         </div>
       </div>
