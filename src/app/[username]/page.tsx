@@ -4,7 +4,7 @@
 import { notFound, useParams } from 'next/navigation';
 import { useFirestore } from '@/firebase';
 import TemplateRenderer from '@/components/templates/template-renderer';
-import { collection, query, where, getDocs, limit, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import type { User, Project } from '@/types';
 import { useEffect, useState } from 'react';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -26,13 +26,12 @@ const usePortfolioData = (username: string) => {
       setLoading(true);
       setError(null);
       try {
-        // Step 1: Find the user by username. This is a query that requires list permission on the users collection.
-        const usersRef = collection(firestore, 'users');
-        const userQuery = query(usersRef, where('username', '==', username), limit(1));
-        
-        const userSnapshot = await getDocs(userQuery);
+        // Step 1: Look up the userId from the public 'usernames' collection.
+        // This is a direct `get` which is allowed for public visitors.
+        const usernameRef = doc(firestore, 'usernames', username);
+        const usernameSnap = await getDoc(usernameRef);
 
-        if (userSnapshot.empty) {
+        if (!usernameSnap.exists()) {
           setError('User not found');
           setData(null);
           setLoading(false);
@@ -40,26 +39,37 @@ const usePortfolioData = (username: string) => {
           return;
         }
 
-        const userDoc = userSnapshot.docs[0];
-        const user = { id: userDoc.id, ...userDoc.data() } as User;
+        const { userId } = usernameSnap.data();
 
-        // Step 2: Fetch the user's projects using their ID. This requires list permission on the projects collection.
-        let projects: Project[] = [];
-        if (user.id) {
-            const projectsRef = collection(firestore, 'projects');
-            const projectsQuery = query(projectsRef, where('userId', '==', user.id));
-            const projectsSnapshot = await getDocs(projectsQuery);
-            projects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
+        // Step 2: Fetch the user's profile directly by their ID.
+        // This is also a direct `get` which is allowed for public reads.
+        const userRef = doc(firestore, 'users', userId);
+        const userSnap = await getDoc(userRef);
+
+        if (!userSnap.exists()) {
+            setError('User profile not found');
+            setData(null);
+            setLoading(false);
+            notFound();
+            return;
         }
+
+        const user = { id: userSnap.id, ...userSnap.data() } as User;
+
+        // Step 3: Fetch the user's projects using their ID.
+        // This query is on the 'projects' collection and is allowed by security rules.
+        const projectsRef = collection(firestore, 'projects');
+        const projectsQuery = query(projectsRef, where('userId', '==', userId));
+        const projectsSnapshot = await getDocs(projectsQuery);
+        const projects = projectsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project));
         
         setData({ user, projects });
 
       } catch (err: any) {
-        // This is a critical part. We identify the permission error and surface it in a developer-friendly way.
         if (err.code === 'permission-denied') {
             const permissionError = new FirestorePermissionError({
-              path: `users`, // The failing query is on the 'users' collection
-              operation: 'list', // The operation is 'list' due to the `where` clause
+              path: `usernames/${username}`, // The initial failing query would be on the username lookup
+              operation: 'get', 
             });
             errorEmitter.emit('permission-error', permissionError);
             setError('Failed to fetch data due to permission issues.');

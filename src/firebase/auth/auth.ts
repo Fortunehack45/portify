@@ -31,18 +31,17 @@ const createSampleProject = async (userId: string) => {
     });
 };
 
-const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
-  if (!firestore) {
-    throw new Error('Firestore not initialized');
-  }
-  const userDocRef = doc(firestore, 'users', user.uid);
-  const userDoc = await getDoc(userDocRef);
+// This function creates the public username mapping and the user profile.
+const createUserProfileAndUsername = async (user: import('firebase/auth').User, name: string, username: string) => {
+    if (!firestore) {
+        throw new Error('Firestore not initialized');
+    }
+    const userDocRef = doc(firestore, 'users', user.uid);
+    const usernameDocRef = doc(firestore, 'usernames', username);
 
-  if (!userDoc.exists()) {
-    const username = user.email ? user.email.split('@')[0] : user.displayName?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`;
     const userProfile: User = {
       id: user.uid,
-      name: user.displayName || 'New User',
+      name: name,
       username: username,
       email: user.email || '',
       bio: 'This is my bio! I can edit it in the editor.',
@@ -55,9 +54,27 @@ const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
+
+    // Create the user profile document
     await setDoc(userDocRef, userProfile);
+    // Create the public username mapping
+    await setDoc(usernameDocRef, { userId: user.uid });
     // Create a sample project for the new user
     await createSampleProject(user.uid);
+};
+
+
+const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
+  if (!firestore) {
+    throw new Error('Firestore not initialized');
+  }
+  const userDocRef = doc(firestore, 'users', user.uid);
+  const userDoc = await getDoc(userDocRef);
+
+  if (!userDoc.exists()) {
+    const name = user.displayName || 'New User';
+    const username = user.email ? user.email.split('@')[0] : user.displayName?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`;
+    await createUserProfileAndUsername(user, name, username);
   }
 };
 
@@ -69,26 +86,7 @@ export const signUpWithEmail = async (email: string, password: string, name: str
   const user = userCredential.user;
 
   await updateProfile(user, { displayName: name });
-
-  const userProfile: User = {
-    id: user.uid,
-    name,
-    username,
-    email: email,
-    bio: 'This is my bio! I can edit it in the editor.',
-    jobTitle: 'Aspiring Developer',
-    location: 'Planet Earth',
-    availability: 'open to work',
-    skills: ['React', 'TypeScript'],
-    socials: [],
-    selectedTemplate: 'minimal-light',
-    createdAt: new Date(),
-    updatedAt: new Date(),
-  };
-
-  await setDoc(doc(firestore, 'users', user.uid), userProfile);
-  // Create a sample project for the new user
-  await createSampleProject(user.uid);
+  await createUserProfileAndUsername(user, name, username);
 
   return user;
 };

@@ -148,6 +148,18 @@
         }
       },
       "required": ["id", "userId", "title", "description", "techStack", "createdAt", "updatedAt"]
+    },
+    "Username": {
+      "title": "Username",
+      "description": "Maps a username to a user ID for public lookups.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "The unique ID of the user."
+        }
+      },
+      "required": ["userId"]
     }
   },
   "auth": {
@@ -165,6 +177,12 @@
         "$ref": "#/entities/Project"
       },
       "description": "Stores project information for all users."
+    },
+    "/usernames/{username}": {
+      "schema": {
+        "$ref": "#/entities/Username"
+      },
+      "description": "Maps usernames to user IDs for public profile lookups."
     }
   }
 }
