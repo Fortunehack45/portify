@@ -30,7 +30,7 @@ import { Label } from '../ui/label';
 
 interface ProjectsListProps {
   projects: Project[];
-  setProjects: React.Dispatch<React.SetStateAction<Project[]>>;
+  setProjects: (projects: Project[]) => void;
   portfolio: Portfolio;
   onPortfolioChange: (portfolio: Portfolio) => void;
 }
