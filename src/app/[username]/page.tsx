@@ -5,57 +5,56 @@ import TemplateRenderer from '@/components/templates/template-renderer';
 import { collection, query, where, getDocs, limit, doc, getDoc } from 'firebase/firestore';
 import type { User, Project, Portfolio } from '@/types';
 
-async function getPortfolioData(username: string) {
+export default async function UserPortfolioPage({ params }: { params: { username: string } }) {
+  const { username } = params;
   const { firestore } = getFirebaseForServer();
+
   if (!firestore) {
     console.error("Firestore is not initialized on the server.");
-    return null;
+    notFound();
   }
 
   try {
-    const lookupUsername = username.toLowerCase();
-    
-    const usernameRef = doc(firestore, 'usernames', lookupUsername);
+    // 1. Get User ID from username
+    const usernameRef = doc(firestore, 'usernames', username.toLowerCase());
     const usernameSnap = await getDoc(usernameRef);
-
     if (!usernameSnap.exists()) {
-      console.log(`Username document not found for: ${lookupUsername}`);
-      return null;
+        console.log(`Username document not found for: ${username.toLowerCase()}`);
+        notFound();
     }
-
     const { userId } = usernameSnap.data();
 
+    // 2. Get User Profile
     const userRef = doc(firestore, 'users', userId);
     const userSnap = await getDoc(userRef);
-
     if (!userSnap.exists()) {
-      console.log(`User profile not found for userId: ${userId}`);
-      return null;
+        console.log(`User profile not found for userId: ${userId}`);
+        notFound();
     }
-
     const user = { id: userSnap.id, ...userSnap.data() } as User;
 
-    const portfolioRef = collection(firestore, 'portfolios');
-    let portfolioQuery = query(portfolioRef, where('userId', '==', userId), where('isPrimary', '==', true), limit(1));
+    // 3. Get Primary Portfolio
+    let portfolioQuery = query(collection(firestore, 'portfolios'), where('userId', '==', userId), where('isPrimary', '==', true), limit(1));
     let portfolioSnapshot = await getDocs(portfolioQuery);
 
+    // Fallback: If no primary, get *any* portfolio
     if (portfolioSnapshot.empty) {
       console.log(`Primary portfolio not found for userId: ${userId}. Falling back to any portfolio.`);
-      // Fallback: Try to get ANY portfolio if no primary is set.
-      const anyPortfolioQuery = query(portfolioRef, where('userId', '==', userId), limit(1));
+      const anyPortfolioQuery = query(collection(firestore, 'portfolios'), where('userId', '==', userId), limit(1));
       portfolioSnapshot = await getDocs(anyPortfolioQuery);
       
       if (portfolioSnapshot.empty) {
         console.log(`No portfolios found for userId: ${userId}`);
-        return null;
+        notFound();
       }
     }
-
     const portfolioDoc = portfolioSnapshot.docs[0];
     const portfolio = { id: portfolioDoc.id, ...portfolioDoc.data() } as Portfolio;
 
+    // 4. Get Projects
     let projects: Project[] = [];
     if (portfolio.projectIds && portfolio.projectIds.length > 0) {
+        // Firestore 'in' queries are limited to 30 items per query.
         const projectChunks: string[][] = [];
         for (let i = 0; i < portfolio.projectIds.length; i += 30) {
           projectChunks.push(portfolio.projectIds.slice(i, i + 30));
@@ -69,30 +68,17 @@ async function getPortfolioData(username: string) {
         projects = projectSnapshots.flatMap(snap => snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Project)));
     }
     
-    return { user, projects, portfolio };
+    return (
+      <TemplateRenderer
+        template={portfolio.selectedTemplate}
+        user={user}
+        projects={projects}
+      />
+    );
 
   } catch (err: any) {
     console.error("Error fetching portfolio data:", err);
-    if (err.code === 'permission-denied') {
-      console.error(`Firestore Permission Denied: Could not fetch primary portfolio for user "${username}". Check your Firestore security rules.`);
-    }
-    return null;
-  }
-}
-
-export default async function UserPortfolioPage({ params }: { params: { username: string } }) {
-  const { username } = params;
-  const data = await getPortfolioData(username);
-
-  if (!data) {
+    // In case of permission errors or other server issues, treat as not found.
     notFound();
   }
-  
-  return (
-    <TemplateRenderer
-      template={data.portfolio.selectedTemplate}
-      user={data.user}
-      projects={data.projects}
-    />
-  );
 }
