@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Github, Chrome } from 'lucide-react';
+import { Github, Chrome, Loader2 } from 'lucide-react';
 import { useState } from "react";
 import { signUpWithEmail, signInWithGoogle, signInWithGithub } from "@/firebase/auth/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -22,11 +22,13 @@ export default function SignupPage() {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     try {
       await signUpWithEmail(email, password, name, username);
       toast({
@@ -35,15 +37,22 @@ export default function SignupPage() {
       });
       router.push('/dashboard');
     } catch (error: any) {
+        let description = error.message;
+        if (error.message === "Username is already taken.") {
+            description = "This username is not available. Please choose another one.";
+        }
       toast({
         title: "Error",
-        description: error.message,
+        description: description,
         variant: "destructive",
       });
+    } finally {
+        setLoading(false);
     }
   };
 
   const handleSocialSignup = async (provider: 'google' | 'github') => {
+    setLoading(true);
     try {
       const signInMethod = provider === 'google' ? signInWithGoogle : signInWithGithub;
       await signInMethod();
@@ -58,6 +67,8 @@ export default function SignupPage() {
         description: error.message,
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -81,6 +92,7 @@ export default function SignupPage() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="h-12"
+                disabled={loading}
               />
             </div>
             <div className="space-y-2">
@@ -91,7 +103,8 @@ export default function SignupPage() {
                 required 
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
-                  className="h-12"
+                className="h-12"
+                disabled={loading}
               />
             </div>
           </div>
@@ -105,6 +118,7 @@ export default function SignupPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="h-12"
+              disabled={loading}
             />
           </div>
           <div className="space-y-2">
@@ -116,9 +130,11 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="h-12"
+              disabled={loading}
             />
           </div>
-          <Button type="submit" className="w-full h-12 text-base font-semibold">
+          <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
+            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Create Account
           </Button>
           <div className="relative my-4">
@@ -132,11 +148,11 @@ export default function SignupPage() {
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-11" onClick={() => handleSocialSignup('github')}>
+            <Button variant="outline" className="h-11" onClick={() => handleSocialSignup('github')} disabled={loading}>
               <Github className="mr-2 h-5 w-5" />
               GitHub
             </Button>
-            <Button variant="outline" className="h-11" onClick={() => handleSocialSignup('google')}>
+            <Button variant="outline" className="h-11" onClick={() => handleSocialSignup('google')} disabled={loading}>
               <Chrome className="mr-2 h-5 w-5" />
               Google
             </Button>

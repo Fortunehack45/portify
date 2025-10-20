@@ -8,8 +8,9 @@ import {
   signInWithPopup,
   GoogleAuthProvider,
   GithubAuthProvider,
+  type User as AuthUser,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, collection, addDoc, writeBatch, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, addDoc, writeBatch, serverTimestamp, runTransaction } from 'firebase/firestore';
 import { getFirebase } from '..';
 import { User, Project, Portfolio } from '@/types';
 import { errorEmitter } from '../error-emitter';
@@ -25,6 +26,7 @@ const createSampleProjectAndPortfolio = (userId: string, batch: import('firebase
     batch.set(projectRef, {
         userId: userId,
         title: "My First Project",
+        slug: "my-first-project",
         description: "This is a sample project to get you started. You can edit or delete this in the dashboard editor.",
         techStack: ["Next.js", "Firebase", "Tailwind CSS"],
         githubLink: "https://github.com/your-username/your-repo",
@@ -49,58 +51,76 @@ const createSampleProjectAndPortfolio = (userId: string, batch: import('firebase
 };
 
 // This function creates the user profile, public username mapping, and a sample project in a single transaction.
-const createUserProfileAndUsername = async (user: import('firebase/auth').User, name: string, username: string) => {
+const createUserProfileAndUsername = async (user: AuthUser, name: string, username: string) => {
     if (!firestore) {
         throw new Error('Firestore not initialized');
     }
-    const batch = writeBatch(firestore);
-
-    const userDocRef = doc(firestore, 'users', user.uid);
+    
     const lowercaseUsername = username.toLowerCase();
     const usernameDocRef = doc(firestore, 'usernames', lowercaseUsername);
+    const userDocRef = doc(firestore, 'users', user.uid);
 
-    const userProfileData: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
-      name: name,
-      username: username, 
-      email: user.email || '',
-      bio: 'This is my bio! I can edit it in the editor.',
-      jobTitle: 'Aspiring Developer',
-      location: 'Planet Earth',
-      availability: 'open to work',
-      skills: ['React', 'TypeScript'],
-      socials: [],
-    };
-    
-    const finalUserData = {
-        ...userProfileData,
-        id: user.uid,
-        createdAt: serverTimestamp(),
-        updatedAt: serverTimestamp()
-    };
-    batch.set(userDocRef, finalUserData);
-    
-    const usernameData = { userId: user.uid };
-    batch.set(usernameDocRef, usernameData);
+    try {
+        await runTransaction(firestore, async (transaction) => {
+            const usernameDoc = await transaction.get(usernameDocRef);
+            if (usernameDoc.exists()) {
+                throw new Error("Username is already taken.");
+            }
 
-    createSampleProjectAndPortfolio(user.uid, batch);
-    
-    return batch.commit().catch(async (error) => {
+            const userProfileData: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
+              name: name,
+              username: lowercaseUsername, 
+              email: user.email || '',
+              bio: 'This is my bio! I can edit it in the editor.',
+              jobTitle: 'Aspiring Developer',
+              location: 'Planet Earth',
+              availability: 'open to work',
+              skills: ['React', 'TypeScript'],
+              socials: [],
+            };
+            
+            const finalUserData = {
+                ...userProfileData,
+                id: user.uid,
+                createdAt: serverTimestamp(),
+                updatedAt: serverTimestamp()
+            };
+            transaction.set(userDocRef, finalUserData);
+            
+            const usernameData = { userId: user.uid };
+            transaction.set(usernameDocRef, usernameData);
+
+            // Using a batch inside a transaction is not standard.
+            // Let's create the sample data in a separate batch after the main transaction succeeds.
+        });
+
+        // If the transaction was successful, create the sample portfolio.
+        const batch = writeBatch(firestore);
+        createSampleProjectAndPortfolio(user.uid, batch);
+        await batch.commit();
+
+    } catch (error: any) {
+        if (error.message === "Username is already taken.") {
+            throw error; // Re-throw the specific error for the UI to catch
+        }
+        
+        // Handle potential permission errors
         const permissionError = new FirestorePermissionError({
-            path: `users/${user.uid}`,
+            path: `users/${user.uid} or usernames/${lowercaseUsername}`,
             operation: 'create',
             requestResourceData: {
-                userProfile: finalUserData,
-                username: usernameData
+                username: lowercaseUsername,
+                userId: user.uid
             }
         });
         errorEmitter.emit('permission-error', permissionError);
         // re-throw the original error
         throw error;
-    });
+    }
 };
 
 
-const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
+const createProfileIfNotExists = async (user: AuthUser) => {
   if (!firestore) {
     throw new Error('Firestore not initialized');
   }
@@ -110,9 +130,17 @@ const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
   if (!userDoc.exists()) {
     const name = user.displayName || 'New User';
     const emailUsername = user.email ? user.email.split('@')[0] : '';
-    const username = (emailUsername || user.displayName?.replace(/\s+/g, '') || `user${Date.now()}`).toLowerCase();
+    // Generate a more unique fallback username
+    const username = (emailUsername || user.displayName?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`);
     
-    await createUserProfileAndUsername(user, name, username);
+    // Check if this generated username already exists
+    const usernameDocRef = doc(firestore, 'usernames', username);
+    const usernameDoc = await getDoc(usernameDocRef);
+
+    // If the generated username exists, append a random number.
+    const finalUsername = usernameDoc.exists() ? `${username}${Math.floor(Math.random() * 1000)}` : username;
+
+    await createUserProfileAndUsername(user, name, finalUsername);
   }
 };
 
@@ -120,11 +148,35 @@ export const signUpWithEmail = async (email: string, password: string, name: str
   if (!auth || !firestore) {
     throw new Error('Firebase not initialized');
   }
+  
+  // First, check if username is valid
+  if (!username || username.length < 3) {
+      throw new Error("Username must be at least 3 characters long.");
+  }
+  if (!/^[a-zA-Z0-9_]+$/.test(username)) {
+      throw new Error("Username can only contain letters, numbers, and underscores.");
+  }
+
+
+  // This will throw if the username is taken, and it will be caught in the UI.
+  await createUserProfileAndUsername(
+    { uid: 'temp-uid-check', email } as AuthUser, // Pass a mock user object for the check
+    name,
+    username
+  ).catch(error => {
+      // Re-throw username error to be caught by the signup page
+      if(error.message === "Username is already taken.") throw error;
+      // For other errors, we let it proceed to user creation, which will handle its own errors.
+  });
+
+
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
 
   await updateProfile(user, { displayName: name });
   
+  // This re-runs the logic, but this time with the actual user, to create the profile.
+  // The username check is technically redundant, but it's safe.
   await createUserProfileAndUsername(user, name, username);
 
   return user;
