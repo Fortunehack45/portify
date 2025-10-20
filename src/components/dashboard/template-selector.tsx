@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import Image from 'next/image';
+import TemplateRenderer from '../templates/template-renderer';
 
 interface TemplateSelectorProps {
   selectedTemplate: Template;
@@ -41,7 +42,7 @@ const templateOptions: { value: Template; label: string; }[] = [
     { value: 'dark-academia', label: 'Dark Academia' },
 ];
 
-const TemplateGrid = ({ selectedTemplate, onTemplateChange }: Pick<TemplateSelectorProps, 'selectedTemplate' | 'onTemplateChange'>) => (
+const TemplateGrid = ({ selectedTemplate, onTemplateChange, user, projects }: Pick<TemplateSelectorProps, 'selectedTemplate' | 'onTemplateChange' | 'user' | 'projects'>) => (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
         {templateOptions.map((template) => (
           <Card
@@ -54,13 +55,13 @@ const TemplateGrid = ({ selectedTemplate, onTemplateChange }: Pick<TemplateSelec
           >
             <CardContent className="p-4 space-y-3">
               <div className="aspect-video w-full rounded-md bg-muted overflow-hidden border">
-                <Image 
-                    src={`/thumbnails/${template.value}.png`} 
-                    alt={`${template.label} template screenshot`}
-                    width={400}
-                    height={225}
-                    className="w-full h-full object-cover"
-                />
+                <div className="w-full h-full scale-[0.3] -translate-y-[33%] -translate-x-[33%] origin-top-left pointer-events-none">
+                  <TemplateRenderer
+                    template={template.value}
+                    user={user}
+                    projects={projects}
+                  />
+                </div>
               </div>
               <p className="text-sm font-medium text-center">{template.label}</p>
             </CardContent>
@@ -88,7 +89,7 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
   return (
     <div className="space-y-6">
         {display === 'grid' ? (
-            <TemplateGrid selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
+            <TemplateGrid selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} user={user} projects={projects} />
         ) : (
              <div className="space-y-2">
                 <h3 className="text-lg font-semibold">Choose a Template</h3>
