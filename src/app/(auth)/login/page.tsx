@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Chrome, Github } from 'lucide-react';
 import { useState } from "react";
-import { signInWithEmail } from "@/firebase/auth/auth";
+import { signInWithEmail, signInWithGoogle, signInWithGithub } from "@/firebase/auth/auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -27,6 +27,24 @@ export default function LoginPage() {
     e.preventDefault();
     try {
       await signInWithEmail(email, password);
+      toast({
+        title: "Success!",
+        description: "You have successfully logged in.",
+      });
+      router.push('/dashboard');
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleSocialLogin = async (provider: 'google' | 'github') => {
+    try {
+      const signInMethod = provider === 'google' ? signInWithGoogle : signInWithGithub;
+      await signInMethod();
       toast({
         title: "Success!",
         description: "You have successfully logged in.",
@@ -94,11 +112,11 @@ export default function LoginPage() {
             </div>
           </div>
             <div className="grid grid-cols-2 gap-4">
-            <Button variant="outline" className="h-11" disabled>
+            <Button variant="outline" className="h-11" onClick={() => handleSocialLogin('github')}>
               <Github className="mr-2 h-5 w-5" />
               GitHub
             </Button>
-            <Button variant="outline" className="h-11" disabled>
+            <Button variant="outline" className="h-11" onClick={() => handleSocialLogin('google')}>
               <Chrome className="mr-2 h-5 w-5" />
               Google
             </Button>

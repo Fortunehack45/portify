@@ -5,12 +5,40 @@ import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
+  signInWithPopup,
+  GoogleAuthProvider,
+  GithubAuthProvider,
 } from 'firebase/auth';
-import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
 import { getFirebase } from '..';
 import { User } from '@/types';
 
 const { auth, firestore } = getFirebase();
+
+const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
+  if (!firestore) {
+    throw new Error('Firestore not initialized');
+  }
+  const userDocRef = doc(firestore, 'users', user.uid);
+  const userDoc = await getDoc(userDocRef);
+
+  if (!userDoc.exists()) {
+    const username = user.email ? user.email.split('@')[0] : user.displayName?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`;
+    const userProfile: User = {
+      id: user.uid,
+      name: user.displayName || 'New User',
+      username: username,
+      email: user.email || '',
+      bio: '',
+      skills: [],
+      socials: [],
+      selectedTemplate: 'minimal-light',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    };
+    await setDoc(userDocRef, userProfile);
+  }
+};
 
 export const signUpWithEmail = async (email: string, password: string, name: string, username: string) => {
   if (!auth || !firestore) {
@@ -44,4 +72,24 @@ export const signInWithEmail = async (email: string, password: string) => {
     throw new Error('Firebase not initialized');
   }
   return await signInWithEmailAndPassword(auth, email, password);
+};
+
+export const signInWithGoogle = async () => {
+  if (!auth) {
+    throw new Error('Firebase not initialized');
+  }
+  const provider = new GoogleAuthProvider();
+  const result = await signInWithPopup(auth, provider);
+  await createProfileIfNotExists(result.user);
+  return result;
+};
+
+export const signInWithGithub = async () => {
+  if (!auth) {
+    throw new Error('Firebase not initialized');
+  }
+  const provider = new GithubAuthProvider();
+  const result = await signInWithPopup(auth, provider);
+  await createProfileIfNotExists(result.user);
+  return result;
 };
