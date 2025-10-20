@@ -1,4 +1,20 @@
+
 {
-  "indexes": [],
+  "indexes": [
+    {
+      "collectionGroup": "portfolios",
+      "queryScope": "COLLECTION",
+      "fields": [
+        {
+          "fieldPath": "userId",
+          "order": "ASCENDING"
+        },
+        {
+          "fieldPath": "isPrimary",
+          "order": "ASCENDING"
+        }
+      ]
+    }
+  ],
   "fieldOverrides": []
 }
