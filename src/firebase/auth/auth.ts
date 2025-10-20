@@ -60,6 +60,27 @@ const createUserProfileAndUsername = async (user: AuthUser, name: string, userna
     const usernameDocRef = doc(firestore, 'usernames', lowercaseUsername);
     const userDocRef = doc(firestore, 'users', user.uid);
 
+    const userProfileData: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
+        name: name,
+        username: lowercaseUsername, 
+        email: user.email || '',
+        bio: 'This is my bio! I can edit it in the editor.',
+        jobTitle: 'Aspiring Developer',
+        location: 'Planet Earth',
+        availability: 'open to work',
+        skills: ['React', 'TypeScript'],
+        socials: [],
+    };
+            
+    const finalUserData = {
+        ...userProfileData,
+        id: user.uid,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
+    };
+    
+    const usernameData = { userId: user.uid };
+
     try {
         await runTransaction(firestore, async (transaction) => {
             const usernameDoc = await transaction.get(usernameDocRef);
@@ -67,31 +88,8 @@ const createUserProfileAndUsername = async (user: AuthUser, name: string, userna
                 throw new Error("Username is already taken.");
             }
 
-            const userProfileData: Omit<User, 'id' | 'createdAt' | 'updatedAt'> = {
-              name: name,
-              username: lowercaseUsername, 
-              email: user.email || '',
-              bio: 'This is my bio! I can edit it in the editor.',
-              jobTitle: 'Aspiring Developer',
-              location: 'Planet Earth',
-              availability: 'open to work',
-              skills: ['React', 'TypeScript'],
-              socials: [],
-            };
-            
-            const finalUserData = {
-                ...userProfileData,
-                id: user.uid,
-                createdAt: serverTimestamp(),
-                updatedAt: serverTimestamp()
-            };
             transaction.set(userDocRef, finalUserData);
-            
-            const usernameData = { userId: user.uid };
             transaction.set(usernameDocRef, usernameData);
-
-            // Using a batch inside a transaction is not standard.
-            // Let's create the sample data in a separate batch after the main transaction succeeds.
         });
 
         // If the transaction was successful, create the sample portfolio.
@@ -104,17 +102,18 @@ const createUserProfileAndUsername = async (user: AuthUser, name: string, userna
             throw error; // Re-throw the specific error for the UI to catch
         }
         
-        // Handle potential permission errors
+        // Handle potential permission errors from the transaction
         const permissionError = new FirestorePermissionError({
             path: `users/${user.uid} or usernames/${lowercaseUsername}`,
             operation: 'create',
             requestResourceData: {
-                username: lowercaseUsername,
-                userId: user.uid
+                user: finalUserData,
+                username: usernameData
             }
         });
         errorEmitter.emit('permission-error', permissionError);
-        // re-throw the original error
+
+        // also re-throw the original error to stop execution flow
         throw error;
     }
 };
@@ -131,14 +130,24 @@ const createProfileIfNotExists = async (user: AuthUser) => {
     const name = user.displayName || 'New User';
     const emailUsername = user.email ? user.email.split('@')[0] : '';
     // Generate a more unique fallback username
-    const username = (emailUsername || user.displayName?.replace(/\s+/g, '').toLowerCase() || `user${Date.now()}`);
+    const baseUsername = (emailUsername || user.displayName?.replace(/\s+/g, '').toLowerCase() || `user`);
     
-    // Check if this generated username already exists
-    const usernameDocRef = doc(firestore, 'usernames', username);
-    const usernameDoc = await getDoc(usernameDocRef);
-
-    // If the generated username exists, append a random number.
-    const finalUsername = usernameDoc.exists() ? `${username}${Math.floor(Math.random() * 1000)}` : username;
+    let finalUsername = baseUsername;
+    let isUnique = false;
+    let attempt = 0;
+    
+    // Keep trying usernames until a unique one is found
+    while(!isUnique) {
+        const usernameToCheck = attempt > 0 ? `${baseUsername}${attempt}` : baseUsername;
+        const usernameDocRef = doc(firestore, 'usernames', usernameToCheck);
+        const usernameDoc = await getDoc(usernameDocRef);
+        if (!usernameDoc.exists()) {
+            finalUsername = usernameToCheck;
+            isUnique = true;
+        } else {
+            attempt++;
+        }
+    }
 
     await createUserProfileAndUsername(user, name, finalUsername);
   }
@@ -149,7 +158,6 @@ export const signUpWithEmail = async (email: string, password: string, name: str
     throw new Error('Firebase not initialized');
   }
   
-  // First, check if username is valid
   if (!username || username.length < 3) {
       throw new Error("Username must be at least 3 characters long.");
   }
@@ -157,26 +165,19 @@ export const signUpWithEmail = async (email: string, password: string, name: str
       throw new Error("Username can only contain letters, numbers, and underscores.");
   }
 
-
-  // This will throw if the username is taken, and it will be caught in the UI.
-  await createUserProfileAndUsername(
-    { uid: 'temp-uid-check', email } as AuthUser, // Pass a mock user object for the check
-    name,
-    username
-  ).catch(error => {
-      // Re-throw username error to be caught by the signup page
-      if(error.message === "Username is already taken.") throw error;
-      // For other errors, we let it proceed to user creation, which will handle its own errors.
-  });
-
+  // Check for username uniqueness before creating the auth user.
+  const usernameDocRef = doc(firestore, 'usernames', username.toLowerCase());
+  const usernameDoc = await getDoc(usernameDocRef);
+  if (usernameDoc.exists()) {
+      throw new Error("Username is already taken.");
+  }
 
   const userCredential = await createUserWithEmailAndPassword(auth, email, password);
   const user = userCredential.user;
 
   await updateProfile(user, { displayName: name });
   
-  // This re-runs the logic, but this time with the actual user, to create the profile.
-  // The username check is technically redundant, but it's safe.
+  // Create profile, sample data etc. This will not throw a username error because we checked above.
   await createUserProfileAndUsername(user, name, username);
 
   return user;
