@@ -25,6 +25,7 @@ const usePortfolioData = (username: string, portfolioSlug: string) => {
     const fetchPortfolio = async () => {
       setLoading(true);
       setError(null);
+      let portfolioQuery;
       try {
         const lookupUsername = username.toLowerCase();
         
@@ -52,7 +53,7 @@ const usePortfolioData = (username: string, portfolioSlug: string) => {
 
         // Fetch the specific portfolio by slug
         const portfolioRef = collection(firestore, 'portfolios');
-        const portfolioQuery = query(
+        portfolioQuery = query(
             portfolioRef, 
             where('userId', '==', userId), 
             where('slug', '==', portfolioSlug), 
@@ -88,7 +89,7 @@ const usePortfolioData = (username: string, portfolioSlug: string) => {
       } catch (err: any) {
         if (err.code === 'permission-denied') {
             const permissionError = new FirestorePermissionError({
-              path: `portfolios`, 
+              path: (portfolioQuery as any)?._query.path.segments.join('/') || `portfolios`,
               operation: 'list', 
             });
             errorEmitter.emit('permission-error', permissionError);
