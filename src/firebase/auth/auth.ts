@@ -9,11 +9,27 @@ import {
   GoogleAuthProvider,
   GithubAuthProvider,
 } from 'firebase/auth';
-import { doc, setDoc, getDoc, serverTimestamp } from 'firebase/firestore';
+import { doc, setDoc, getDoc, collection, addDoc } from 'firebase/firestore';
 import { getFirebase } from '..';
-import { User } from '@/types';
+import { User, Project } from '@/types';
 
 const { auth, firestore } = getFirebase();
+
+const createSampleProject = async (userId: string) => {
+    if (!firestore) return;
+    const projectsCollection = collection(firestore, 'projects');
+    await addDoc(projectsCollection, {
+        userId: userId,
+        title: "My First Project",
+        description: "This is a sample project to get you started. You can edit or delete this in the dashboard editor.",
+        techStack: ["Next.js", "Firebase", "Tailwind CSS"],
+        githubLink: "https://github.com/your-username/your-repo",
+        liveDemo: "",
+        imageUrl: "https://picsum.photos/seed/1/600/400",
+        createdAt: new Date(),
+        updatedAt: new Date(),
+    });
+};
 
 const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
   if (!firestore) {
@@ -29,17 +45,19 @@ const createProfileIfNotExists = async (user: import('firebase/auth').User) => {
       name: user.displayName || 'New User',
       username: username,
       email: user.email || '',
-      bio: '',
-      jobTitle: '',
-      location: '',
-      availability: 'not available',
-      skills: [],
+      bio: 'This is my bio! I can edit it in the editor.',
+      jobTitle: 'Aspiring Developer',
+      location: 'Planet Earth',
+      availability: 'open to work',
+      skills: ['React', 'TypeScript'],
       socials: [],
       selectedTemplate: 'minimal-light',
       createdAt: new Date(),
       updatedAt: new Date(),
     };
     await setDoc(userDocRef, userProfile);
+    // Create a sample project for the new user
+    await createSampleProject(user.uid);
   }
 };
 
@@ -57,11 +75,11 @@ export const signUpWithEmail = async (email: string, password: string, name: str
     name,
     username,
     email: email,
-    bio: '',
-    jobTitle: '',
-    location: '',
-    availability: 'not available',
-    skills: [],
+    bio: 'This is my bio! I can edit it in the editor.',
+    jobTitle: 'Aspiring Developer',
+    location: 'Planet Earth',
+    availability: 'open to work',
+    skills: ['React', 'TypeScript'],
     socials: [],
     selectedTemplate: 'minimal-light',
     createdAt: new Date(),
@@ -69,6 +87,8 @@ export const signUpWithEmail = async (email: string, password: string, name: str
   };
 
   await setDoc(doc(firestore, 'users', user.uid), userProfile);
+  // Create a sample project for the new user
+  await createSampleProject(user.uid);
 
   return user;
 };
