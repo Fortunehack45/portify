@@ -3,22 +3,27 @@
 import { useState, useEffect } from 'react';
 import type { User, Project } from '@/types';
 import { Button } from '../ui/button';
-import { Save } from 'lucide-react';
+import { Save, Eye } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion } from '@/components/ui/accordion';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
 
 interface EditorClientProps {
   initialUser: User;
   initialProjects: Project[];
+  onTogglePreview: () => void;
+  isPreviewCollapsed: boolean;
 }
 
 export default function EditorClient({
   initialUser,
   initialProjects,
+  onTogglePreview,
+  isPreviewCollapsed,
 }: EditorClientProps) {
   const [user, setUser] = useState<User>(initialUser);
   const [projects, setProjects] = useState<Project[]>(initialProjects);
@@ -75,6 +80,18 @@ export default function EditorClient({
               <p className="text-muted-foreground text-sm">Update your profile and projects.</p>
           </div>
           <div className="flex items-center gap-2">
+            <TooltipProvider>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <Button variant="ghost" size="icon" onClick={onTogglePreview}>
+                            <Eye className="w-5 h-5" />
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                        <p>{isPreviewCollapsed ? 'Show Preview' : 'Hide Preview'}</p>
+                    </TooltipContent>
+                </Tooltip>
+            </TooltipProvider>
             <Button onClick={handleSave}>
                 <Save className="mr-2 h-4 w-4" />
                 Save

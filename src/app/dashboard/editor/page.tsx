@@ -101,16 +101,19 @@ export default function EditorPage() {
                 <TabsTrigger value="preview" className="text-base h-full rounded-none">Preview</TabsTrigger>
             </TabsList>
             <TabsContent value="editor" className="flex-grow overflow-y-auto">
-                <EditorClient initialUser={initialUser as User} initialProjects={initialProjects} />
+                <EditorClient 
+                  initialUser={initialUser as User} 
+                  initialProjects={initialProjects}
+                  onTogglePreview={() => {}} // No-op on mobile
+                  isPreviewCollapsed={true} 
+                />
             </TabsContent>
             <TabsContent value="preview" className="flex-grow overflow-y-auto bg-muted/30">
                 <div className="w-full h-full bg-white">
                     <PreviewPanel 
                         user={initialUser as User} 
                         projects={initialProjects} 
-                        isMobile={true} 
-                        onTogglePreview={() => {}}
-                        isPreviewCollapsed={false}
+                        isMobile={true}
                     />
                 </div>
             </TabsContent>
@@ -130,7 +133,12 @@ export default function EditorPage() {
         }}
       >
         <ResizablePanel defaultSize={50} minSize={30}>
-          <EditorClient initialUser={initialUser as User} initialProjects={initialProjects} />
+          <EditorClient 
+            initialUser={initialUser as User} 
+            initialProjects={initialProjects} 
+            onTogglePreview={handleTogglePreview}
+            isPreviewCollapsed={isPreviewCollapsed}
+          />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel 
@@ -144,8 +152,6 @@ export default function EditorPage() {
           <PreviewPanel 
             user={initialUser as User} 
             projects={initialProjects}
-            onTogglePreview={handleTogglePreview}
-            isPreviewCollapsed={isPreviewCollapsed}
           />
         </ResizablePanel>
       </ResizablePanelGroup>
