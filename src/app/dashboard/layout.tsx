@@ -1,7 +1,7 @@
 'use client';
 
 import Link from "next/link";
-import { CircleUser, Menu, Home, Pencil, Palette, Eye, Settings } from "lucide-react";
+import { CircleUser, Home, Pencil, Palette, Eye, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -15,11 +15,11 @@ import { Logo } from "@/components/icons";
 import { useUser } from "@/firebase";
 import { signOut } from "firebase/auth";
 import { useAuth } from "@/firebase";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-
+import MobileNav from "@/components/dashboard/mobile-nav";
 
 const navItems = [
   { href: "/dashboard", icon: Home, label: "Home" },
@@ -36,16 +36,13 @@ export default function DashboardLayout({
   const { user, loading } = useUser();
   const auth = useAuth();
   const router = useRouter();
-  const pathname = usePathname();
   const { toast } = useToast();
 
   useEffect(() => {
-    // If loading is finished and there's no user, redirect to login.
     if (!loading && !user) {
       router.push('/login');
     }
   }, [user, loading, router]);
-
 
   const handleLogout = async () => {
     if (auth) {
@@ -80,36 +77,31 @@ export default function DashboardLayout({
   const username = user?.displayName?.replace(/\s+/g, '').toLowerCase() || 'preview';
 
   return (
-    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
-      <div className="hidden border-r bg-muted/40 md:block">
-        <div className="flex h-full max-h-screen flex-col gap-2">
-          <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-            <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
-              <Logo />
-            </Link>
-          </div>
-          <div className="flex-1">
-            <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
-                    pathname === item.href && "text-primary bg-muted"
-                  )}
-                >
-                  <item.icon className="h-4 w-4" />
-                  {item.label}
-                </Link>
-              ))}
-            </nav>
-          </div>
+    <div className="min-h-screen w-full">
+      {/* Desktop Sidebar */}
+      <div className="hidden md:flex h-full w-[220px] lg:w-[280px] flex-col fixed inset-y-0 z-50 border-r bg-muted/40">
+        <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
+          <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
+            <Logo />
+          </Link>
         </div>
+        <nav className="flex-1 grid items-start p-2 text-sm font-medium lg:p-4">
+          {navItems.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary"
+            >
+              <item.icon className="h-4 w-4" />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
       </div>
-      <div className="flex flex-col">
-        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          {/* Mobile nav can go here if needed, but the prompt focuses on desktop */}
+
+      <div className="md:pl-[220px] lg:pl-[280px] flex flex-col min-h-screen">
+        {/* Desktop and Mobile Header */}
+        <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 sticky top-0 bg-background z-40">
           <div className="w-full flex-1">
              <Button variant="outline" size="sm" asChild>
                 <Link href={`/${username}`} target="_blank">
@@ -117,6 +109,10 @@ export default function DashboardLayout({
                   Public View
                 </Link>
             </Button>
+          </div>
+          {/* Mobile-only logo */}
+          <div className="md:hidden">
+            <Logo />
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
@@ -135,9 +131,13 @@ export default function DashboardLayout({
             </DropdownMenuContent>
           </DropdownMenu>
         </header>
-        <main className="flex flex-1 flex-col p-4 lg:p-6 overflow-auto">
+
+        <main className="flex-1 p-4 lg:p-6 overflow-auto pb-20 md:pb-6">
           {children}
         </main>
+        
+        {/* Mobile Bottom Nav */}
+        <MobileNav items={navItems} />
       </div>
     </div>
   );
