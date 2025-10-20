@@ -6,7 +6,6 @@ import AiTemplateAssistant from './ai-template-assistant';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import Image from 'next/image';
 import TemplateRenderer from '../templates/template-renderer';
 
 interface TemplateSelectorProps {
