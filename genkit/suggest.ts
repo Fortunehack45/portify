@@ -76,12 +76,3 @@ export const suggestTemplatesFlow = ai.defineFlow(
     return output!;
   }
 );
-
-
-// Wrapper function for client-side invocation
-export async function suggestTemplates(input: TemplateSuggestionInput): Promise<TemplateSuggestionOutput> {
-  // In a real app, you might call your API endpoint here,
-  // but for simplicity, we're calling the flow directly.
-  // This will only work if the client and server are the same deployment.
-  return suggestTemplatesFlow(input);
-}

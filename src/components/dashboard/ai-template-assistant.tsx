@@ -3,8 +3,7 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Loader2 } from 'lucide-react';
-import { suggestTemplates } from '@/ai/flows/ai-template-suggestions';
-import { Project, Template } from '@/types';
+import type { Project, Template } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent } from '../ui/card';
 
@@ -37,6 +36,21 @@ const validTemplates: Record<string, Template> = {
   'Newspaper': 'newspaper',
   'Dark Academia': 'dark-academia',
 };
+
+async function suggestTemplates(input: { projectDescriptions: string[] }): Promise<{ suggestedTemplates: string[] }> {
+  const response = await fetch('/api/genkit/suggestTemplates', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.error || 'Failed to fetch AI suggestions');
+  }
+
+  return response.json();
+}
 
 export default function AiTemplateAssistant({ projects, onSelectTemplate }: AiTemplateAssistantProps) {
   const [isLoading, setIsLoading] = useState(false);
