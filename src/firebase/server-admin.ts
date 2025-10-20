@@ -1,29 +1,28 @@
 
 import { initializeApp, getApps, cert, App } from 'firebase-admin/app';
 import { getFirestore, Firestore } from 'firebase-admin/firestore';
+import * as path from 'path';
+import * as fs from 'fs';
 
 let adminDb: Firestore;
 
 try {
     if (getApps().length === 0) {
-        const privateKey = process.env.FIREBASE_PRIVATE_KEY
-            ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
-            : undefined;
+        // Use a service account key file for robust authentication, especially in development.
+        // This avoids issues with environment variable formatting of private keys.
+        const serviceAccountPath = path.resolve(process.cwd(), 'serviceAccountKey.json');
 
-        if (!privateKey || !process.env.FIREBASE_CLIENT_EMAIL || !process.env.FIREBASE_PROJECT_ID) {
-            throw new Error('Firebase Admin SDK Error: Missing environment variables. Please make sure FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, and FIREBASE_PRIVATE_KEY are set in your .env file.');
+        if (!fs.existsSync(serviceAccountPath)) {
+            throw new Error(`Firebase Admin SDK Error: serviceAccountKey.json not found. 
+Please download it from your Firebase project settings (Project settings > Service accounts > Generate new private key),
+rename it to 'serviceAccountKey.json', and place it in the root directory of your project.`);
         }
-      
-        const serviceAccount = {
-            projectId: process.env.FIREBASE_PROJECT_ID,
-            clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-            privateKey: privateKey,
-        };
+        
+        const serviceAccount = require(serviceAccountPath);
 
         initializeApp({
             credential: cert(serviceAccount),
         });
-        
     }
     adminDb = getFirestore(getApps()[0]);
 
