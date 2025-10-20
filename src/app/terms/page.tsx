@@ -2,6 +2,7 @@
 import Footer from "@/components/footer";
 import Header from "@/components/header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Mail, MapPin, Phone } from "lucide-react";
 
 export default function TermsPage() {
   return (
@@ -146,11 +147,11 @@ export default function TermsPage() {
               <section className="space-y-4">
                 <h2 className="text-2xl font-semibold text-foreground">15. CONTACT INFORMATION</h2>
                 <p>For inquiries, complaints, or exercise of rights under this Agreement, contact:</p>
-                <div className="pl-4">
+                <div className="pl-4 space-y-2">
                     <p>Sirius (Portify Legal Department)</p>
-                    <p>📍 Address: Ilesa, Osun State, Nigeria</p>
-                    <p>📧 Email: sirius.portifty.help@gmail.com</p>
-                    <p>📞 Phone: +2347067860584</p>
+                    <p className="flex items-center gap-2"><MapPin className="w-4 h-4 text-muted-foreground" /> Address: Ilesa, Osun State, Nigeria</p>
+                    <p className="flex items-center gap-2"><Mail className="w-4 h-4 text-muted-foreground" /> Email: sirius.portifty.help@gmail.com</p>
+                    <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-muted-foreground" /> Phone: +2347067860584</p>
                 </div>
               </section>
           </CardContent>
