@@ -1,40 +1,47 @@
-
 rules_version = '2';
 
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // Usernames:
-    // - Anyone can read a username to find a user's ID.
-    // - A user can create their own username mapping, but cannot change it.
-    // - A user cannot steal an existing username.
-    match /usernames/{username} {
-      allow read;
-      allow create: if request.auth != null && request.resource.data.userId == request.auth.uid;
+
+    // Helper function to check if the user is authenticated
+    function isSignedIn() {
+      return request.auth != null;
     }
 
-    // User Profiles:
-    // - Anyone can read a user's public profile.
-    // - A user can create, update, and delete their own profile.
+    // Helper function to check if the authenticated user's ID matches the document's userId
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    // Usernames: Publicly readable. Can only be created by the user it points to.
+    match /usernames/{username} {
+      allow read;
+      // Allow create only if the user is creating their own username mapping.
+      // `request.resource.data.userId` is the userId being written in the new document.
+      allow create: if isSignedIn() && isOwner(request.resource.data.userId);
+      // Prevent usernames from being updated or deleted for simplicity.
+      allow update, delete: if false;
+    }
+
+    // User Profiles: Publicly readable. Writable only by the owner.
     match /users/{userId} {
       allow read;
-      allow write: if request.auth != null && request.auth.uid == userId;
+       // Allow write (create, update, delete) only if the user is the owner.
+      allow write: if isSignedIn() && isOwner(userId);
     }
-    
-    // Portfolios:
-    // - Anyone can read a portfolio.
-    // - A user can create, update, and delete their own portfolios.
+
+    // Portfolios: Publicly readable. Writable only by the owner.
     match /portfolios/{portfolioId} {
       allow read;
-      allow write: if request.auth != null && request.resource.data.userId == request.auth.uid;
+      // The user creating/updating the portfolio must be the owner.
+      allow write: if isSignedIn() && isOwner(request.resource.data.userId);
     }
-    
-    // Projects:
-    // - Anyone can read a project.
-    // - A user can create, update, and delete their own projects.
+
+    // Projects: Publicly readable. Writable only by the owner.
     match /projects/{projectId} {
       allow read;
-      allow write: if request.auth != null && request.resource.data.userId == request.auth.uid;
+       // The user creating/updating the project must be the owner.
+      allow write: if isSignedIn() && isOwner(request.resource.data.userId);
     }
   }
 }
