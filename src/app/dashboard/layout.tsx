@@ -105,7 +105,6 @@ export default function DashboardLayout({
     );
   }
 
-  const publicUsername = currentUser?.username || 'preview';
   const editorHref = primaryPortfolioId ? `/dashboard/editor?portfolioId=${primaryPortfolioId}` : '/dashboard/editor';
 
   return (
@@ -143,12 +142,7 @@ export default function DashboardLayout({
         {/* Desktop and Mobile Header */}
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6 sticky top-0 bg-background z-40">
           <div className="w-full flex-1">
-             <Button variant="outline" size="sm" asChild>
-                <Link href={`/${publicUsername}`} target="_blank">
-                  <Eye className="mr-2 h-4 w-4" />
-                  Public View
-                </Link>
-            </Button>
+            {/* The public view button was here */}
           </div>
           {/* Mobile-only logo */}
           <div className="md:hidden">
