@@ -4,12 +4,16 @@
 import { Template, Project, User } from '@/types';
 import AiTemplateAssistant from './ai-template-assistant';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils';
+import Image from 'next/image';
 
 interface TemplateSelectorProps {
   selectedTemplate: Template;
   onTemplateChange: (template: Template) => void;
   projects: Project[];
   user: User;
+  display?: 'grid' | 'select';
 }
 
 const templateOptions: { value: Template; label: string; }[] = [
@@ -37,15 +41,36 @@ const templateOptions: { value: Template; label: string; }[] = [
     { value: 'dark-academia', label: 'Dark Academia' },
 ];
 
-export default function TemplateSelector({ selectedTemplate, onTemplateChange, projects, user }: TemplateSelectorProps) {
-  return (
-    <div className="space-y-6">
-      <div className="space-y-2">
-        <h3 className="text-lg font-semibold">Choose a Template</h3>
-        <p className="text-sm text-muted-foreground">Select a template to change the look of your portfolio.</p>
-      </div>
+const TemplateGrid = ({ selectedTemplate, onTemplateChange }: Pick<TemplateSelectorProps, 'selectedTemplate' | 'onTemplateChange'>) => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {templateOptions.map((template) => (
+          <Card
+            key={template.value}
+            onClick={() => onTemplateChange(template.value)}
+            className={cn(
+              'cursor-pointer transition-all hover:shadow-lg hover:-translate-y-1',
+              selectedTemplate === template.value && 'ring-2 ring-primary ring-offset-2'
+            )}
+          >
+            <CardContent className="p-4 space-y-3">
+              <div className="aspect-video w-full rounded-md bg-muted overflow-hidden border">
+                <Image 
+                    src={`/thumbnails/${template.value}.png`} 
+                    alt={`${template.label} template screenshot`}
+                    width={400}
+                    height={225}
+                    className="w-full h-full object-cover"
+                />
+              </div>
+              <p className="text-sm font-medium text-center">{template.label}</p>
+            </CardContent>
+          </Card>
+        ))}
+    </div>
+)
 
-      <Select value={selectedTemplate} onValueChange={(value) => onTemplateChange(value as Template)}>
+const TemplateDropdown = ({ selectedTemplate, onTemplateChange }: Pick<TemplateSelectorProps, 'selectedTemplate' | 'onTemplateChange'>) => (
+    <Select value={selectedTemplate} onValueChange={(value) => onTemplateChange(value as Template)}>
         <SelectTrigger>
           <SelectValue placeholder="Select a template" />
         </SelectTrigger>
@@ -56,8 +81,22 @@ export default function TemplateSelector({ selectedTemplate, onTemplateChange, p
             </SelectItem>
           ))}
         </SelectContent>
-      </Select>
+    </Select>
+)
 
+export default function TemplateSelector({ selectedTemplate, onTemplateChange, projects, user, display = 'grid' }: TemplateSelectorProps) {
+  return (
+    <div className="space-y-6">
+        {display === 'grid' ? (
+            <TemplateGrid selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
+        ) : (
+             <div className="space-y-2">
+                <h3 className="text-lg font-semibold">Choose a Template</h3>
+                <p className="text-sm text-muted-foreground">Select a template to change the look of your portfolio.</p>
+                <TemplateDropdown selectedTemplate={selectedTemplate} onTemplateChange={onTemplateChange} />
+            </div>
+        )}
+      
       <AiTemplateAssistant projects={projects} onSelectTemplate={onTemplateChange} />
     </div>
   );

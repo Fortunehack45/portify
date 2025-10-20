@@ -11,12 +11,13 @@ import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Save } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 
 export default function TemplatesPage() {
   const { user: authUser, loading: userLoading } = useAuthUser();
   const firestore = useFirestore();
+  const [selectedTemplate, setSelectedTemplate] = useState<Template | undefined>(undefined);
   const router = useRouter();
+  const { toast } = useToast();
 
   const userProfileQuery = useMemo(() => {
     if (!firestore || !authUser) return null;
@@ -25,25 +26,71 @@ export default function TemplatesPage() {
 
   const { data: userProfile, loading: profileLoading } = useCollection<User>(userProfileQuery);
   
-  const isLoading = userLoading || profileLoading;
+  const projectsQuery = useMemo(() => {
+    if (!firestore || !authUser) return null;
+    return query(collection(firestore, 'projects'), where('userId', '==', authUser.uid));
+  }, [firestore, authUser]);
+
+  const { data: projects, loading: projectsLoading } = useCollection<Project>(
+    projectsQuery
+  );
+
+  const user = userProfile?.[0];
+
+  useEffect(() => {
+    if (user) {
+      setSelectedTemplate(user.selectedTemplate);
+    }
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!firestore || !authUser || !selectedTemplate || !user) {
+        toast({ title: "Error", description: "Could not save. User or template not available.", variant: "destructive" });
+        return;
+    }
+    const userDocRef = doc(firestore, 'users', authUser.uid);
+    try {
+        await setDoc(userDocRef, { selectedTemplate: selectedTemplate }, { merge: true });
+        toast({
+            title: 'Template Saved!',
+            description: 'Your new template has been applied.',
+        });
+        router.push(`/dashboard/editor`);
+    } catch (error: any) {
+        console.error("Error saving template: ", error);
+        toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+
+  const isLoading = userLoading || profileLoading || projectsLoading;
 
   if (isLoading) {
     return <div className="p-4 md:p-6">Loading...</div>;
   }
   
-  const user = userProfile?.[0];
+  if (!user || !projects) {
+    return <div className="p-4 md:p-6">Could not load user data.</div>;
+  }
 
   return (
-    <div className="p-4 md:p-6 space-y-6 flex flex-col items-center justify-center text-center h-full">
-        <div className="space-y-2">
-            <h1 className="text-2xl font-bold font-headline">Template selection has moved!</h1>
-            <p className="text-muted-foreground text-sm max-w-md mx-auto">To make editing your portfolio easier, you can now change your template directly inside the Editor.</p>
+    <div className="p-4 md:p-6 space-y-6">
+      <div className="flex items-center justify-between">
+        <div className="space-y-1">
+          <h1 className="text-2xl font-bold font-headline">Templates</h1>
+          <p className="text-muted-foreground text-sm">Choose a template to showcase your portfolio.</p>
         </div>
-        <Button asChild>
-            <Link href="/dashboard/editor">
-                Go to Editor
-            </Link>
+        <Button onClick={handleSave} disabled={!selectedTemplate}>
+          <Save className="mr-2 h-4 w-4" />
+          Save Template
         </Button>
+      </div>
+      <TemplateSelector
+        display='grid'
+        selectedTemplate={selectedTemplate || user.selectedTemplate}
+        onTemplateChange={setSelectedTemplate}
+        user={user}
+        projects={projects}
+      />
     </div>
   );
 }
