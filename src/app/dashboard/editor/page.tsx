@@ -157,7 +157,7 @@ export default function EditorPage() {
             user={liveUser as User} portfolio={livePortfolio as Portfolio} projects={liveProjects}
             onUserChange={setLiveUser} onPortfolioChange={setLivePortfolio} onProjectsChange={setLiveProjects}
             onTogglePreview={handleTogglePreview}
-            isMobile={isMobile}
+            isMobile={isMobile ?? false}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
