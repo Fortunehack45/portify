@@ -26,6 +26,16 @@ const validTemplates: Record<string, Template> = {
   'Craftsman Paper': 'craftsman-paper',
   'Photo Grid': 'photo-grid',
   'Lakeside Dawn': 'lakeside-dawn',
+  'Geometric Dark': 'geometric-dark',
+  'Minimal Serif': 'minimal-serif',
+  'Corporate Clean': 'corporate-clean',
+  'Glassmorphism': 'glassmorphism',
+  'Neobrutalism': 'neobrutalism',
+  'Storybook': 'storybook',
+  'Two Column Image': 'two-column-image',
+  'Bold and Blue': 'bold-and-blue',
+  'Newspaper': 'newspaper',
+  'Dark Academia': 'dark-academia',
 };
 
 export default function AiTemplateAssistant({ projects, onSelectTemplate }: AiTemplateAssistantProps) {
