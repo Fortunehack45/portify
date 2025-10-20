@@ -1,11 +1,11 @@
 
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import type { User, Project, Template } from '@/types';
 import TemplateSelector from '@/components/dashboard/template-selector';
 import { useFirestore, useUser as useAuthUser, useDoc, useCollection } from '@/firebase';
-import { doc, query, where } from 'firebase/firestore';
+import { doc, query, where, collection } from 'firebase/firestore';
 import { useMemoFirebase } from '@/hooks/use-memo-firebase';
 
 export default function TemplatesPage() {
@@ -40,7 +40,7 @@ export default function TemplatesPage() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="space-y-6">
       <div className="space-y-1">
         <h1 className="text-2xl font-bold font-headline">Explore Templates</h1>
         <p className="text-muted-foreground text-sm">
