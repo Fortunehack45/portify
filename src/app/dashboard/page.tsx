@@ -19,7 +19,6 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { useToast } from '@/hooks/use-toast';
 import { errorEmitter } from '@/firebase/error-emitter';
@@ -65,24 +64,20 @@ export default function DashboardPage() {
 
     const portfolioRef = doc(firestore, 'portfolios', portfolioId);
     
-    deleteDoc(portfolioRef).then(() => {
+    deleteDoc(portfolioRef)
+      .then(() => {
         setPortfolios(prev => prev.filter(p => p.id !== portfolioId));
         toast({
             title: "Success!",
             description: "The portfolio has been deleted.",
         });
-    }).catch((err) => {
+      })
+      .catch((err) => {
         const permissionError = new FirestorePermissionError({
             path: portfolioRef.path,
             operation: 'delete',
         });
         errorEmitter.emit('permission-error', permissionError);
-
-        toast({
-            title: "Error",
-            description: "You don't have permission to delete this portfolio.",
-            variant: "destructive"
-        });
     });
   }
 
