@@ -34,7 +34,7 @@ const usePortfolioData = (username: string) => {
         if (!usernameSnap.exists()) {
           setError('User not found');
           setLoading(false);
-          notFound();
+          // notFound() will be called in the component
           return;
         }
 
@@ -46,7 +46,6 @@ const usePortfolioData = (username: string) => {
         if (!userSnap.exists()) {
             setError('User profile not found');
             setLoading(false);
-            notFound();
             return;
         }
 
@@ -60,7 +59,6 @@ const usePortfolioData = (username: string) => {
         if (portfolioSnapshot.empty) {
             setError('Primary portfolio not found');
             setLoading(false);
-            notFound();
             return;
         }
 
@@ -118,21 +116,16 @@ export default function UserPortfolioPage() {
     return <div className="flex h-screen w-full items-center justify-center">Loading portfolio...</div>;
   }
 
-  if (error) {
-     if (error.includes('permission')) {
+  if (error || !data) {
+     if (error && error.includes('permission')) {
         // The custom error from the hook now provides better context for debugging.
         // We re-throw it to make it visible in the Next.js development overlay.
         throw new Error(`Firestore Permission Denied: Could not fetch portfolio for user "${username}". Check your Firestore security rules.`);
      }
-     // For other errors like "User not found", notFound() is called inside the hook.
-     // We call it here again as a fallback.
+     // For other errors like "User not found", we call notFound()
      notFound();
   }
   
-  if (!data) {
-    notFound();
-  }
-
   return (
     <TemplateRenderer
       template={data.portfolio.selectedTemplate}
