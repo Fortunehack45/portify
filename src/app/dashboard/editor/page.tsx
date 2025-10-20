@@ -1,3 +1,4 @@
+
 'use client';
 
 import EditorClient from '@/components/dashboard/editor-client';
@@ -19,12 +20,11 @@ export default function EditorPage() {
   const { user: authUser, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const isMobile = useIsMobile();
-  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
   const panelGroupRef = useRef<ImperativePanelGroupHandle>(null);
 
-  const [initialUser, setInitialUser] = useState<User | null>(null);
-  const [initialProjects, setInitialProjects] = useState<Project[]>([]);
-
+  const [liveUser, setLiveUser] = useState<User | null>(null);
+  const [liveProjects, setLiveProjects] = useState<Project[]>([]);
+  
   const projectsQuery = useMemo(() => {
     if (!firestore || !authUser) return null;
     return query(collection(firestore, 'projects'), where('userId', '==', authUser.uid));
@@ -43,9 +43,9 @@ export default function EditorPage() {
 
   useEffect(() => {
     if (userProfile && userProfile.length > 0) {
-      setInitialUser(userProfile[0]);
+      setLiveUser(userProfile[0]);
     } else if (authUser && !profileLoading && (!userProfile || userProfile.length === 0)) {
-      setInitialUser({
+      setLiveUser({
         id: authUser.uid,
         email: authUser.email || '',
         name: authUser.displayName || 'New User',
@@ -70,11 +70,11 @@ export default function EditorPage() {
         createdAt: p.createdAt,
         updatedAt: p.updatedAt,
       }));
-      setInitialProjects(formattedProjects);
+      setLiveProjects(formattedProjects);
     }
   }, [projects]);
 
-  const isLoading = userLoading || projectsLoading || profileLoading || !initialUser;
+  const isLoading = userLoading || projectsLoading || profileLoading || !liveUser;
   
   const handleTogglePreview = () => {
     const panelGroup = panelGroupRef.current;
@@ -102,17 +102,17 @@ export default function EditorPage() {
             </TabsList>
             <TabsContent value="editor" className="flex-grow overflow-y-auto">
                 <EditorClient 
-                  initialUser={initialUser as User} 
-                  initialProjects={initialProjects}
-                  onTogglePreview={() => {}} // No-op on mobile
-                  isPreviewCollapsed={true} 
+                  user={liveUser as User} 
+                  projects={liveProjects}
+                  onUserChange={setLiveUser}
+                  onProjectsChange={setLiveProjects}
                 />
             </TabsContent>
             <TabsContent value="preview" className="flex-grow overflow-y-auto bg-muted/30">
                 <div className="w-full h-full bg-white">
                     <PreviewPanel 
-                        user={initialUser as User} 
-                        projects={initialProjects} 
+                        user={liveUser as User} 
+                        projects={liveProjects} 
                         isMobile={true}
                     />
                 </div>
@@ -134,10 +134,10 @@ export default function EditorPage() {
       >
         <ResizablePanel defaultSize={50} minSize={30}>
           <EditorClient 
-            initialUser={initialUser as User} 
-            initialProjects={initialProjects} 
-            onTogglePreview={handleTogglePreview}
-            isPreviewCollapsed={isPreviewCollapsed}
+            user={liveUser as User} 
+            projects={liveProjects}
+            onUserChange={setLiveUser}
+            onProjectsChange={setLiveProjects}
           />
         </ResizablePanel>
         <ResizableHandle withHandle />
@@ -146,12 +146,11 @@ export default function EditorPage() {
             minSize={30}
             collapsible={true}
             collapsedSize={0}
-            onCollapse={() => setIsPreviewCollapsed(true)}
-            onExpand={() => setIsPreviewCollapsed(false)}
         >
           <PreviewPanel 
-            user={initialUser as User} 
-            projects={initialProjects}
+            user={liveUser as User} 
+            projects={liveProjects}
+            onTogglePreview={handleTogglePreview}
           />
         </ResizablePanel>
       </ResizablePanelGroup>

@@ -1,26 +1,44 @@
+
 'use client';
 
 import { User, Project } from '@/types';
 import TemplateRenderer from '../templates/template-renderer';
-import { Frame } from 'lucide-react';
+import { Eye } from 'lucide-react';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import { Button } from '../ui/button';
 
 interface PreviewPanelProps {
   user: User;
   projects: Project[];
   isMobile?: boolean;
+  onTogglePreview?: () => void;
+  isPreviewCollapsed?: boolean;
 }
 
-export default function PreviewPanel({ user, projects, isMobile = false }: PreviewPanelProps) {
+export default function PreviewPanel({ user, projects, isMobile = false, onTogglePreview, isPreviewCollapsed }: PreviewPanelProps) {
   return (
     <div className="h-full bg-muted/40 flex flex-col">
       {!isMobile && (
         <div className="flex-shrink-0 bg-background border-b p-3 flex items-center justify-between gap-2 h-[57px]">
             <div className="flex items-center gap-2">
-                <Frame className="w-4 h-4 text-muted-foreground" />
                 <p className="text-sm font-medium text-muted-foreground transition-opacity">
                     Live Preview
                 </p>
             </div>
+             {onTogglePreview && (
+                 <TooltipProvider>
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                            <Button variant="ghost" size="icon" onClick={onTogglePreview}>
+                                <Eye className="w-5 h-5" />
+                            </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                            <p>{isPreviewCollapsed ? 'Show Preview' : 'Hide Preview'}</p>
+                        </TooltipContent>
+                    </Tooltip>
+                </TooltipProvider>
+            )}
         </div>
       )}
       <div className="flex-grow overflow-auto">

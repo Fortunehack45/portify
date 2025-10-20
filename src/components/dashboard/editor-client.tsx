@@ -1,53 +1,41 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
 import type { User, Project, Template } from '@/types';
 import { Button } from '../ui/button';
-import { Save, Eye } from 'lucide-react';
+import { Save } from 'lucide-react';
 import ProfileForm from './profile-form';
 import ProjectsList from './projects-list';
 import { useFirestore, useUser as useAuthUser } from '@/firebase';
 import { doc, setDoc } from 'firebase/firestore';
 import { useToast } from '@/hooks/use-toast';
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '../ui/tooltip';
+import { Accordion, AccordionItem, AccordionTrigger, AccordionContent } from '@/components/ui/accordion';
 import TemplateSelector from './template-selector';
 
 interface EditorClientProps {
-  initialUser: User;
-  initialProjects: Project[];
-  onTogglePreview: () => void;
-  isPreviewCollapsed: boolean;
+  user: User;
+  projects: Project[];
+  onUserChange: (user: User) => void;
+  onProjectsChange: (projects: Project[]) => void;
 }
 
 export default function EditorClient({
-  initialUser,
-  initialProjects,
-  onTogglePreview,
-  isPreviewCollapsed,
+  user,
+  projects,
+  onUserChange,
+  onProjectsChange,
 }: EditorClientProps) {
-  const [user, setUser] = useState<User>(initialUser);
-  const [projects, setProjects] = useState<Project[]>(initialProjects);
 
   const firestore = useFirestore();
   const { user: authUser } = useAuthUser();
   const { toast } = useToast();
 
-  useEffect(() => {
-    setUser(initialUser);
-  }, [initialUser]);
-
-  useEffect(() => {
-    setProjects(initialProjects);
-  }, [initialProjects]);
-
-  const handleUserChange = (updatedUser: Partial<User>) => {
-    setUser(prev => ({ ...prev, ...updatedUser }));
+  const handleUserPropChange = (updatedUser: Partial<User>) => {
+    onUserChange({ ...user, ...updatedUser });
   };
 
   const handleTemplateChange = (template: Template) => {
-    setUser(prev => ({ ...prev, selectedTemplate: template }));
+    onUserChange({ ...user, selectedTemplate: template });
   };
 
   const handleSave = async () => {
@@ -86,18 +74,6 @@ export default function EditorClient({
               <p className="text-muted-foreground text-sm">Update your profile and projects.</p>
           </div>
           <div className="flex items-center gap-2">
-            <TooltipProvider>
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                         <Button variant="ghost" size="icon" onClick={onTogglePreview}>
-                            <Eye className="w-5 h-5" />
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent>
-                        <p>{isPreviewCollapsed ? 'Show Preview' : 'Hide Preview'}</p>
-                    </TooltipContent>
-                </Tooltip>
-            </TooltipProvider>
             <Button onClick={handleSave}>
                 <Save className="mr-2 h-4 w-4" />
                 Save
@@ -106,8 +82,8 @@ export default function EditorClient({
       </div>
       <div className="p-6 space-y-6 h-full overflow-y-auto">
         <Accordion type="multiple" defaultValue={['profile', 'projects', 'template']} className="w-full space-y-4">
-            <ProfileForm user={user} onUserChange={handleUserChange} />
-            <ProjectsList projects={projects} setProjects={setProjects} />
+            <ProfileForm user={user} onUserChange={handleUserPropChange} />
+            <ProjectsList projects={projects} setProjects={onProjectsChange} />
             <AccordionItem value="template">
               <AccordionTrigger className="p-4 bg-background rounded-lg border shadow-sm text-base font-medium">
                 Template
