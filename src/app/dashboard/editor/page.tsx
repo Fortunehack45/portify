@@ -13,11 +13,16 @@ import {
   ResizablePanel,
   ResizableHandle,
 } from '@/components/ui/resizable';
+import type { ImperativePanelGroupHandle } from 'react-resizable-panels';
+import { PanelRightClose, PanelRightOpen } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 export default function EditorPage() {
   const { user: authUser, loading: userLoading } = useUser();
   const firestore = useFirestore();
   const isMobile = useIsMobile();
+  const [panelLayout, setPanelLayout] = useState([50, 50]);
+  const [isPreviewCollapsed, setIsPreviewCollapsed] = useState(false);
 
   const [initialUser, setInitialUser] = useState<User | null>(null);
   const [initialProjects, setInitialProjects] = useState<Project[]>([]);
@@ -72,6 +77,20 @@ export default function EditorPage() {
   }, [projects]);
 
   const isLoading = userLoading || projectsLoading || profileLoading || !initialUser;
+  
+  const handleLayout = (sizes: number[]) => {
+    setPanelLayout(sizes);
+    setIsPreviewCollapsed(sizes[1] === 0);
+  };
+
+  const togglePreview = () => {
+    if (isPreviewCollapsed) {
+        setPanelLayout([50, 50]);
+    } else {
+        setPanelLayout([100, 0]);
+    }
+    setIsPreviewCollapsed(!isPreviewCollapsed);
+  };
 
   if (isLoading) {
     return <div className="flex items-center justify-center h-screen">Loading editor...</div>;
@@ -90,7 +109,11 @@ export default function EditorPage() {
             </TabsContent>
             <TabsContent value="preview" className="flex-grow overflow-y-auto bg-muted/30">
                 <div className="w-full h-full bg-white">
-                    <PreviewPanel user={initialUser as User} projects={initialProjects} isMobile={true} />
+                    <PreviewPanel 
+                        user={initialUser as User} 
+                        projects={initialProjects} 
+                        isMobile={true} 
+                    />
                 </div>
             </TabsContent>
         </Tabs>
@@ -100,13 +123,29 @@ export default function EditorPage() {
   // Desktop View
   return (
     <div className="flex flex-col h-full -m-4 lg:-m-6">
-      <ResizablePanelGroup direction="horizontal" className="flex-grow">
-        <ResizablePanel defaultSize={50} minSize={30}>
+      <ResizablePanelGroup 
+        direction="horizontal" 
+        className="flex-grow"
+        onLayout={handleLayout}
+      >
+        <ResizablePanel defaultSize={panelLayout[0]} minSize={30}>
           <EditorClient initialUser={initialUser as User} initialProjects={initialProjects} />
         </ResizablePanel>
         <ResizableHandle withHandle />
-        <ResizablePanel defaultSize={50} minSize={30}>
-          <PreviewPanel user={initialUser as User} projects={initialProjects} />
+        <ResizablePanel 
+            defaultSize={panelLayout[1]} 
+            minSize={30}
+            collapsible={true}
+            collapsedSize={0}
+            onCollapse={() => setIsPreviewCollapsed(true)}
+            onExpand={() => setIsPreviewCollapsed(false)}
+        >
+          <PreviewPanel 
+            user={initialUser as User} 
+            projects={initialProjects}
+            isCollapsed={isPreviewCollapsed}
+            onToggle={togglePreview}
+          />
         </ResizablePanel>
       </ResizablePanelGroup>
     </div>
