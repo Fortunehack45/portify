@@ -13,88 +13,91 @@ interface TemplateProps {
 
 const GeometricDark: React.FC<TemplateProps> = ({ user, projects }) => {
 
-    const getSocialButton = (platform: SocialPlatform, url: string) => {
-        const iconClass = "w-4 h-4";
-        const buttonClass = "flex items-center gap-2 text-gray-400 hover:text-white transition-colors";
-        switch (platform) {
-            case 'github': return <Button variant="ghost" size="sm" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className={buttonClass}><Github className={iconClass} /> GitHub</a></Button>;
-            case 'linkedin': return <Button variant="ghost" size="sm" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className={buttonClass}><Linkedin className={iconClass} /> LinkedIn</a></Button>;
-            case 'twitter': return <Button variant="ghost" size="sm" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="Twitter" className={buttonClass}><Twitter className={iconClass} /> Twitter</a></Button>;
-            case 'website': return <Button variant="ghost" size="sm" asChild><a href={url} target="_blank" rel="noopener noreferrer" aria-label="Website" className={buttonClass}><LinkIcon className={iconClass} /> Website</a></Button>;
-            default: return null;
-        }
+    const getSocialIcon = (platform: SocialPlatform, url: string) => {
+        const iconClass = "w-5 h-5 text-gray-400 group-hover:text-teal-300 transition-colors";
+        return (
+            <a href={url} target="_blank" rel="noopener noreferrer" aria-label={platform} className="group p-2 bg-gray-800/50 rounded-full border border-gray-700 hover:border-teal-400/50">
+                {platform === 'github' && <Github className={iconClass} />}
+                {platform === 'linkedin' && <Linkedin className={iconClass} />}
+                {platform === 'twitter' && <Twitter className={iconClass} />}
+                {platform === 'website' && <LinkIcon className={iconClass} />}
+            </a>
+        );
     }
 
   return (
     <div className="font-body bg-gray-900 text-gray-300 min-h-screen">
-      <main className="container mx-auto px-4 py-12 md:py-16 max-w-5xl">
-        <div className="md:flex md:gap-12">
-          
-          <aside className="md:w-1/3 md:sticky md:top-16 self-start mb-12 md:mb-0">
-            <div className="md:border-r md:border-gray-700 md:h-full md:pr-8">
-              <h1 className="text-4xl font-bold font-headline text-white">{user.name}</h1>
-              <p className="text-md text-gray-400 mt-2">@{user.username}</p>
-              <p className="mt-6 text-gray-300">{user.bio}</p>
-              
-              <div className="flex flex-col items-start gap-1 mt-6">
-                {user.socials?.map(social => (
-                    <React.Fragment key={social.platform}>
-                        {getSocialButton(social.platform, social.url)}
-                    </React.Fragment>
-                ))}
-                {user.email && <Button variant="ghost" size="sm" asChild><a href={`mailto:${user.email}`} aria-label="Email" className="flex items-center gap-2 text-gray-400 hover:text-white transition-colors"><Mail className="w-4 h-4" /> Email</a></Button>}
-              </div>
-
-              <hr className="my-8 border-gray-700" />
-
-              <h2 className="text-2xl font-bold font-headline mb-4 text-white">Skills</h2>
-              <div className="flex flex-wrap gap-2">
-                {user.skills.map((skill) => (
-                  <Badge key={skill} variant="secondary" className="text-sm px-3 py-1 bg-gray-800 text-gray-300 font-normal border border-gray-700">
-                    {skill}
-                  </Badge>
-                ))}
-              </div>
-            </div>
-          </aside>
-
-          <div className="md:w-2/3">
-            <section id="projects">
-              <h2 className="text-3xl font-bold font-headline mb-8 text-white">Projects</h2>
-              <div className="space-y-10">
-                {projects.map((project, index) => (
-                  <div key={project.id} className={`pt-2 ${index > 0 ? 'border-t border-gray-700 pt-10' : ''}`}>
-                    <h3 className="text-2xl font-bold font-headline text-white">{project.title}</h3>
-                    <p className="text-gray-400 my-3">{project.description}</p>
-                    <div className="flex flex-wrap gap-2 mb-4">
-                      {project.techStack.map((tech) => (
-                        <Badge key={tech} variant="outline" className="border-gray-600 text-gray-400 font-normal">{tech}</Badge>
-                      ))}
-                    </div>
-                    <div className="flex gap-4">
-                      {project.githubLink && (
-                        <Button variant="outline" size="sm" className="border-gray-600 text-gray-300 hover:bg-gray-800" asChild>
-                          <a href={project.githubLink} target="_blank" rel="noopener noreferrer">
-                            <Github className="mr-2 h-4 w-4" /> GitHub
-                          </a>
-                        </Button>
-                      )}
-                      {project.liveDemo && (
-                        <Button size="sm" asChild className="bg-gray-200 text-gray-900 hover:bg-white">
-                          <a href={project.liveDemo} target="_blank" rel="noopener noreferrer">
-                            <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
-                          </a>
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+      <div 
+        className="fixed inset-0 z-0 opacity-10"
+        style={{
+            backgroundImage: 'radial-gradient(circle at 25% 25%, #2d3748 2%, transparent 2%), radial-gradient(circle at 75% 75%, #2d3748 2%, transparent 2%)',
+            backgroundSize: '50px 50px'
+        }}
+      />
+      <main className="relative z-10 container mx-auto px-4 py-12 md:py-20 max-w-6xl">
+        <header className="text-center mb-20">
+          <h1 className="text-6xl md:text-8xl font-black font-headline text-transparent bg-clip-text bg-gradient-to-r from-white to-teal-300 uppercase tracking-tighter">
+            {user.name}
+          </h1>
+          <p className="text-xl text-gray-400 mt-4">{user.jobTitle}</p>
+          <p className="mt-8 text-lg max-w-3xl mx-auto leading-relaxed">{user.bio}</p>
+          <div className="flex justify-center gap-4 mt-8">
+            {user.socials?.map(social => (
+                <React.Fragment key={social.platform}>
+                    {getSocialIcon(social.platform, social.url)}
+                </React.Fragment>
+            ))}
+            {user.email && <a href={`mailto:${user.email}`} aria-label="Email" className="group p-2 bg-gray-800/50 rounded-full border border-gray-700 hover:border-teal-400/50"><Mail className="w-5 h-5 text-gray-400 group-hover:text-teal-300 transition-colors" /></a>}
           </div>
-        </div>
+        </header>
+
+        <section id="skills" className="mb-20">
+          <h2 className="text-4xl font-bold font-headline text-center mb-10 text-white">Core Competencies</h2>
+          <div className="flex flex-wrap gap-3 justify-center">
+            {user.skills.map((skill) => (
+              <Badge key={skill} className="text-base px-5 py-2 bg-gray-800 border border-gray-700 text-gray-300 font-normal">
+                {skill}
+              </Badge>
+            ))}
+          </div>
+        </section>
+
+        <section id="projects">
+          <h2 className="text-4xl font-bold font-headline text-center mb-12 text-white">Project Showcase</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            {projects.map((project) => (
+              <div key={project.id} className="bg-gray-800/50 border border-gray-700 rounded-lg overflow-hidden transition-all duration-300 hover:border-teal-400/50 hover:shadow-2xl hover:shadow-teal-500/10">
+                <div className="p-6">
+                    <h3 className="text-2xl font-bold font-headline text-white mb-2">{project.title}</h3>
+                    <div className="flex flex-wrap gap-2 mb-4">
+                    {project.techStack.map((tech) => (
+                        <Badge key={tech} variant="outline" className="border-gray-600 text-gray-400">{tech}</Badge>
+                    ))}
+                    </div>
+                    <p className="text-gray-400 mb-6">{project.description}</p>
+                    <div className="flex gap-4">
+                    {project.githubLink && (
+                        <Button variant="outline" className="border-gray-600 text-gray-300 hover:bg-gray-700" asChild>
+                        <a href={project.githubLink} target="_blank" rel="noopener noreferrer">
+                            <Github className="mr-2 h-4 w-4" /> Source
+                        </a>
+                        </Button>
+                    )}
+                    {project.liveDemo && (
+                        <Button className="bg-teal-500 text-gray-900 font-bold hover:bg-teal-400" asChild>
+                        <a href={project.liveDemo} target="_blank" rel="noopener noreferrer">
+                            <ExternalLink className="mr-2 h-4 w-4" /> Live Demo
+                        </a>
+                        </Button>
+                    )}
+                    </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
       </main>
-      <footer className="text-center py-4 text-xs text-gray-600 border-t border-gray-800 mt-8">Made with FolioForge</footer>
+      <footer className="relative z-10 text-center py-6 text-sm text-gray-600">Engineered with FolioForge</footer>
     </div>
   );
 };
