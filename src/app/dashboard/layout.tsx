@@ -13,16 +13,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Logo } from "@/components/icons";
-import { useUser } from "@/firebase";
+import { useUser, useFirestore, useAuth } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { useAuth, useDoc, useFirestore } from "@/firebase";
+import { collection, doc, getDocs, query, where } from "firebase/firestore";
 import { useRouter, usePathname } from "next/navigation";
 import { useToast } from "@/hooks/use-toast";
-import { useEffect, useMemo } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { cn } from "@/lib/utils";
 import MobileNav from "@/components/dashboard/mobile-nav";
-import type { User } from '@/types';
-import { doc } from "firebase/firestore";
+import type { User, Portfolio } from '@/types';
+import { useDoc } from "@/firebase";
 import { useMemoFirebase } from "@/hooks/use-memo-firebase";
 
 const navItems = [
@@ -43,6 +43,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { toast } = useToast();
+  const [primaryPortfolioId, setPrimaryPortfolioId] = useState<string | null>(null);
 
   const userProfileRef = useMemoFirebase(() => {
     if (!firestore || !authUser) return null;
@@ -56,6 +57,21 @@ export default function DashboardLayout({
       router.push('/login');
     }
   }, [authUser, userLoading, router]);
+
+  useEffect(() => {
+    if (firestore && authUser) {
+      const q = query(
+        collection(firestore, 'portfolios'),
+        where('userId', '==', authUser.uid),
+        where('isPrimary', '==', true)
+      );
+      getDocs(q).then(snapshot => {
+        if (!snapshot.empty) {
+          setPrimaryPortfolioId(snapshot.docs[0].id);
+        }
+      });
+    }
+  }, [firestore, authUser]);
 
   const handleLogout = async () => {
     if (auth) {
@@ -90,6 +106,7 @@ export default function DashboardLayout({
   }
 
   const publicUsername = currentUser?.username || 'preview';
+  const editorHref = primaryPortfolioId ? `/dashboard/editor?portfolioId=${primaryPortfolioId}` : '/dashboard/editor';
 
   return (
     <div className="min-h-screen w-full">
@@ -103,11 +120,12 @@ export default function DashboardLayout({
         <div className="flex-1 overflow-y-auto">
           <nav className="grid items-start p-2 text-sm font-medium lg:p-4">
             {navItems.map((item) => {
-              const isActive = pathname === item.href;
+              const href = item.href === '/dashboard/editor' ? editorHref : item.href;
+              const isActive = pathname === href || (pathname.startsWith('/dashboard/editor') && item.href === '/dashboard/editor');
               return (
               <Link
                 key={item.label}
-                href={item.href}
+                href={href}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2 text-muted-foreground transition-all hover:text-primary",
                   isActive && "bg-muted text-primary"
@@ -159,7 +177,7 @@ export default function DashboardLayout({
         </main>
         
         {/* Mobile Bottom Nav */}
-        <MobileNav />
+        <MobileNav editorHref={editorHref}/>
       </div>
     </div>
   );

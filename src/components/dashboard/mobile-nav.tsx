@@ -3,7 +3,6 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import type { LucideIcon } from 'lucide-react';
 import { Home, Palette, Pencil, Settings } from 'lucide-react';
 
 const navItems = [
@@ -13,18 +12,19 @@ const navItems = [
     { href: "/dashboard/settings", icon: Settings, label: "Settings" },
 ];
 
-export default function MobileNav() {
+export default function MobileNav({ editorHref }: { editorHref: string }) {
   const pathname = usePathname();
 
   return (
     <nav className="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-background border-t z-50">
       <div className="grid h-full grid-cols-4">
         {navItems.map((item) => {
-          const isActive = pathname === item.href;
+          const href = item.href === '/dashboard/editor' ? editorHref : item.href;
+          const isActive = pathname === href || (pathname.startsWith('/dashboard/editor') && item.href === '/dashboard/editor');
           return (
             <Link
               key={item.label}
-              href={item.href}
+              href={href}
               className={cn(
                 'flex flex-col items-center justify-center gap-1 text-xs font-medium',
                 isActive ? 'text-primary' : 'text-muted-foreground'
