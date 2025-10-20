@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Chrome, Github } from 'lucide-react';
+import { Chrome, Eye, EyeOff, Github } from 'lucide-react';
 import { useState } from "react";
 import { signInWithEmail, signInWithGoogle, signInWithGithub } from "@/firebase/auth/auth";
 import { useToast } from "@/hooks/use-toast";
@@ -20,6 +20,7 @@ import { useRouter } from "next/navigation";
 export default function LoginPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -88,14 +89,26 @@ export default function LoginPage() {
                 Forgot password?
               </Link>
             </div>
-            <Input 
-              id="password" 
-              type="password" 
-              required 
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              className="h-12 text-base"
-            />
+            <div className="relative">
+              <Input 
+                id="password" 
+                type={showPassword ? "text" : "password"}
+                required 
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="h-12 text-base pr-10"
+              />
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                className="absolute inset-y-0 right-0 h-full px-3"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5 text-muted-foreground" /> : <Eye className="h-5 w-5 text-muted-foreground" />}
+                <span className="sr-only">{showPassword ? "Hide password" : "Show password"}</span>
+              </Button>
+            </div>
           </div>
           <Button type="submit" className="w-full h-12 text-base font-semibold">
             Log In

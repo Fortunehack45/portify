@@ -30,14 +30,38 @@ const prompt = ai.definePrompt({
   name: 'templateSuggestionPrompt',
   input: {schema: TemplateSuggestionInputSchema},
   output: {schema: TemplateSuggestionOutputSchema},
-  prompt: `You are an expert portfolio template advisor. Given the following project descriptions, suggest portfolio templates that would be visually suitable.  You MUST pick templates that match the overall style of the projects.
+  prompt: `You are an expert portfolio template advisor. Given the following project descriptions, suggest portfolio templates that would be visually suitable.
+
+You MUST choose from the following list of available templates:
+- Minimal Light
+- Modern Dark
+- Professional Blue
+- Retro Gamer
+- Brutalist Web
+- Cyberpunk Neon
+- Elegant Serif
+- Cosmic Dream
+- Hacker Terminal
+- Craftsman Paper
+- Photo Grid
+- Lakeside Dawn
+- Geometric Dark
+- Minimal Serif
+- Corporate Clean
+- Glassmorphism
+- Neobrutalism
+- Storybook
+- Two Column Image
+- Bold and Blue
+- Newspaper
+- Dark Academia
 
 Project Descriptions:
 {{#each projectDescriptions}}
 - {{{this}}}
 {{/each}}
 
-Output the names of the templates that you suggest.`, 
+Output ONLY the names of the templates that you suggest from the list provided.`, 
 });
 
 export const suggestTemplatesFlow = ai.defineFlow(
