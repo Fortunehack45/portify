@@ -13,6 +13,7 @@ import TemplateSelector from './template-selector';
 import { errorEmitter } from '@/firebase/error-emitter';
 import { FirestorePermissionError } from '@/firebase/errors';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../ui/tooltip';
+import React from 'react';
 
 interface EditorClientProps {
   user: User;
@@ -20,7 +21,7 @@ interface EditorClientProps {
   projects: Project[];
   onUserChange: (user: User) => void;
   onPortfolioChange: (portfolio: Portfolio) => void;
-  onProjectsChange: (projects: Project[]) => void;
+  onProjectsChange: React.Dispatch<React.SetStateAction<Project[]>>;
   onTogglePreview: () => void;
   isMobile: boolean;
 }
